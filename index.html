@@ -894,13 +894,25 @@ window.saveAnn=async function(){
   const file=document.getElementById('annImgFile').files[0];
   let imgUrl='';
   if(file) imgUrl=await uploadImg(file,document.getElementById('annImgTxt'))||'';
-  await addDoc(AC,{title,body,imgUrl,date,pinned,createdAt:serverTimestamp()});
+  if(window._editAnnId){
+    // UPDATE existing
+    const upd={title,body,date,pinned};
+    if(imgUrl) upd.imgUrl=imgUrl;
+    await updateDoc(doc(db,'announcements',window._editAnnId),upd);
+    window._editAnnId=null;
+    const btn=document.querySelector('#adm-ann .sbtn');
+    if(btn){btn.textContent='📢 نشر الإعلان';btn.style.background='';}
+    toast('تم تحديث الإعلان ✅','ok');
+  } else {
+    await addDoc(AC,{title,body,imgUrl,date,pinned,createdAt:serverTimestamp()});
+    toast('تم نشر الإعلان 📢','ok');
+  }
   document.getElementById('aTitle').value='';document.getElementById('aBody').value='';
   document.getElementById('aPin').value='0';
   document.getElementById('annImgPrev').innerHTML='🖼️';
   document.getElementById('annImgFile').value='';
   document.getElementById('annImgTxt').textContent='';
-  toast('تم نشر الإعلان 📢','ok');goAdm('manann');
+  goAdm('manann');
 };
 function renderSavedAnns(){
   const el=document.getElementById('savedAnns');if(!el)return;
@@ -909,11 +921,26 @@ function renderSavedAnns(){
     <div class="sitem">
       <div class="sitem-info"><div class="sitem-title">${esc(a.title)}</div><div class="sitem-sub">📅 ${fdate(a.date)} ${a.pinned?'· 📌':''} ${a.imgUrl?'· 🖼️':''}</div></div>
       <button class="pin-btn ${a.pinned?'on':''}" onclick="togPin('${a.id}',${a.pinned?0:1})">📌</button>
+      <button class="del-btn" style="color:var(--blue3)" onclick="editAnn('${a.id}')">✏️</button>
       <button class="del-btn" onclick="delAnn('${a.id}')">🗑️</button>
     </div>`).join('');
 }
 window.togPin=async function(id,v){await updateDoc(doc(db,'announcements',id),{pinned:v});};
 window.delAnn=async function(id){if(!confirm('تأكيد الحذف؟'))return;await deleteDoc(doc(db,'announcements',id));toast('تم الحذف');};
+window.editAnn=function(id){
+  const a=anns.find(x=>x.id===id);if(!a)return;
+  document.getElementById('aTitle').value=a.title||'';
+  document.getElementById('aBody').value=a.body||'';
+  document.getElementById('aDate').value=a.date||'';
+  document.getElementById('aPin').value=a.pinned||0;
+  if(a.imgUrl){const p=document.getElementById('annImgPrev');if(p)p.innerHTML=`<img src="${a.imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;}
+  // Switch to ann tab and set edit mode
+  window._editAnnId=id;
+  goAdm('ann');
+  const btn=document.querySelector('#adm-ann .sbtn');
+  if(btn){btn.textContent='💾 تحديث الإعلان';btn.style.background='linear-gradient(135deg,#e65100,#f4a523)';}
+  toast('عدّل البيانات ثم اضغط تحديث ✏️');
+};
 
 // LEADERS
 let leaders=[];
@@ -923,7 +950,9 @@ onSnapshot(query(LC,orderBy('createdAt','asc')),snap=>{
 });
 function renderChips(){
   const el=document.getElementById('leaderChips');
-  el.innerHTML=leaders.map(l=>`<span class="chip">⚓ ${esc(l.name)}</span>`).join('');
+  // Show count only, no names
+  if(!leaders.length){el.innerHTML='';return;}
+  el.innerHTML=`<span class="chip">⚓ ${leaders.length} قائد</span><span class="chip">👥 ${members.length} عضو</span>`;
 }
 function renderLeadersPub(){
   const el=document.getElementById('leadersList');
@@ -965,6 +994,7 @@ function renderLeadersAdm(){
     <div class="sitem">
       <div class="mav" style="width:36px;height:36px;flex-shrink:0;border-radius:50%;overflow:hidden;border:2px solid var(--border2);background:var(--blue-lighter);display:flex;align-items:center;justify-content:center;font-size:16px">${l.imgUrl?`<img src="${esc(l.imgUrl)}" style="width:100%;height:100%;object-fit:cover"/>`: '👨‍✈️'}</div>
       <div class="sitem-info"><div class="sitem-title">${esc(l.name)}</div><div class="sitem-sub">${esc(l.role||'')} ${l.phone?'· '+l.phone:''}</div></div>
+      <button class="del-btn" style="color:var(--blue3)" onclick="editLeader('${l.id}')">✏️</button>
       <button class="del-btn" onclick="delLeader('${l.id}')">🗑️</button>
     </div>`).join('');
 }
@@ -974,14 +1004,39 @@ window.saveLeader=async function(){
   const file=document.getElementById('lImgFile').files[0];
   let imgUrl='';
   if(file) imgUrl=await uploadImg(file,document.getElementById('lUpTxt'))||'';
-  await addDoc(LC,{name,role:document.getElementById('lRole').value.trim(),imgUrl,whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim(),createdAt:serverTimestamp()});
+  if(window._editLeaderId){
+    const upd={name,role:document.getElementById('lRole').value.trim(),whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim()};
+    if(imgUrl) upd.imgUrl=imgUrl;
+    await updateDoc(doc(db,'leaders',window._editLeaderId),upd);
+    window._editLeaderId=null;
+    const btn=document.querySelector('[onclick="saveLeader()"]');
+    if(btn){btn.textContent='💾 حفظ القائد';btn.style.background='';}
+    toast('تم تحديث القائد ✅','ok');
+  } else {
+    await addDoc(LC,{name,role:document.getElementById('lRole').value.trim(),imgUrl,whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim(),createdAt:serverTimestamp()});
+    toast('تم حفظ القائد ✅','ok');
+  }
   ['lName','lRole','lWa','lPh','lFb'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('lImgPrev').innerHTML='👨‍✈️';
   document.getElementById('lImgFile').value='';
   document.getElementById('lUpTxt').textContent='';
-  toast('تم حفظ القائد ✅','ok');
 };
 window.delLeader=async function(id){if(!confirm('تأكيد الحذف؟'))return;await deleteDoc(doc(db,'leaders',id));toast('تم الحذف');};
+window.editLeader=function(id){
+  const l=leaders.find(x=>x.id===id);if(!l)return;
+  document.getElementById('lName').value=l.name||'';
+  document.getElementById('lRole').value=l.role||'';
+  document.getElementById('lWa').value=l.whatsapp||'';
+  document.getElementById('lPh').value=l.phone||'';
+  document.getElementById('lFb').value=l.facebook||'';
+  if(l.imgUrl){const p=document.getElementById('lImgPrev');if(p)p.innerHTML=`<img src="${l.imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;}
+  window._editLeaderId=id;
+  // scroll to form
+  document.getElementById('lName').scrollIntoView({behavior:'smooth',block:'center'});
+  const btn=document.querySelector('[onclick="saveLeader()"]');
+  if(btn){btn.textContent='💾 تحديث القائد';btn.style.background='linear-gradient(135deg,#e65100,#f4a523)';}
+  toast('عدّل البيانات ثم اضغط تحديث ✏️');
+};
 
 // MEMBERS
 let members=[];
@@ -1178,23 +1233,56 @@ window.saveEvent=async function(){
   if(!name){toast('أدخل اسم الفعالية ⚠️','err');return;}
   const files=document.getElementById('evtImgs').files;
   const txt=document.getElementById('evtUpTxt');
-  let images=[];
-  if(files.length) images=await uploadMultiple(files,txt);
-  await addDoc(EVC,{name,date:document.getElementById('evtDate').value,images,createdAt:serverTimestamp()});
+  let newImages=[];
+  if(files.length) newImages=await uploadMultiple(files,txt);
+  if(window._editEventId){
+    const ev=events.find(e=>e.id===window._editEventId);
+    const allImgs=[...(ev?.images||[]),...newImages];
+    await updateDoc(doc(db,'events',window._editEventId),{name,date:document.getElementById('evtDate').value,images:allImgs});
+    window._editEventId=null;
+    const btn=document.querySelector('[onclick="saveEvent()"]');
+    if(btn){btn.textContent='💾 حفظ الفعالية';btn.style.background='';}
+    toast('تم تحديث الفعالية ✅','ok');
+  } else {
+    await addDoc(EVC,{name,date:document.getElementById('evtDate').value,images:newImages,createdAt:serverTimestamp()});
+    toast('تم حفظ الفعالية ✅','ok');
+  }
   document.getElementById('evtName').value='';document.getElementById('evtDate').value='';document.getElementById('evtImgs').value='';
   if(txt)txt.textContent='';
-  toast('تم حفظ الفعالية ✅','ok');
 };
 function renderEventsAdm(){
   const el=document.getElementById('eventsAdmList');if(!el)return;
   if(!events.length){el.innerHTML='<div class="empty"><span>📸</span>لا توجد فعاليات</div>';return;}
   el.innerHTML=events.map(ev=>`
-    <div class="sitem">
+    <div class="sitem" style="flex-wrap:wrap">
       <div class="sitem-info"><div class="sitem-title">${esc(ev.name)}</div><div class="sitem-sub">📅 ${fdate(ev.date)} · ${(ev.images||[]).length} صورة</div></div>
-      <button class="del-btn" onclick="delEvent('${ev.id}')">🗑️</button>
+      <div style="display:flex;gap:4px">
+        <button class="del-btn" style="color:var(--blue3)" onclick="editEvent('${ev.id}')">✏️</button>
+        <button class="del-btn" onclick="delEvent('${ev.id}')">🗑️</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;width:100%;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        ${(ev.images||[]).map((url,i)=>`<div style="position:relative;width:56px;height:56px"><img src="${esc(url)}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border)"/><button onclick="delEventImg('${ev.id}',${i})" style="position:absolute;top:-5px;right:-5px;width:18px;height:18px;background:var(--danger);border:none;border-radius:50%;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button></div>`).join('')}
+      </div>
     </div>`).join('');
 }
 window.delEvent=async function(id){if(!confirm('تأكيد الحذف؟'))return;await deleteDoc(doc(db,'events',id));toast('تم الحذف');};
+window.delEventImg=async function(evId,imgIdx){
+  if(!confirm('حذف هذه الصورة؟'))return;
+  const ev=events.find(e=>e.id===evId);if(!ev)return;
+  const imgs=[...(ev.images||[])];imgs.splice(imgIdx,1);
+  await updateDoc(doc(db,'events',evId),{images:imgs});
+  toast('تم حذف الصورة','ok');
+};
+window.editEvent=function(id){
+  const ev=events.find(e=>e.id===id);if(!ev)return;
+  document.getElementById('evtName').value=ev.name||'';
+  document.getElementById('evtDate').value=ev.date||'';
+  window._editEventId=id;
+  document.getElementById('evtName').scrollIntoView({behavior:'smooth',block:'center'});
+  const btn=document.querySelector('[onclick="saveEvent()"]');
+  if(btn){btn.textContent='💾 تحديث الفعالية';btn.style.background='linear-gradient(135deg,#e65100,#f4a523)';}
+  toast('عدّل البيانات ثم اضغط تحديث ✏️');
+};
 
 // HONOR
 let honors=[];
