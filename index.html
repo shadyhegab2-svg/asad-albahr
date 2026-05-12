@@ -1549,7 +1549,7 @@ function animateCount(el, target){
   const timer=setInterval(()=>{
     val+=current<target?step:-step;
     if((current<target&&val>=target)||(current>target&&val<=target)){val=target;clearInterval(timer);}
-    el.textContent=val.toLocaleString('ar-EG');
+    el.textContent=val.toLocaleString();
   },40);
 }
 
