@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="أسد البحار">
 <link rel="manifest" href="manifest.json">
-<title>فريق أسد البحار للكشافة البحرية</title>
+<title>مجموعة أسد البحار للكشافة البحرية</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1229,10 +1229,10 @@ window.saveLeader=async function(){
     window._editLeaderId=null;
     const btn=document.querySelector('[onclick="saveLeader()"]');
     if(btn){btn.textContent='💾 حفظ القائد';btn.style.background='';}
-    toast('تم تحديث القائد ✅','ok');
+    toast('تم تحديث البيانات ✅','ok');
   } else {
     await addDoc(LC,{name,role:document.getElementById('lRole').value.trim(),imgUrl,whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim(),createdAt:serverTimestamp()});
-    toast('تم حفظ القائد ✅','ok');
+    toast('تم حفظ البيانات ✅','ok');
   }
   ['lName','lRole','lWa','lPh','lFb'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('lImgPrev').innerHTML='👨‍✈️';
@@ -1299,8 +1299,8 @@ function renderPubMems(){
     </div>`;
   };
   el.innerHTML='<div class="page">'+
-    renderGroup(males,'👦','الذكور','linear-gradient(135deg,#0a2a5e,#1565c0)')+
-    renderGroup(females,'👧','الإناث','linear-gradient(135deg,#880e4f,#c2185b)')+
+    renderGroup(males,'👦','الاولاد','linear-gradient(135deg,#0a2a5e,#1565c0)')+
+    renderGroup(females,'👧','البنات','linear-gradient(135deg,#880e4f,#c2185b)')+
   '</div>';
 }
 window.addMember=async function(){
