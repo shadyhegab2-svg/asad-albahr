@@ -1,7 +1,7 @@
 {
-  "name": "فريق أسد البحار للكشافة البحرية",
+  "name": "مجموعة أسد البحار للكشافة البحرية",
   "short_name": "أسد البحار",
-  "description": "تطبيق فريق أسد البحار للكشافة البحرية",
+  "description": "تطبيق مجموعة أسد البحار للكشافة البحرية",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#050e1a",
