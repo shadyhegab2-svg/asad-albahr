@@ -441,7 +441,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nh-leaders-row" id="leaderChips"></div>
 
     <div class="nh-quicklinks">
-      <a href="https://www.facebook.com/share/1D5ER5nkCy/" target="_blank" class="nh-qlink fb">📘 صفحة المجموعة على فيسبوك</a>
+      <a href="https://www.facebook.com/share/1D5ER5nkCy/" target="_blank" class="nh-qlink fb">📘 صفحتنا على فيسبوك</a>
       <a href="#" onclick="requestJoinGroup();return false;" class="nh-qlink wa">💬 طلب الانضمام لجروب الواتساب</a>
     </div>
   </div>
@@ -463,7 +463,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
     <button class="ntab" onclick="goTab('leaders')">👨‍✈️ القادة</button>
     <button class="ntab" onclick="goTab('members')">👥 الأعضاء</button>
     <button class="ntab" onclick="goTab('register')">📝 تسجيل</button>
-    <button class="ntab" onclick="goTab('chat')" id="chatNavBtn" style="position:relative">💬 شات<div class="nbadge" id="chatBadge"></div></button>
+    <button class="ntab" onclick="goTab('chat')" id="chatNavBtn" style="position:relative">💬 دردشه<div class="nbadge" id="chatBadge"></div></button>
     <button class="ntab" onclick="goTab('album')">📸 ألبوم</button>
     <button class="ntab" onclick="goTab('honor')">🏆 الشرف</button>
     <button class="ntab" onclick="goTab('rank')">📊 الترتيب</button>
@@ -481,7 +481,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div id="sec-leaders" class="sec">
       <div class="page">
         <div class="card">
-          <div class="card-head">👨‍✈️ قادة الفريق</div>
+          <div class="card-head">👨‍✈️ قادة المجموعة</div>
           <div id="leadersList"><div class="empty"><span>👨‍✈️</span>لا يوجد قادة بعد</div></div>
         </div>
         <!-- ORG CARD -->
@@ -502,11 +502,11 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
 
         <div class="card">
-          <div class="card-head">🌊 عن الفريق</div>
+          <div class="card-head">🌊 عن المجموعة</div>
           <div class="igrid">
-            <div class="ibox"><div class="ii">🦁</div><div class="il">اسم الفريق</div><div class="iv">أسد البحار للكشافة البحرية</div></div>
+            <div class="ibox"><div class="ii">🦁</div><div class="il">اسم المجموعة</div><div class="iv">أسد البحار للكشافة البحرية</div></div>
             <div class="ibox"><div class="ii">🏛️</div><div class="il">التابع لـ</div><div class="iv">جمعية حقوق المرأة السيناوية</div></div>
-            <div class="ibox"><div class="ii">📍</div><div class="il">المنطقة</div><div class="iv">سيناء</div></div>
+            <div class="ibox"><div class="ii">📍</div><div class="il">المنطقة</div><div class="iv">شمال سيناء</div></div>
             <div class="ibox"><div class="ii">⚓</div><div class="il">النوع</div><div class="iv">كشافة بحرية</div></div>
           </div>
         </div>
@@ -525,17 +525,17 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
           <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--navy),var(--blue2),var(--cyan))"></div>
           <div class="card-head">📝 طلب الانضمام للفريق</div>
           <div style="background:rgba(33,150,243,0.07);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px;font-size:0.78rem;color:var(--muted);line-height:1.9">
-            ⚓ أهلاً بك في فريق أسد البحار! سيتم مراجعة طلبك من قِبَل الإدارة والموافقة عليه خلال 24-48 ساعة.
+            ⚓ أهلاً بك في مجموعة أسد البحار! سيتم مراجعة طلبك من قِبَل الإدارة والموافقة عليه خلال 24-48 ساعة.
           </div>
           <!-- Personal Info -->
           <div style="font-size:0.72rem;font-weight:700;color:var(--blue2);margin-bottom:10px;display:flex;align-items:center;gap:5px">👤 البيانات الشخصية</div>
           <div class="fr2">
             <div class="ff"><label>الاسم الكامل *</label><input type="text" id="regName" placeholder="الاسم رباعي"/></div>
-            <div class="ff"><label>الجنس *</label>
+            <div class="ff"><label>النوع *</label>
               <select id="regGender">
                 <option value="">اختر...</option>
-                <option value="male">👦 ذكر</option>
-                <option value="female">👧 أنثى</option>
+                <option value="male">👦 ولد</option>
+                <option value="female">👧 بنت</option>
               </select>
             </div>
           </div>
@@ -554,7 +554,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             </div>
           </div>
           <div class="fr2">
-            <div class="ff"><label>رقم الهاتف *</label><input type="tel" id="regPhone" placeholder="01xxxxxxxxx"/></div>
+            <div class="ff"><label>رقم الموبايل*</label><input type="tel" id="regPhone" placeholder="01xxxxxxxxx"/></div>
             <div class="ff"><label>واتساب</label><input type="tel" id="regWa" placeholder="201xxxxxxxxx"/></div>
           </div>
           <div class="ff"><label>ملاحظة / سبب الانضمام</label><textarea id="regNote" placeholder="اكتب أي ملاحظة..." rows="2"></textarea></div>
@@ -594,7 +594,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
         <!-- CHAT BOX -->
         <div class="card" style="padding:14px">
-          <div class="card-head">💬 الشات العام <span style="font-size:0.65rem;font-weight:400;color:var(--muted)">يظهر للجميع</span></div>
+          <div class="card-head">💬 الدردشة العامه <span style="font-size:0.65rem;font-weight:400;color:var(--muted)">يظهر للجميع</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
             <input type="text" id="chatName" placeholder="✍️ اسمك *" style="padding:9px 13px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:50px;color:var(--text);font-family:Cairo,sans-serif;font-size:0.8rem;outline:none;direction:rtl" oninput="localStorage.setItem('chatName',this.value)"/>
             <input type="tel" id="chatPhone" placeholder="📱 موبايلك *" maxlength="11" inputmode="numeric" style="padding:9px 13px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:50px;color:var(--text);font-family:Cairo,sans-serif;font-size:0.8rem;outline:none;direction:ltr" oninput="this.value=this.value.replace(/[^0-9]/g,'');localStorage.setItem('chatPhone',this.value)"/>
@@ -730,7 +730,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <button class="atab" onclick="goAdm('track')">👥 أعضاء</button>
               <button class="atab" onclick="goAdm('reqs')" id="reqsTab">📋 طلبات<div class="nbadge" id="reqsBadge" style="position:absolute;top:5px;right:3px;width:7px;height:7px;background:var(--danger);border-radius:50%;display:none;box-shadow:0 0 5px var(--danger)"></div></button>
               <button class="atab" onclick="goAdm('inbox')">📬 رسائل</button>
-              <button class="atab" onclick="goAdm('chat')">💬 شات</button>
+              <button class="atab" onclick="goAdm('chat')">💬 دردشة</button>
               <button class="atab" onclick="goAdm('album')">📸 ألبوم</button>
               <button class="atab" onclick="goAdm('honor')">🏆 الشرف</button>
               <button class="atab" onclick="goAdm('tasks')">📋 المهام</button>
@@ -770,7 +770,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <span class="up-txt" id="lUpTxt"></span>
               </div>
               <div class="ff"><label>الاسم الكامل *</label><input type="text" id="lName" placeholder="اسم القائد"/></div>
-              <div class="ff"><label>الدور / المنصب</label><input type="text" id="lRole" placeholder="قائد الفريق..."/></div>
+              <div class="ff"><label>الدور / المنصب</label><input type="text" id="lRole" placeholder="قائد المجموعة..."/></div>
               <div class="fr2">
                 <div class="ff"><label>واتساب (مع كود الدولة)</label><input type="tel" id="lWa" placeholder="201xxxxxxxxx"/></div>
                 <div class="ff"><label>رقم الهاتف</label><input type="tel" id="lPh" placeholder="01xxxxxxxxx"/></div>
@@ -784,7 +784,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <div id="adm-track" class="asec">
               <div class="tadd">
                 <input type="text" id="mName" placeholder="اسم العضو الكامل"/>
-                <select id="mGender"><option value="male">👦 ذكر</option><option value="female">👧 أنثى</option></select>
+                <select id="mGender"><option value="male">👦 ولد</option><option value="female">👧 بنت</option></select>
                 <button class="add-btn" onclick="addMember()">+ إضافة</button>
               </div>
               <div class="sbar">
@@ -797,11 +797,11 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;margin-top:10px">
                 <div style="background:rgba(21,101,192,0.15);border:1px solid rgba(21,101,192,0.3);border-radius:10px;padding:10px;text-align:center">
                   <div style="font-size:1.3rem;font-weight:900;color:#2196f3;font-family:Tajawal,sans-serif" id="stMales">0</div>
-                  <div style="font-size:0.65rem;color:var(--muted)">👦 ذكور</div>
+                  <div style="font-size:0.65rem;color:var(--muted)">👦 اولاد</div>
                 </div>
                 <div style="background:rgba(194,24,91,0.12);border:1px solid rgba(194,24,91,0.28);border-radius:10px;padding:10px;text-align:center">
                   <div style="font-size:1.3rem;font-weight:900;color:#e91e8c;font-family:Tajawal,sans-serif" id="stFemales">0</div>
-                  <div style="font-size:0.65rem;color:var(--muted)">👧 إناث</div>
+                  <div style="font-size:0.65rem;color:var(--muted)">👧 بنات</div>
                 </div>
               </div>
               <!-- WHATSAPP BROADCAST -->
@@ -866,8 +866,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <!-- ADMIN CHAT MODERATION -->
             <div id="adm-chat" class="asec">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                <div style="font-size:0.84rem;font-weight:700;color:var(--text)">💬 الشات العام</div>
-                <button class="stg-btn danger" onclick="clearChat()">🗑️ مسح الشات</button>
+                <div style="font-size:0.84rem;font-weight:700;color:var(--text)">💬 الدردشة العامه</div>
+                <button class="stg-btn danger" onclick="clearChat()">🗑️ مسح الدردشة</button>
               </div>
               <div id="admChatList"><div class="empty"><span>💬</span>لا توجد رسائل</div></div>
             </div>
@@ -914,7 +914,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
   <!-- FOOTER -->
   <div style="text-align:center;padding:20px 16px 8px;border-top:1px solid rgba(33,150,243,0.1);margin-top:10px">
     <div style="font-size:0.65rem;color:rgba(255,255,255,0.25);line-height:2">
-      <div>© جميع الحقوق محفوظة لفريق أسد البحار للكشافة البحرية</div>
+      <div>© جميع الحقوق محفوظة لمجموعة أسد البحار للكشافة البحرية</div>
       <div style="color:rgba(255,255,255,0.35);margin-top:2px">فكرة وتنفيذ: <span style="color:rgba(0,180,216,0.6);font-weight:700">شادي حجاب</span></div>
       <div style="margin-top:2px">
         <a href="tel:01006857145" style="color:rgba(255,255,255,0.3);text-decoration:none">📞 01006857145</a>
@@ -1413,7 +1413,7 @@ window.printMember=function(id){
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>استمارة ${m.name}</title>
   <style>body{font-family:Cairo,sans-serif;padding:30px;color:#000;direction:rtl}h1{color:#1a3a6b;font-size:1.4rem;margin-bottom:4px}h2{color:#2271b3;font-size:1rem;margin-bottom:20px;font-weight:normal}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{border:1px solid #ccd;border-radius:8px;padding:10px 12px}.field .lbl{font-size:0.68rem;color:#666;margin-bottom:3px}.field .val{font-size:0.9rem;font-weight:700}.full{grid-column:1/-1}.header{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #1a3a6b}.logo{font-size:50px}.tags{display:flex;flex-wrap:wrap;gap:5px}.tag{background:#e8f0fa;border:1px solid #b8c8dc;border-radius:20px;padding:2px 8px;font-size:0.72rem}</style></head>
-  <body><div class="header"><div class="logo">🦁</div><div><h1>فريق أسد البحار للكشافة البحرية</h1><h2>استمارة بيانات العضو</h2></div></div>
+  <body><div class="header"><div class="logo">🦁</div><div><h1>مجموعة أسد البحار للكشافة البحرية</h1><h2>استمارة بيانات العضو</h2></div></div>
   <div class="grid">
   <div class="field"><div class="lbl">الاسم الكامل</div><div class="val">${esc(m.name)}</div></div>
   <div class="field"><div class="lbl">الجنس</div><div class="val">${m.gender==='male'?'ذكر':'أنثى'}</div></div>
@@ -1483,7 +1483,7 @@ function renderAdmMems(){
           <div class="pf"><label>تاريخ الميلاد</label><input id="dob${m.id}" type="date" value="${esc(m.dob||'')}"/></div>
           <div class="pf"><label>المرحلة الدراسية</label><select id="gr${m.id}">${['<option value="">اختر...</option>',...GRADES.map(g=>`<option ${m.grade===g?'selected':''}>${g}</option>`)].join('')}</select></div>
           <div class="pf"><label>الصفة في الفريق</label><select id="rol${m.id}">${['<option value="">اختر...</option>',...rolesList.map(r=>`<option ${m.role===r?'selected':''}>${r}</option>`)].join('')}</select></div>
-          <div class="pf"><label>اسم المجموعة</label><input id="grp${m.id}" type="text" value="${esc(m.group||'')}" placeholder="اسم المجموعة"/></div>
+          <div class="pf"><label>اسم المجموعة</label><input id="grp${m.id}" type="text" value="${esc(m.group||'')}" placeholder="اسم الفريق"/></div>
           <div class="pf"><label>اسم الطليعة</label><input id="pat${m.id}" type="text" value="${esc(m.patrol||'')}" placeholder="اسم الطليعة"/></div>
           <div class="pf full"><label>ملاحظات</label><textarea id="not${m.id}" rows="2" placeholder="ملاحظات...">${esc(m.notes||'')}</textarea></div>
         </div>
@@ -1622,7 +1622,7 @@ window.editEvent=function(id){
   document.getElementById('evtName').scrollIntoView({behavior:'smooth',block:'center'});
   const btn=document.querySelector('[onclick="saveEvent()"]');
   if(btn){btn.textContent='💾 تحديث الفعالية';btn.style.background='linear-gradient(135deg,#e65100,#f4a523)';}
-  toast('عدّل البيانات ثم اضغط تحديث ✏️');
+  toast('عدل البيانات ثم اضغط تحديث ✏️');
 };
 
 // HONOR
@@ -1685,13 +1685,13 @@ window.submitReg=async function(){
   const status=document.getElementById('regStatus');
   if(!name){toast('أدخل اسمك الكامل ⚠️','err');return;}
   if(nid.length!==14||!/^\d{14}$/.test(nid)){toast('الرقم القومي يجب أن يكون 14 رقم ⚠️','err');return;}
-  if(!gender){toast('اختر الجنس ⚠️','err');return;}
-  if(!phone){toast('أدخل رقم هاتفك ⚠️','err');return;}
+  if(!gender){toast('اختر النوع ⚠️','err');return;}
+  if(!phone){toast('أدخل رقم موبايلك⚠️','err');return;}
   // Check duplicate NID
   const existing=pendingReqs.find(r=>r.nationalId===nid);
   if(existing){
     if(existing.status==='pending') status.innerHTML='<span style="color:var(--warn)">⏳ طلبك قيد المراجعة — انتظر موافقة الإدارة</span>';
-    else if(existing.status==='approved') status.innerHTML='<span style="color:var(--ok)">✅ تم قبولك في الفريق!</span>';
+    else if(existing.status==='approved') status.innerHTML='<span style="color:var(--ok)">✅ تم قبولك في المجموعة!</span>';
     else status.innerHTML='<span style="color:var(--err)">❌ تم رفض طلبك — تواصل مع الإدارة</span>';
     return;
   }
@@ -1728,7 +1728,7 @@ window.checkRegStatus=function(){
   el.innerHTML=`<div style="padding:12px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:10px">
     <div style="font-size:1rem;font-weight:800;color:${s.color};margin-bottom:5px">${s.icon} ${s.text}</div>
     <div style="font-size:0.8rem;color:var(--text)">${esc(req.name)}</div>
-    ${req.status==='approved'?'<div style="font-size:0.72rem;color:var(--ok);margin-top:5px">🎉 مرحباً بك في فريق أسد البحار!</div>':''}
+    ${req.status==='approved'?'<div style="font-size:0.72rem;color:var(--ok);margin-top:5px">🎉 مرحباً بك في مجموعة أسد البحار!</div>':''}
     ${req.status==='rejected'?'<div style="font-size:0.72rem;color:var(--muted);margin-top:5px">تواصل مع الإدارة لمعرفة السبب</div>':''}
   </div>`;
 };
@@ -1758,7 +1758,7 @@ function renderAdmReqs(){
         ${statusBadge[r.status]||''}
       </div>
       <div style="font-size:0.7rem;color:var(--blue2);font-family:Tajawal,sans-serif;letter-spacing:1px;margin-bottom:4px">🪪 ${esc(r.nationalId||'—')}</div>
-      <div style="font-size:0.68rem;color:var(--muted);margin-bottom:4px">${r.gender==='male'?'👦 ذكر':'👧 أنثى'} ${r.age?'· العمر: '+r.age:''}  ${r.grade?'· '+r.grade:''}</div>
+      <div style="font-size:0.68rem;color:var(--muted);margin-bottom:4px">${r.gender==='male'?'👦 ولد':'👧 بنت'} ${r.age?'· العمر: '+r.age:''}  ${r.grade?'· '+r.grade:''}</div>
       ${r.phone?`<div style="font-size:0.72rem;color:var(--text2);margin-bottom:6px">📞 ${esc(r.phone)}</div>`:''}
       ${r.note?`<div style="font-size:0.74rem;color:var(--muted);font-style:italic;margin-bottom:8px">"${esc(r.note)}"</div>`:''}
       ${r.status==='pending'?`
@@ -1787,9 +1787,9 @@ window.approveReq=async function(id){
   const phone=(req.whatsapp||req.phone||'').replace(/^0/,'20');
   if(phone){
     const msg=encodeURIComponent(`السلام عليكم ورحمة الله وبركاته 🌟
-فريق أسد البحار يرحب بك بين أفراده 🤝
+مجموعة أسد البحار ترحب بك بين أفراده 🤝
 نتمنى لك رحلة مليئة بالنجاح والتعلم والمغامرات الممتعة
-ودوام التوفيق والتألق معنا دائمًا 💙⚓
+ودوام التوفيق والتألق معنا دائما 💙⚓
 أهلا بك عضوا في أسرة أسد البحار 🦁🌊`);
     window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
   }
