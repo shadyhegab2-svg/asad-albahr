@@ -1596,7 +1596,12 @@ function renderRank(){
 }
 window.savProf=async function(id){
   const g=s=>document.getElementById(s+id)?.value||'';
-  await updateDoc(doc(db,'members',id),{phone:g('ph'),whatsapp:g('wa'),nationalId:g('nid'),age:g('age'),grade:g('gr'),group:g('grp'),patrol:g('pat'),role:g('rol'),notes:g('not')});
+  // Convert Arabic numerals to English + accept dash as separator
+  const rawDob=g('dob');
+  const dob=rawDob
+    .replace(/[٠١٢٣٤٥٦٧٨٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/-/g,'/');
+  await updateDoc(doc(db,'members',id),{phone:g('ph'),whatsapp:g('wa'),nationalId:g('nid'),age:g('age'),grade:g('gr'),group:g('grp'),patrol:g('pat'),role:g('rol'),notes:g('not'),dob});
   toast('تم حفظ البيانات ✅','ok');
 };
 window.uploadMemberImg=async function(id){
@@ -1676,7 +1681,7 @@ function renderAdmMems(){
           <div class="pf"><label>رقم الموبايل</label><input id="ph${m.id}" type="tel" value="${esc(m.phone||'')}" placeholder="01xxxxxxxxx"/></div>
           <div class="pf"><label>واتساب (مع كود الدولة)</label><input id="wa${m.id}" type="tel" value="${esc(m.whatsapp||'')}" placeholder="201xxxxxxxxx"/></div>
           <div class="pf full"><label>الرقم القومي</label><input id="nid${m.id}" type="text" value="${esc(m.nationalId||'')}" placeholder="14 رقم" maxlength="14"/></div><div class="pf"><label>العمر</label><input id="age${m.id}" type="number" value="${esc(m.age||'')}" placeholder="بالسنوات"/></div>
-          <div class="pf"><label>تاريخ الميلاد</label><input id="dob${m.id}" type="text" inputmode="numeric" placeholder="مثال: 15/06/2010" value="${esc(m.dob||'')}"/></div>
+          <div class="pf"><label>تاريخ الميلاد</label><input id="dob${m.id}" type="text" inputmode="numeric" placeholder="مثال: 15/06/2010 أو 15-06-2010" value="${esc(m.dob||'')}"/></div>
           <div class="pf"><label>المرحلة الدراسية</label><select id="gr${m.id}">${['<option value="">اختر...</option>',...GRADES.map(g=>`<option ${m.grade===g?'selected':''}>${g}</option>`)].join('')}</select></div>
           <div class="pf"><label>الصفة في المجموعة</label><select id="rol${m.id}">${['<option value="">اختر...</option>',...rolesList.map(r=>`<option ${m.role===r?'selected':''}>${r}</option>`)].join('')}</select></div>
           <div class="pf"><label>اسم المجموعة</label><input id="grp${m.id}" type="text" value="${esc(m.group||'')}" placeholder="اسم المجموعة"/></div>
