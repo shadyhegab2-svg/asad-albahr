@@ -1,4 +1,4 @@
-const CACHE='asad-v13';
+const CACHE='asad-v14';
 const FILES=['/asad-albahr/','/asad-albahr/index.html','/asad-albahr/manifest.json'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));
