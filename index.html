@@ -1596,11 +1596,11 @@ function renderRank(){
 }
 window.savProf=async function(id){
   const g=s=>document.getElementById(s+id)?.value||'';
-  // Convert Arabic numerals to English + accept dash as separator
-  const rawDob=g('dob');
-  const dob=rawDob
-    .replace(/[٠١٢٣٤٥٦٧٨٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/-/g,'/');
+  const toEn=s=>s.replace(/[٠١٢٣٤٥٦٧٨٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  const d=toEn(g('dobD')).trim();
+  const mo=toEn(g('dobM')).trim();
+  const y=toEn(g('dobY')).trim();
+  const dob=(d&&mo&&y)?`${d.padStart(2,'0')}/${mo.padStart(2,'0')}/${y}`:'';
   await updateDoc(doc(db,'members',id),{phone:g('ph'),whatsapp:g('wa'),nationalId:g('nid'),age:g('age'),grade:g('gr'),group:g('grp'),patrol:g('pat'),role:g('rol'),notes:g('not'),dob});
   toast('تم حفظ البيانات ✅','ok');
 };
@@ -1681,7 +1681,11 @@ function renderAdmMems(){
           <div class="pf"><label>رقم الموبايل</label><input id="ph${m.id}" type="tel" value="${esc(m.phone||'')}" placeholder="01xxxxxxxxx"/></div>
           <div class="pf"><label>واتساب (مع كود الدولة)</label><input id="wa${m.id}" type="tel" value="${esc(m.whatsapp||'')}" placeholder="201xxxxxxxxx"/></div>
           <div class="pf full"><label>الرقم القومي</label><input id="nid${m.id}" type="text" value="${esc(m.nationalId||'')}" placeholder="14 رقم" maxlength="14"/></div><div class="pf"><label>العمر</label><input id="age${m.id}" type="number" value="${esc(m.age||'')}" placeholder="بالسنوات"/></div>
-          <div class="pf"><label>تاريخ الميلاد</label><input id="dob${m.id}" type="text" inputmode="numeric" placeholder="مثال: 15/06/2010 أو 15-06-2010" value="${esc(m.dob||'')}"/></div>
+          <div class="pf full"><label>تاريخ الميلاد</label><div style="display:flex;gap:6px">
+            <input id="dobD${m.id}" type="tel" placeholder="يوم" maxlength="2" style="flex:1;text-align:center" value="${esc((m.dob||'').split('/')[0]||'')}"/>
+            <input id="dobM${m.id}" type="tel" placeholder="شهر" maxlength="2" style="flex:1;text-align:center" value="${esc((m.dob||'').split('/')[1]||'')}"/>
+            <input id="dobY${m.id}" type="tel" placeholder="سنة" maxlength="4" style="flex:2;text-align:center" value="${esc((m.dob||'').split('/')[2]||'')}"/>
+          </div></div>
           <div class="pf"><label>المرحلة الدراسية</label><select id="gr${m.id}">${['<option value="">اختر...</option>',...GRADES.map(g=>`<option ${m.grade===g?'selected':''}>${g}</option>`)].join('')}</select></div>
           <div class="pf"><label>الصفة في المجموعة</label><select id="rol${m.id}">${['<option value="">اختر...</option>',...rolesList.map(r=>`<option ${m.role===r?'selected':''}>${r}</option>`)].join('')}</select></div>
           <div class="pf"><label>اسم المجموعة</label><input id="grp${m.id}" type="text" value="${esc(m.group||'')}" placeholder="اسم المجموعة"/></div>
