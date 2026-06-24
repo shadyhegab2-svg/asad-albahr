@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="أسد البحار">
 <link rel="manifest" href="manifest.json">
-<title>فريق أسد البحار للكشافة البحرية</title>
+<title>مجموعة أسد البحار للكشافة البحرية</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -521,7 +521,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="nh-modal-close" onclick="closeAboutModal()">✕</button>
       <h3 style="text-align:center;margin-bottom:14px">ℹ️ عن المجموعة</h3>
       <p style="line-height:1.9;font-size:0.86rem;color:var(--text)">
-        <b>مجموعة أسد البحار للكشافة البحرية</b> تابعة لجمعية حقوق المرأة السيناوية، مقرها مدينة العريش. تهدف المجموعة إلى تنمية مهارات الأطفال والشباب الكشفية والبحرية، وغرس القيم الأخلاقية والروح الجماعية من خلال الأنشطة والفعاليات والرحلات الكشفية المنتظمة.
+        <b>مجموعة أسد البحار للكشافة البحرية</b> تابعة لجمعية حقوق المرأة السيناوية، مقرها مدينة العريش. تهدف المجموعة إلى تنمية مهارات الفتية الكشفية والبحرية، وغرس القيم الأخلاقية وروح العمل الجماعي من خلال الأنشطة والفعاليات والرحلات الكشفية في فريق .
       </p>
     </div>
   </div>
@@ -532,8 +532,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="nh-modal-close" onclick="closeRightsModal()">✕</button>
       <h3 style="text-align:center;margin-bottom:14px">📜 حقوق الملكية</h3>
       <p style="line-height:1.9;font-size:0.86rem;color:var(--text)">
-        جميع الحقوق محفوظة © مجموعة أسد البحار للكشافة البحرية — جمعية حقوق المرأة السيناوية.<br><br>
-        يُمنع نسخ أو إعادة استخدام محتوى هذا التطبيق (الشعار، الصور، البيانات) دون إذن مسبق من إدارة المجموعة.
+        جميع الحقوق محفوظة © مجموعة أسد البحار الكشافة البحرية — قائد شادي حجاب يُمنع نسخ أو إعادة استخدام محتوى هذا التطبيق (الشعار، الصور، البيانات) دون إذن مسبق من إدارة المجموعة.
       </p>
     </div>
   </div>
@@ -556,13 +555,19 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="wrap">
 
     <!-- ANNOUNCEMENTS -->
+    <!-- Birthday announcements (auto-generated) -->
+    <div id="bdayBanner" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,#ff6b6b,#feca57);border-radius:18px;padding:16px;box-shadow:0 4px 18px rgba(255,107,107,.3)">
+      <div style="font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:6px">🎂 عيد ميلاد سعيد!</div>
+      <div id="bdayList" style="color:#fff;font-size:0.84rem;line-height:1.8"></div>
+    </div>
+
     <div id="sec-ann" class="sec on"><div class="page" id="annList"></div></div>
 
     <!-- LEADERS -->
     <div id="sec-leaders" class="sec">
       <div class="page">
         <div class="card">
-          <div class="card-head">👨‍✈️ قادة الفريق</div>
+          <div class="card-head">👨‍✈️ قادة المجموعة</div>
           <div id="leadersList"><div class="empty"><span>👨‍✈️</span>لا يوجد قادة بعد</div></div>
         </div>
         <!-- ORG CARD -->
@@ -583,9 +588,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
 
         <div class="card">
-          <div class="card-head">🌊 عن الفريق</div>
+          <div class="card-head">🌊 عن المجموعة</div>
           <div class="igrid">
-            <div class="ibox"><div class="ii">🦁</div><div class="il">اسم الفريق</div><div class="iv">أسد البحار للكشافة البحرية</div></div>
+            <div class="ibox"><div class="ii">🦁</div><div class="il">اسم المجموعة</div><div class="iv">أسد البحار للكشافة البحرية</div></div>
             <div class="ibox"><div class="ii">🏛️</div><div class="il">التابع لـ</div><div class="iv">جمعية حقوق المرأة السيناوية</div></div>
             <div class="ibox"><div class="ii">📍</div><div class="il">المنطقة</div><div class="iv">سيناء</div></div>
             <div class="ibox"><div class="ii">⚓</div><div class="il">النوع</div><div class="iv">كشافة بحرية</div></div>
@@ -604,19 +609,19 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="page">
         <div class="card" style="position:relative;overflow:hidden">
           <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--navy),var(--blue2),var(--cyan))"></div>
-          <div class="card-head">📝 طلب الانضمام للفريق</div>
+          <div class="card-head">📝 طلب الانضمام للمجموعة</div>
           <div style="background:rgba(33,150,243,0.07);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px;font-size:0.78rem;color:var(--muted);line-height:1.9">
-            ⚓ أهلاً بك في فريق أسد البحار! سيتم مراجعة طلبك من قِبَل الإدارة والموافقة عليه خلال 24-48 ساعة.
+            ⚓ أهلاً بك في مجموعة أسد البحار! سيتم مراجعة طلبك من قِبَل الإدارة والموافقة عليه خلال 24-48 ساعة.
           </div>
           <!-- Personal Info -->
           <div style="font-size:0.72rem;font-weight:700;color:var(--blue2);margin-bottom:10px;display:flex;align-items:center;gap:5px">👤 البيانات الشخصية</div>
           <div class="fr2">
             <div class="ff"><label>الاسم الكامل *</label><input type="text" id="regName" placeholder="الاسم رباعي"/></div>
-            <div class="ff"><label>الجنس *</label>
+            <div class="ff"><label>النوع *</label>
               <select id="regGender">
                 <option value="">اختر...</option>
-                <option value="male">👦 ذكر</option>
-                <option value="female">👧 أنثى</option>
+                <option value="male">👦 ولد</option>
+                <option value="female">👧 بنت</option>
               </select>
             </div>
           </div>
@@ -635,7 +640,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             </div>
           </div>
           <div class="fr2">
-            <div class="ff"><label>رقم الهاتف *</label><input type="tel" id="regPhone" placeholder="01xxxxxxxxx"/></div>
+            <div class="ff"><label>رقم الموبايل *</label><input type="tel" id="regPhone" placeholder="01xxxxxxxxx"/></div>
             <div class="ff"><label>واتساب</label><input type="tel" id="regWa" placeholder="201xxxxxxxxx"/></div>
           </div>
           <div class="ff"><label>ملاحظة / سبب الانضمام</label><textarea id="regNote" placeholder="اكتب أي ملاحظة..." rows="2"></textarea></div>
@@ -660,7 +665,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="page">
         <!-- RATING -->
         <div class="card" style="margin-bottom:12px">
-          <div class="card-head">⭐ قيّم البرنامج والفريق</div>
+          <div class="card-head">⭐ قيّم البرنامج والمجموعة</div>
           <div style="text-align:center">
             <div id="rateStars" style="display:flex;justify-content:center;gap:8px;margin-bottom:8px">
               <button onclick="setRating(1)" style="background:none;border:none;cursor:pointer;font-size:32px;padding:2px;line-height:1;transition:transform .2s" onmouseover="hlStars(1)" onmouseout="hlStars(window._myRating||0)">☆</button>
@@ -675,7 +680,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
         <!-- CHAT BOX -->
         <div class="card" style="padding:14px">
-          <div class="card-head">💬 الشات العام <span style="font-size:0.65rem;font-weight:400;color:var(--muted)">يظهر للجميع</span></div>
+          <div class="card-head">💬 الدردشة العامة <span style="font-size:0.65rem;font-weight:400;color:var(--muted)">يظهر للجميع</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
             <input type="text" id="chatName" placeholder="✍️ اسمك *" style="padding:9px 13px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:50px;color:var(--text);font-family:Cairo,sans-serif;font-size:0.8rem;outline:none;direction:rtl" oninput="localStorage.setItem('chatName',this.value)"/>
             <input type="tel" id="chatPhone" placeholder="📱 موبايلك *" maxlength="11" inputmode="numeric" style="padding:9px 13px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:50px;color:var(--text);font-family:Cairo,sans-serif;font-size:0.8rem;outline:none;direction:ltr" oninput="this.value=this.value.replace(/[^0-9]/g,'');localStorage.setItem('chatPhone',this.value)"/>
@@ -688,7 +693,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
         <!-- JOIN GROUP -->
         <div class="card">
-          <div class="card-head">💬 جروب الفريق على واتساب</div>
+          <div class="card-head">💬 جروب علي الواتساب</div>
           <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;line-height:1.8">
             الانضمام للجروب يتم بموافقة الإدارة فقط — اضغط الزرار وسيصلهم طلبك تلقائياً
           </p>
@@ -866,10 +871,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <span class="up-txt" id="lUpTxt"></span>
               </div>
               <div class="ff"><label>الاسم الكامل *</label><input type="text" id="lName" placeholder="اسم القائد"/></div>
-              <div class="ff"><label>الدور / المنصب</label><input type="text" id="lRole" placeholder="قائد الفريق..."/></div>
+              <div class="ff"><label>الدور / المنصب</label><input type="text" id="lRole" placeholder="قائد المجموعة..."/></div>
               <div class="fr2">
                 <div class="ff"><label>واتساب (مع كود الدولة)</label><input type="tel" id="lWa" placeholder="201xxxxxxxxx"/></div>
-                <div class="ff"><label>رقم الهاتف</label><input type="tel" id="lPh" placeholder="01xxxxxxxxx"/></div>
+                <div class="ff"><label>رقم الموبايل</label><input type="tel" id="lPh" placeholder="01xxxxxxxxx"/></div>
               </div>
               <div class="ff"><label>رابط فيسبوك</label><input type="text" id="lFb" placeholder="https://facebook.com/..."/></div>
               <button class="sbtn" onclick="saveLeader()">💾 حفظ القائد</button>
@@ -880,7 +885,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <div id="adm-track" class="asec">
               <div class="tadd">
                 <input type="text" id="mName" placeholder="اسم العضو الكامل"/>
-                <select id="mGender"><option value="male">👦 ذكر</option><option value="female">👧 أنثى</option></select>
+                <select id="mGender"><option value="male">👦 ولد</option><option value="female">👧 بنت</option></select>
                 <button class="add-btn" onclick="addMember()">+ إضافة</button>
               </div>
               <div class="sbar">
@@ -893,11 +898,11 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;margin-top:10px">
                 <div style="background:rgba(21,101,192,0.15);border:1px solid rgba(21,101,192,0.3);border-radius:10px;padding:10px;text-align:center">
                   <div style="font-size:1.3rem;font-weight:900;color:#2196f3;font-family:Tajawal,sans-serif" id="stMales">0</div>
-                  <div style="font-size:0.65rem;color:var(--muted)">👦 ذكور</div>
+                  <div style="font-size:0.65rem;color:var(--muted)">👦 أولاد</div>
                 </div>
                 <div style="background:rgba(194,24,91,0.12);border:1px solid rgba(194,24,91,0.28);border-radius:10px;padding:10px;text-align:center">
                   <div style="font-size:1.3rem;font-weight:900;color:#e91e8c;font-family:Tajawal,sans-serif" id="stFemales">0</div>
-                  <div style="font-size:0.65rem;color:var(--muted)">👧 إناث</div>
+                  <div style="font-size:0.65rem;color:var(--muted)">👧 بنات</div>
                 </div>
               </div>
               <!-- WHATSAPP BROADCAST -->
@@ -906,8 +911,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <textarea id="broadcastMsg" rows="3" placeholder="اكتب رسالتك هنا..." style="width:100%;padding:9px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:Cairo,sans-serif;font-size:0.82rem;outline:none;resize:none;margin-bottom:8px"></textarea>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
                   <button onclick="broadcastWA('all')" style="flex:1;padding:9px;background:rgba(0,200,100,0.15);border:1px solid rgba(0,200,100,0.3);border-radius:8px;color:#4caf50;font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">💬 الكل</button>
-                  <button onclick="broadcastWA('male')" style="flex:1;padding:9px;background:rgba(33,150,243,0.12);border:1px solid var(--border2);border-radius:8px;color:var(--blue3);font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">👦 ذكور</button>
-                  <button onclick="broadcastWA('female')" style="flex:1;padding:9px;background:rgba(194,24,91,0.1);border:1px solid rgba(194,24,91,0.25);border-radius:8px;color:#e91e8c;font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">👧 إناث</button>
+                  <button onclick="broadcastWA('male')" style="flex:1;padding:9px;background:rgba(33,150,243,0.12);border:1px solid var(--border2);border-radius:8px;color:var(--blue3);font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">👦 أولاد</button>
+                  <button onclick="broadcastWA('female')" style="flex:1;padding:9px;background:rgba(194,24,91,0.1);border:1px solid rgba(194,24,91,0.25);border-radius:8px;color:#e91e8c;font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">👧 بنات</button>
                 </div>
                 <div id="broadcastResult" style="margin-top:8px;font-size:0.72rem;color:var(--muted)"></div>
               </div>
@@ -945,7 +950,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               </div>
               <div class="ff"><label>اسم العضو *</label><input type="text" id="honName" placeholder="اسم العضو"/></div>
               <div class="ff"><label>سبب التكريم *</label><input type="text" id="honReason" placeholder="أفضل كشاف / دورة متميزة..."/></div>
-              <div class="ff"><label>الشارة / اللقب</label><input type="text" id="honBadge" placeholder="🥇 الأول على الفريق"/></div>
+              <div class="ff"><label>الشارة / اللقب</label><input type="text" id="honBadge" placeholder="🥇 الأول على المجموعة"/></div>
               <button class="sbtn" onclick="saveHonor()">💾 إضافة للوحة الشرف</button>
               <div style="margin-top:14px" id="honorAdmList"></div>
             </div>
@@ -1018,7 +1023,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
   <!-- FOOTER -->
   <div style="text-align:center;padding:20px 16px 8px;border-top:1px solid rgba(33,150,243,0.1);margin-top:10px">
     <div style="font-size:0.65rem;color:rgba(255,255,255,0.25);line-height:2">
-      <div>© جميع الحقوق محفوظة لفريق أسد البحار للكشافة البحرية</div>
+      <div>© جميع الحقوق محفوظة لمجموعة أسد البحار للكشافة البحرية</div>
       <div style="color:rgba(255,255,255,0.35);margin-top:2px">فكرة وتنفيذ: <span style="color:rgba(0,180,216,0.6);font-weight:700">شادي حجاب</span></div>
       <div style="margin-top:2px">
         <a href="tel:01006857145" style="color:rgba(255,255,255,0.3);text-decoration:none">📞 01006857145</a>
@@ -1292,6 +1297,7 @@ let leaders=[];
 onSnapshot(query(LC,orderBy('createdAt','asc')),snap=>{
   leaders=snap.docs.map(d=>({id:d.id,...d.data()}));
   renderLeadersPub();renderLeadersAdm();renderChips();renderContactDirect();
+  checkBirthdays();
 });
 function renderChips(){
   const el=document.getElementById('leaderChips');
@@ -1457,6 +1463,7 @@ let members=[];
 onSnapshot(MC,snap=>{
   members=snap.docs.map(d=>({id:d.id,...d.data()}));
   renderPubMems();renderAdmMems();renderRank();
+  checkBirthdays();
   // Update header counter
   const el=document.getElementById('cntMembers');
   if(el) animateCount(el, snap.size);
@@ -1477,7 +1484,7 @@ function renderPubMems(){
         <span style="background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:1px 8px;font-size:0.7rem;margin-right:auto">${list.length}</span>
       </div>
       ${list.map((m,i)=>{
-        const av=m.gender==='male'?'👦':'👧';
+        const av=m.gender==='male'?'⛺':'🏕️';
         const meta=[m.grade,m.group,m.patrol].filter(Boolean).join(' · ');
         return `<div class="mem-pub" style="animation-delay:${i*0.04}s">
           <div class="mem-pub-img">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:`<span>${av}</span>`}</div>
@@ -1495,8 +1502,8 @@ function renderPubMems(){
     </div>`;
   };
   el.innerHTML='<div class="page">'+
-    renderGroup(males,'👦','الذكور','linear-gradient(135deg,#0a2a5e,#1565c0)')+
-    renderGroup(females,'👧','الإناث','linear-gradient(135deg,#880e4f,#c2185b)')+
+    renderGroup(males,'👦','ولاد','linear-gradient(135deg,#0a2a5e,#1565c0)')+
+    renderGroup(females,'👧','بنات','linear-gradient(135deg,#880e4f,#c2185b)')+
   '</div>';
 }
 window.addMember=async function(){
@@ -1531,6 +1538,42 @@ function calcPoints(m){
   const abs=(m.absence||0)*2;
   return rating+badges+courses+att-abs;
 }
+function checkBirthdays(){
+  const banner=document.getElementById('bdayBanner');
+  const list=document.getElementById('bdayList');
+  if(!banner||!list)return;
+  const now=new Date();
+  const todayDay=now.getDate();
+  const todayMonth=now.getMonth()+1;
+  // Check members + leaders for today's birthday
+  const allPeople=[...members,...leaders];
+  const todayBdays=allPeople.filter(p=>{
+    if(!p.dob)return false;
+    // Support formats: DD/MM/YYYY or YYYY-MM-DD
+    let day,month;
+    if(p.dob.includes('/')){
+      const parts=p.dob.split('/');
+      day=parseInt(parts[0]);month=parseInt(parts[1]);
+    }else if(p.dob.includes('-')){
+      const parts=p.dob.split('-');
+      day=parseInt(parts[2]);month=parseInt(parts[1]);
+    }else return false;
+    return day===todayDay && month===todayMonth;
+  });
+  if(!todayBdays.length){banner.style.display='none';return;}
+  banner.style.display='block';
+  list.innerHTML=todayBdays.map(p=>{
+    const isAdmin=document.getElementById('sec-admin')&&document.getElementById('admPanel')&&document.getElementById('admPanel').style.display!=='none';
+    const waBtn=`<button onclick="sendBdayWA('${esc(p.name)}','${esc(p.whatsapp||p.phone||'')}')" style="background:rgba(255,255,255,.25);border:none;border-radius:20px;padding:4px 12px;color:#fff;font-family:Cairo,sans-serif;font-size:0.75rem;font-weight:700;cursor:pointer;margin-right:8px">📲 تهنئة واتساب</button>`;
+    return `<div style="margin-bottom:6px">🎉 <b>${esc(p.name)}</b> — كل عام وأنت بخير يا كشاف! ${waBtn}</div>`;
+  }).join('');
+}
+window.sendBdayWA=function(name,phone){
+  if(!phone){toast('لا يوجد رقم واتساب لهذا الشخص','err');return;}
+  const num=phone.replace(/^0/,'20');
+  const msg=encodeURIComponent(`🎂 كل عام وأنت بخير يا ${name}!\nمن مجموعة أسد البحار للكشافة البحرية 🦁⚓`);
+  window.open(`https://wa.me/${num}?text=${msg}`,'_blank');
+};
 function renderRank(){
   const el=document.getElementById('rankList');
   if(!el)return;
@@ -1538,7 +1581,7 @@ function renderRank(){
   const ranked=[...members].map(m=>({...m,points:calcPoints(m)})).sort((a,b)=>b.points-a.points);
   const medals=['🥇','🥈','🥉'];
   el.innerHTML=ranked.map((m,i)=>{
-    const av=m.gender==='male'?'👦':'👧';
+    const av=m.gender==='male'?'⛺':'🏕️';
     const medal=i<3?medals[i]:`#${i+1}`;
     return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:${i<3?'rgba(244,165,35,0.08)':'var(--bg2)'};border-radius:12px;margin-bottom:8px;border:1px solid ${i<3?'rgba(244,165,35,0.25)':'var(--border)'}">
       <div style="font-size:${i<3?'1.4rem':'0.9rem'};font-weight:900;color:${i<3?'#f4a523':'var(--muted)'};min-width:32px;text-align:center">${medal}</div>
@@ -1566,16 +1609,16 @@ window.printMember=function(id){
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>استمارة ${m.name}</title>
   <style>body{font-family:Cairo,sans-serif;padding:30px;color:#000;direction:rtl}h1{color:#1a3a6b;font-size:1.4rem;margin-bottom:4px}h2{color:#2271b3;font-size:1rem;margin-bottom:20px;font-weight:normal}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{border:1px solid #ccd;border-radius:8px;padding:10px 12px}.field .lbl{font-size:0.68rem;color:#666;margin-bottom:3px}.field .val{font-size:0.9rem;font-weight:700}.full{grid-column:1/-1}.header{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #1a3a6b}.logo{font-size:50px}.tags{display:flex;flex-wrap:wrap;gap:5px}.tag{background:#e8f0fa;border:1px solid #b8c8dc;border-radius:20px;padding:2px 8px;font-size:0.72rem}</style></head>
-  <body><div class="header"><div class="logo">🦁</div><div><h1>فريق أسد البحار للكشافة البحرية</h1><h2>استمارة بيانات العضو</h2></div></div>
+  <body><div class="header"><div class="logo">🦁</div><div><h1>مجموعة أسد البحار للكشافة البحرية</h1><h2>استمارة بيانات العضو</h2></div></div>
   <div class="grid">
   <div class="field"><div class="lbl">الاسم الكامل</div><div class="val">${esc(m.name)}</div></div>
-  <div class="field"><div class="lbl">الجنس</div><div class="val">${m.gender==='male'?'ذكر':'أنثى'}</div></div>
+  <div class="field"><div class="lbl">الجنس</div><div class="val">${m.gender==='male'?'ولد':'بنت'}</div></div>
   <div class="field"><div class="lbl">العمر</div><div class="val">${esc(m.age)||'—'}</div></div>
   <div class="field"><div class="lbl">المرحلة الدراسية</div><div class="val">${esc(m.grade)||'—'}</div></div>
-  <div class="field"><div class="lbl">الصفة في الفريق</div><div class="val">${esc(m.role)||'—'}</div></div>
+  <div class="field"><div class="lbl">الصفة في المجموعة</div><div class="val">${esc(m.role)||'—'}</div></div>
   <div class="field"><div class="lbl">اسم المجموعة</div><div class="val">${esc(m.group)||'—'}</div></div>
   <div class="field"><div class="lbl">اسم الطليعة</div><div class="val">${esc(m.patrol)||'—'}</div></div>
-  <div class="field"><div class="lbl">رقم الهاتف</div><div class="val">${esc(m.phone)||'—'}</div></div>
+  <div class="field"><div class="lbl">رقم الموبايل</div><div class="val">${esc(m.phone)||'—'}</div></div>
   <div class="field"><div class="lbl">واتساب</div><div class="val">${esc(m.whatsapp)||'—'}</div></div>
   <div class="field full"><div class="lbl">الشارات</div><div class="tags">${(m.badges||[]).map(b=>`<span class="tag">🏅 ${esc(b)}</span>`).join('')||'—'}</div></div>
   <div class="field full"><div class="lbl">الدورات</div><div class="tags">${(m.courses||[]).map(c=>`<span class="tag">📚 ${esc(c)}</span>`).join('')||'—'}</div></div>
@@ -1609,7 +1652,7 @@ function renderAdmMems(){
     const stars=[1,2,3,4,5].map(i=>`<button class="star" onclick="setRat('${m.id}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
     const bdgs=(m.badges||[]).map((b,i)=>`<span class="tag-b">🏅${esc(b)}<i class="xt" onclick="rmBadge('${m.id}',${i})">✕</i></span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد شارات</span>';
     const crss=(m.courses||[]).map((c,i)=>`<span class="tag-c">📚${esc(c)}<i class="xt" onclick="rmCourse('${m.id}',${i})">✕</i></span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد دورات</span>';
-    const av=m.gender==='male'?'👦':'👧';
+    const av=m.gender==='male'?'⛺':'🏕️';
     const rolesList=m.gender==='female'?ROLES_F:ROLES_M;
     const meta=[m.role,m.group,m.patrol,m.grade].filter(Boolean).join(' · ')||'اضغط لعرض البيانات';
     return `
@@ -1630,12 +1673,12 @@ function renderAdmMems(){
           <button class="mimg-btn" onclick="document.getElementById('mfi${m.id}').click()">📷 رفع</button>
         </div>
         <div class="pgrid">
-          <div class="pf"><label>رقم الهاتف</label><input id="ph${m.id}" type="tel" value="${esc(m.phone||'')}" placeholder="01xxxxxxxxx"/></div>
+          <div class="pf"><label>رقم الموبايل</label><input id="ph${m.id}" type="tel" value="${esc(m.phone||'')}" placeholder="01xxxxxxxxx"/></div>
           <div class="pf"><label>واتساب (مع كود الدولة)</label><input id="wa${m.id}" type="tel" value="${esc(m.whatsapp||'')}" placeholder="201xxxxxxxxx"/></div>
           <div class="pf full"><label>الرقم القومي</label><input id="nid${m.id}" type="text" value="${esc(m.nationalId||'')}" placeholder="14 رقم" maxlength="14"/></div><div class="pf"><label>العمر</label><input id="age${m.id}" type="number" value="${esc(m.age||'')}" placeholder="بالسنوات"/></div>
-          <div class="pf"><label>تاريخ الميلاد</label><input id="dob${m.id}" type="date" value="${esc(m.dob||'')}"/></div>
+          <div class="pf"><label>تاريخ الميلاد</label><input id="dob${m.id}" type="text" inputmode="numeric" placeholder="مثال: 15/06/2010" value="${esc(m.dob||'')}"/></div>
           <div class="pf"><label>المرحلة الدراسية</label><select id="gr${m.id}">${['<option value="">اختر...</option>',...GRADES.map(g=>`<option ${m.grade===g?'selected':''}>${g}</option>`)].join('')}</select></div>
-          <div class="pf"><label>الصفة في الفريق</label><select id="rol${m.id}">${['<option value="">اختر...</option>',...rolesList.map(r=>`<option ${m.role===r?'selected':''}>${r}</option>`)].join('')}</select></div>
+          <div class="pf"><label>الصفة في المجموعة</label><select id="rol${m.id}">${['<option value="">اختر...</option>',...rolesList.map(r=>`<option ${m.role===r?'selected':''}>${r}</option>`)].join('')}</select></div>
           <div class="pf"><label>اسم المجموعة</label><input id="grp${m.id}" type="text" value="${esc(m.group||'')}" placeholder="اسم المجموعة"/></div>
           <div class="pf"><label>اسم الطليعة</label><input id="pat${m.id}" type="text" value="${esc(m.patrol||'')}" placeholder="اسم الطليعة"/></div>
           <div class="pf full"><label>ملاحظات</label><textarea id="not${m.id}" rows="2" placeholder="ملاحظات...">${esc(m.notes||'')}</textarea></div>
@@ -1663,8 +1706,8 @@ function renderAdmMems(){
       <span style="background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:1px 8px;font-size:0.7rem;margin-right:auto">${count} عضو</span>
     </div>`;
   el.innerHTML=
-    (males.length?groupHeader('الذكور','👦','linear-gradient(135deg,#0a2a5e,#1565c0)',males.length)+males.map(renderMemberCard).join(''):'')+
-    (females.length?groupHeader('الإناث','👧','linear-gradient(135deg,#880e4f,#c2185b)',females.length)+females.map(renderMemberCard).join(''):'');
+    (males.length?groupHeader('الأولاد','👦','linear-gradient(135deg,#0a2a5e,#1565c0)',males.length)+males.map(renderMemberCard).join(''):'')+
+    (females.length?groupHeader('البنات','👧','linear-gradient(135deg,#880e4f,#c2185b)',females.length)+females.map(renderMemberCard).join(''):'');
 }
 
 // INBOX
@@ -1839,13 +1882,13 @@ window.submitReg=async function(){
   const status=document.getElementById('regStatus');
   if(!name){toast('أدخل اسمك الكامل ⚠️','err');return;}
   if(nid.length!==14||!/^\d{14}$/.test(nid)){toast('الرقم القومي يجب أن يكون 14 رقم ⚠️','err');return;}
-  if(!gender){toast('اختر الجنس ⚠️','err');return;}
-  if(!phone){toast('أدخل رقم هاتفك ⚠️','err');return;}
+  if(!gender){toast('اختر النوع ⚠️','err');return;}
+  if(!phone){toast('أدخل رقم موبايلك ⚠️','err');return;}
   // Check duplicate NID
   const existing=pendingReqs.find(r=>r.nationalId===nid);
   if(existing){
     if(existing.status==='pending') status.innerHTML='<span style="color:var(--warn)">⏳ طلبك قيد المراجعة — انتظر موافقة الإدارة</span>';
-    else if(existing.status==='approved') status.innerHTML='<span style="color:var(--ok)">✅ تم قبولك في الفريق!</span>';
+    else if(existing.status==='approved') status.innerHTML='<span style="color:var(--ok)">✅ تم قبولك في المجموعة!</span>';
     else status.innerHTML='<span style="color:var(--err)">❌ تم رفض طلبك — تواصل مع الإدارة</span>';
     return;
   }
@@ -1882,7 +1925,7 @@ window.checkRegStatus=function(){
   el.innerHTML=`<div style="padding:12px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:10px">
     <div style="font-size:1rem;font-weight:800;color:${s.color};margin-bottom:5px">${s.icon} ${s.text}</div>
     <div style="font-size:0.8rem;color:var(--text)">${esc(req.name)}</div>
-    ${req.status==='approved'?'<div style="font-size:0.72rem;color:var(--ok);margin-top:5px">🎉 مرحباً بك في فريق أسد البحار!</div>':''}
+    ${req.status==='approved'?'<div style="font-size:0.72rem;color:var(--ok);margin-top:5px">🎉 مرحباً بك في مجموعة أسد البحار!</div>':''}
     ${req.status==='rejected'?'<div style="font-size:0.72rem;color:var(--muted);margin-top:5px">تواصل مع الإدارة لمعرفة السبب</div>':''}
   </div>`;
 };
@@ -1913,7 +1956,7 @@ function renderAdmReqs(){
         ${statusBadge[r.status]||''}
       </div>
       <div style="font-size:0.7rem;color:var(--blue2);font-family:Tajawal,sans-serif;letter-spacing:1px;margin-bottom:4px">🪪 ${esc(r.nationalId||'—')}</div>
-      <div style="font-size:0.68rem;color:var(--muted);margin-bottom:4px">${r.gender==='male'?'👦 ذكر':'👧 أنثى'} ${r.age?'· العمر: '+r.age:''}  ${r.grade?'· '+r.grade:''}</div>
+      <div style="font-size:0.68rem;color:var(--muted);margin-bottom:4px">${r.gender==='male'?'🧒‍♂️ ولد':'🧒‍♀️ بنت'} ${r.age?'· العمر: '+r.age:''} ${r.grade?'· '+r.grade:''}</div>
       ${r.phone?`<div style="font-size:0.72rem;color:var(--text2);margin-bottom:6px">📞 ${esc(r.phone)}</div>`:''}
       ${r.note?`<div style="font-size:0.74rem;color:var(--muted);font-style:italic;margin-bottom:8px">"${esc(r.note)}"</div>`:''}
       ${r.status==='pending'?`
@@ -1942,7 +1985,7 @@ window.approveReq=async function(id){
   const phone=(req.whatsapp||req.phone||'').replace(/^0/,'20');
   if(phone){
     const msg=encodeURIComponent(`السلام عليكم ورحمة الله وبركاته 🌟
-فريق أسد البحار يرحب بك بين أفراده 🤝
+مجموعة أسد البحار ترحب بك بين أفراده 🤝
 نتمنى لك رحلة مليئة بالنجاح والتعلم والمغامرات الممتعة
 ودوام التوفيق والتألق معنا دائمًا 💙⚓
 أهلا بك عضوا في أسرة أسد البحار 🦁🌊`);
@@ -2060,7 +2103,7 @@ function renderChat(){
   const myName=localStorage.getItem('chatName')||'';
   el.innerHTML=chatMsgs.map(m=>{
     const isMine=m.name&&m.name===myName&&myName!=='';
-    const av=isMine?'🧑‍✈️':'👤';
+    const av=isMine?'👦':'👤';
     const time=m.createdAt?.toDate?.()?.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})||'';
     return `<div style="display:flex;gap:7px;align-items:flex-end;${isMine?'flex-direction:row-reverse':''}">
       <div style="width:30px;height:30px;border-radius:50%;background:var(--bg);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">${av}</div>
@@ -2148,8 +2191,8 @@ onSnapshot(doc(db,'meta','featuredVideo'),snap=>{
 window.requestJoinGroup=function(){
   const name=localStorage.getItem('chatName')||'';
   const msg=encodeURIComponent(`السلام عليكم،
-أنا ${name||'أحد أعضاء الفريق'} عضو في فريق أسد البحار
-أطلب الانضمام لجروب واتساب الفريق 🦁⚓`);
+أنا ${name||'أحد أعضاء المجموعة'} عضو في مجموعة أسد البحار
+أطلب الانضمام لجروب واتساب المجموعة 🦁⚓`);
   window.open(`https://wa.me/201552578618?text=${msg}`,'_blank');
 };
 
@@ -2167,7 +2210,7 @@ window.myaccLogin=function(){
     const nidMatch=nid.length>=4 && nid.slice(-4)===nidIn;
     return phoneMatch && nidMatch;
   });
-  if(!found){toast('البيانات غير صحيحة، تأكد من الرقمين ❌','err');return;}
+  if(!found){toast('تأكد من بياناتك يا كشاف ❌','err');return;}
   myaccCurrentId=found.id;
   myaccNewImgUrl=null;
   document.getElementById('myaccName').value=found.name||'';
@@ -2329,9 +2372,9 @@ window.clearAll=async function(){
   toast('تم مسح البيانات');
 };
 window.clearChat=async function(){
-  if(!confirm('مسح كل رسائل الشات؟'))return;
+  if(!confirm('مسح كل رسائل الدردشة؟'))return;
   const s=await getDocs(CHAT);await Promise.all(s.docs.map(d=>deleteDoc(d.ref)));
-  toast('تم مسح الشات','ok');
+  toast('تم مسح الدردشة','ok');
 };
 function renderAdmChat(){
   const el=document.getElementById('admChatList');if(!el)return;
