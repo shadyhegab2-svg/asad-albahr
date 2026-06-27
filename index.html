@@ -248,6 +248,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .star{background:none;border:none;cursor:pointer;font-size:19px;padding:1px;line-height:1}
 .rat-txt{font-size:0.74rem;color:var(--gold);margin-top:3px;font-weight:700;min-height:16px}
 .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.exc-tag{background:linear-gradient(135deg,rgba(244,165,35,.15),rgba(255,107,107,.12));border:1px solid rgba(244,165,35,.35);border-radius:20px;padding:4px 10px;font-size:0.76rem;display:inline-flex;align-items:center;gap:5px}
+.exc-tag button{background:none;border:none;cursor:pointer;color:#c0392b;font-size:0.7rem;padding:0}
 .tag-b{background:var(--blue-lighter);border:1px solid var(--border2);border-radius:20px;padding:3px 8px;font-size:0.68rem;color:var(--navy2);display:inline-flex;align-items:center;gap:3px;font-weight:600}
 .tag-c{background:#fff8e8;border:1px solid #f0d890;border-radius:20px;padding:3px 8px;font-size:0.68rem;color:var(--warn);display:inline-flex;align-items:center;gap:3px;font-weight:600}
 .xt{cursor:pointer;color:var(--muted);font-size:9px;font-style:normal}.xt:hover{color:var(--danger)}
@@ -1534,9 +1536,10 @@ function calcPoints(m){
   const rating=(m.rating||0)*10;
   const badges=(m.badges||[]).length*5;
   const courses=(m.courses||[]).length*8;
+  const excellence=(m.excellence||[]).length*6;
   const att=(m.attendance||0)*3;
   const abs=(m.absence||0)*2;
-  return rating+badges+courses+att-abs;
+  return rating+badges+courses+excellence+att-abs;
 }
 function checkBirthdays(){
   const banner=document.getElementById('bdayBanner');
@@ -1589,6 +1592,7 @@ function renderRank(){
       <div style="flex:1">
         <div style="font-weight:700;color:var(--text);font-size:0.88rem">${esc(m.name)}</div>
         <div style="font-size:0.68rem;color:var(--muted)">⭐${m.rating||0} · 🏅${(m.badges||[]).length} · 📚${(m.courses||[]).length} · ✅${m.attendance||0} · ❌${m.absence||0}</div>
+        ${(m.excellence||[]).length>0?`<div style="font-size:0.7rem;margin-top:4px">${(m.excellence||[]).join(' · ')}</div>`:''}
       </div>
       <div style="font-family:Tajawal,sans-serif;font-weight:900;font-size:1.1rem;color:var(--blue3)">${m.points}</div>
     </div>`;
@@ -1601,8 +1605,36 @@ window.savProf=async function(id){
   const mo=toEn(g('dobM')).trim();
   const y=toEn(g('dobY')).trim();
   const dob=(d&&mo&&y)?`${d.padStart(2,'0')}/${mo.padStart(2,'0')}/${y}`:'';
-  await updateDoc(doc(db,'members',id),{phone:g('ph'),whatsapp:g('wa'),nationalId:g('nid'),age:g('age'),grade:g('gr'),group:g('grp'),patrol:g('pat'),role:g('rol'),notes:g('not'),dob});
+  const name=g('nm').trim();
+  const updates={phone:g('ph'),whatsapp:g('wa'),nationalId:g('nid'),age:g('age'),grade:g('gr'),group:g('grp'),patrol:g('pat'),role:g('rol'),notes:g('not'),dob};
+  if(name) updates.name=name;
+  await updateDoc(doc(db,'members',id),updates);
   toast('تم حفظ البيانات ✅','ok');
+};
+window.addExcellence=async function(id,badge){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  const list=m.excellence||[];
+  if(list.includes(badge)){toast('هذه الشارة موجودة بالفعل ⚠️','err');return;}
+  await updateDoc(doc(db,'members',id),{excellence:[...list,badge]});
+  toast('تمت إضافة شارة التميز ✅','ok');
+};
+window.removeExcellence=async function(id,badge){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  await updateDoc(doc(db,'members',id),{excellence:(m.excellence||[]).filter(e=>e!==badge)});
+  toast('تم حذف الشارة','ok');
+};
+// Attendance with date and activity type
+window.addAttendanceFull=async function(id,present){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  const today=new Date().toLocaleDateString('ar-EG-u-nu-latn',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const typeEl=document.getElementById('attType'+id);
+  const actType=typeEl?typeEl.value:'تدريب';
+  const log=m.attendanceLog||[];
+  log.push({date:today,type:actType,present});
+  const att=(m.attendance||0)+(present?1:0);
+  const abs=(m.absence||0)+(present?0:1);
+  await updateDoc(doc(db,'members',id),{attendance:att,absence:abs,attendanceLog:log});
+  toast(present?`✅ تم تسجيل حضور - ${today}`:`❌ تم تسجيل غياب - ${today}`,'ok');
 };
 window.uploadMemberImg=async function(id){
   const file=document.getElementById('mfi'+id).files[0];if(!file)return;
@@ -1678,6 +1710,7 @@ function renderAdmMems(){
           <button class="mimg-btn" onclick="document.getElementById('mfi${m.id}').click()">📷 رفع</button>
         </div>
         <div class="pgrid">
+          <div class="pf full"><label>✏️ اسم العضو</label><input id="nm${m.id}" type="text" value="${esc(m.name||'')}" placeholder="الاسم الكامل"/></div>
           <div class="pf"><label>رقم الموبايل</label><input id="ph${m.id}" type="tel" value="${esc(m.phone||'')}" placeholder="01xxxxxxxxx"/></div>
           <div class="pf"><label>واتساب (مع كود الدولة)</label><input id="wa${m.id}" type="tel" value="${esc(m.whatsapp||'')}" placeholder="201xxxxxxxxx"/></div>
           <div class="pf full"><label>الرقم القومي</label><input id="nid${m.id}" type="text" value="${esc(m.nationalId||'')}" placeholder="14 رقم" maxlength="14"/></div><div class="pf"><label>العمر</label><input id="age${m.id}" type="number" value="${esc(m.age||'')}" placeholder="بالسنوات"/></div>
@@ -1695,12 +1728,26 @@ function renderAdmMems(){
         <div class="rat-sec"><div class="sec-lbl">⭐ التقييم العام</div><div class="stars">${stars}</div><div class="rat-txt">${r?RLBLS[r]:''}</div></div>
         <div class="rat-sec">
           <div class="sec-lbl">📋 الحضور والغياب</div>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-            <button onclick="addAttendance('${m.id}',1)" style="flex:1;padding:9px;background:rgba(0,200,100,0.15);border:1px solid rgba(0,200,100,0.3);border-radius:8px;color:#4caf50;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer">✅ حضور (${m.attendance||0})</button>
-            <button onclick="addAttendance('${m.id}',0)" style="flex:1;padding:9px;background:rgba(192,57,43,0.12);border:1px solid rgba(192,57,43,0.28);border-radius:8px;color:#c0392b;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer">❌ غياب (${m.absence||0})</button>
+          <select id="attType${m.id}" style="width:100%;margin:8px 0;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;font-size:0.8rem;background:var(--bg)">
+            <option value="تدريب">🏕️ تدريب</option>
+            <option value="فعالية">⚡ فعالية</option>
+            <option value="رحلة">🚢 رحلة</option>
+            <option value="اجتماع">📋 اجتماع</option>
+          </select>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button onclick="addAttendanceFull('${m.id}',true)" style="flex:1;padding:9px;background:rgba(0,200,100,0.15);border:1px solid rgba(0,200,100,0.3);border-radius:8px;color:#4caf50;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer">✅ حضور (${m.attendance||0})</button>
+            <button onclick="addAttendanceFull('${m.id}',false)" style="flex:1;padding:9px;background:rgba(192,57,43,0.12);border:1px solid rgba(192,57,43,0.28);border-radius:8px;color:#c0392b;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer">❌ غياب (${m.absence||0})</button>
           </div>
+          ${(m.attendanceLog||[]).length>0?`<div style="margin-top:8px;max-height:100px;overflow-y:auto;font-size:0.72rem;color:var(--muted)">${[...(m.attendanceLog||[])].reverse().slice(0,5).map(l=>`<div style="padding:3px 0;border-bottom:1px solid var(--border)">${l.present?'✅':'❌'} ${l.date} · ${l.type}</div>`).join('')}</div>`:''}
         </div>
         <div class="bdg-sec"><div class="sec-lbl">🏅 الشارات</div><div class="tags">${bdgs}</div><div class="tag-add"><input id="bi${m.id}" placeholder="اسم الشارة..." onkeydown="if(event.key==='Enter')addBadge('${m.id}')"/><button onclick="addBadge('${m.id}')">+ إضافة</button></div></div>
+        <div class="bdg-sec">
+          <div class="sec-lbl">🌟 شارات التميز</div>
+          <div class="tags" id="excTags${m.id}">${(m.excellence||[]).map(e=>`<span class="tag exc-tag">${e}<button onclick="removeExcellence('${m.id}','${e}')">✕</button></span>`).join('')}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+            ${['🎨 فن وإبداع','🎵 موهبة موسيقية','📖 تلاوة قرآن','💡 ابتكار وأفكار','🤝 مساعدة الآخرين','⭐ ملتزم بالوعد والقانون','🌊 مهارة بحرية','🏃 رياضة ولياقة','📸 تصوير','🖥️ تكنولوجيا'].map(e=>`<button onclick="addExcellence('${m.id}','${e}')" style="padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-family:Cairo,sans-serif;font-size:0.72rem;cursor:pointer">${e}</button>`).join('')}
+          </div>
+        </div>
         <div class="crs-sec"><div class="sec-lbl">📚 الدورات</div><div class="tags">${crss}</div><div class="tag-add"><input id="ci${m.id}" placeholder="اسم الدورة..." onkeydown="if(event.key==='Enter')addCourse('${m.id}')"/><button onclick="addCourse('${m.id}')">+ إضافة</button></div></div>
         <button class="sav-prof" onclick="savProf('${m.id}')">💾 حفظ البيانات</button>
         <button class="print-btn" onclick="printMember('${m.id}')">🖨️ طباعة الاستمارة</button>
