@@ -563,6 +563,13 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <div id="bdayList" style="color:#fff;font-size:0.84rem;line-height:1.8"></div>
     </div>
 
+    <!-- Upcoming events reminder -->
+    <div id="upcomingBanner" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,#1a3a6b,#2271b3);border-radius:18px;padding:16px;box-shadow:0 4px 18px rgba(26,58,107,.3)">
+      <div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:8px">📅 تذكير بفعالية قادمة!</div>
+      <div id="upcomingList" style="color:#e8f0fa;font-size:0.84rem;line-height:1.9"></div>
+      <button onclick="sendEventReminder()" style="margin-top:10px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:8px 18px;color:#fff;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer">📲 إرسال تذكير للأعضاء عبر واتساب</button>
+    </div>
+
     <div id="sec-ann" class="sec on"><div class="page" id="annList"></div></div>
 
     <!-- LEADERS -->
@@ -837,6 +844,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <button class="atab" onclick="goAdm('album')">📸 ألبوم</button>
               <button class="atab" onclick="goAdm('honor')">🏆 الشرف</button>
               <button class="atab" onclick="goAdm('tasks')">📋 المهام</button>
+              <button class="atab" onclick="goAdm('stats')">📊 إحصائيات</button>
               <button class="atab" onclick="goAdm('settings')">⚙️ إعدادات</button>
             </div>
 
@@ -988,6 +996,19 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <button class="sav-prof" onclick="addTask()">➕ إضافة المهمة</button>
               </div>
               <div id="admTasksList"><div class="empty"><span>📋</span>لا توجد مهام بعد</div></div>
+            </div>
+
+            <!-- STATS -->
+            <div id="adm-stats" class="asec">
+              <div class="card" style="margin-bottom:14px">
+                <div class="card-head">📊 إحصائيات المجموعة</div>
+                <div id="statsBody"><div class="empty"><span>📊</span>جاري التحميل...</div></div>
+              </div>
+              <div class="card">
+                <div class="card-head">💾 تصدير البيانات</div>
+                <button class="sav-prof" onclick="exportExcel()" style="margin-bottom:8px">📥 تصدير بيانات الأعضاء (Excel)</button>
+                <button class="sav-prof" onclick="exportAttendance()" style="background:linear-gradient(135deg,#27ae60,#2ecc71)">📥 تصدير سجل الحضور (Excel)</button>
+              </div>
             </div>
 
             <!-- SETTINGS -->
@@ -1159,7 +1180,7 @@ window.goAdm=function(t){
   document.querySelectorAll('.asec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.atab').forEach(b=>b.classList.remove('on'));
   document.getElementById('adm-'+t).classList.add('on');
-  const tabs=['ann','manann','leaders','track','reqs','inbox','chat','album','honor','tasks','settings'];
+  const tabs=['ann','manann','leaders','track','reqs','inbox','chat','album','honor','tasks','stats','settings'];
   if(t==='reqs') renderAdmReqs();
   if(t==='chat') renderAdmChat();
   const idx=tabs.indexOf(t);
@@ -1168,6 +1189,7 @@ window.goAdm=function(t){
   if(t==='leaders') renderLeadersAdm();
   if(t==='inbox') renderAdmInbox();
   if(t==='tasks') renderAdmTasks();
+  if(t==='stats') renderStats();
   if(t==='album') renderEventsAdm();
   if(t==='honor') renderHonorAdm();
 };
@@ -1541,6 +1563,36 @@ function calcPoints(m){
   const abs=(m.absence||0)*2;
   return rating+badges+courses+excellence+att-abs;
 }
+// ===== UPCOMING EVENTS =====
+let upcomingEventsData=[];
+function checkUpcomingEvents(){
+  const banner=document.getElementById('upcomingBanner');
+  const list=document.getElementById('upcomingList');
+  if(!banner||!list)return;
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
+  const dayAfter=new Date(today);dayAfter.setDate(today.getDate()+2);
+  upcomingEventsData=events.filter(e=>{
+    if(!e.date)return false;
+    const evDate=new Date(e.date);
+    return evDate>=tomorrow && evDate<=dayAfter;
+  });
+  if(!upcomingEventsData.length){banner.style.display='none';return;}
+  banner.style.display='block';
+  list.innerHTML=upcomingEventsData.map(e=>`🗓️ <b>${esc(e.name)}</b> — غداً ${new Date(e.date).toLocaleDateString('ar-EG')}`).join('<br>');
+}
+window.sendEventReminder=function(){
+  if(!upcomingEventsData.length)return;
+  const ev=upcomingEventsData[0];
+  const phones=members.map(m=>m.whatsapp||m.phone).filter(Boolean).map(p=>p.replace(/^0/,'20'));
+  const msg=encodeURIComponent(`📅 تذكير بفعالية غداً!\n\n🦁 ${ev.name}\n📆 ${new Date(ev.date).toLocaleDateString('ar-EG')}\n\nمجموعة أسد البحار للكشافة البحرية ⚓`);
+  if(phones.length){
+    navigator.clipboard.writeText(phones.join(String.fromCharCode(10))).catch(()=>{});
+  }
+  window.open(`https://wa.me/${phones[0]||''}?text=${msg}`,'_blank');
+  toast('تم نسخ الأرقام — افتح واتساب وأرسل للقائمة ✅','ok');
+};
 function checkBirthdays(){
   const banner=document.getElementById('bdayBanner');
   const list=document.getElementById('bdayList');
@@ -1696,7 +1748,7 @@ function renderAdmMems(){
     <div class="mcard">
       <div class="mtop" onclick="togProf('${m.id}')">
         <div class="mav">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:av}</div>
-        <div class="mi"><div class="mn">${esc(m.name)}</div><div class="mm">${esc(meta)}</div></div>
+        <div class="mi"><div class="mn">${esc(m.name)}</div><div class="mm">${esc(meta)} · 📅 ${m.createdAt?.toDate?.()?.toLocaleDateString('ar-EG')||''}</div></div>
         <div class="macts" onclick="event.stopPropagation()">
           <button class="tog ${m.sent?'s':'p'}" onclick="togSent('${m.id}',${m.sent})">${m.sent?'✅ أرسل':'⏳ لم يُرسل'}</button>
           <button class="mdel" onclick="delMem('${m.id}')">🗑️</button>
@@ -2118,8 +2170,10 @@ if(window._myRating){
 
 // ── LIVE COUNTERS ──
 onSnapshot(EVC, snap=>{
+  events=snap.docs.map(d=>({id:d.id,...d.data()}));
   const el=document.getElementById('cntEvents');
   if(el) animateCount(el, snap.size);
+  checkUpcomingEvents();
 });
 function animateCount(el, target){
   const current=parseInt(el.textContent)||0;
@@ -2398,6 +2452,109 @@ window.delTask=async function(id){
   toast('تم الحذف','ok');
 };
 // ===== END TASKS =====
+// ===== STATS =====
+function renderStats(){
+  const el=document.getElementById('statsBody');
+  if(!el)return;
+  if(!members.length){el.innerHTML='<div class="empty"><span>📊</span>لا يوجد أعضاء بعد</div>';return;}
+  const total=members.length;
+  const males=members.filter(m=>m.gender==='male').length;
+  const females=total-males;
+  const totalAtt=members.reduce((s,m)=>s+(m.attendance||0),0);
+  const totalAbs=members.reduce((s,m)=>s+(m.absence||0),0);
+  const totalSessions=totalAtt+totalAbs;
+  const attRate=totalSessions>0?Math.round(totalAtt/totalSessions*100):0;
+  const doneTasks=tasks.filter(t=>t.status==='done').length;
+  const pendingTasks=tasks.filter(t=>t.status==='pending').length;
+  // Top 5 by attendance
+  const top5=[...members].sort((a,b)=>(b.attendance||0)-(a.attendance||0)).slice(0,5);
+  // Excellence count
+  const excellenceCount=members.reduce((s,m)=>s+(m.excellence||[]).length,0);
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:rgba(26,58,107,.08);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:var(--blue3)">${total}</div>
+        <div style="font-size:0.72rem;color:var(--muted)">👥 إجمالي الأعضاء</div>
+      </div>
+      <div style="background:rgba(39,174,96,.08);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:#27ae60">${attRate}%</div>
+        <div style="font-size:0.72rem;color:var(--muted)">✅ نسبة الحضور</div>
+      </div>
+      <div style="background:rgba(52,152,219,.08);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:#3498db">${males}</div>
+        <div style="font-size:0.72rem;color:var(--muted)">🧒‍♂️ أولاد</div>
+      </div>
+      <div style="background:rgba(231,76,60,.08);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:#e74c3c">${females}</div>
+        <div style="font-size:0.72rem;color:var(--muted)">🧒‍♀️ بنات</div>
+      </div>
+      <div style="background:rgba(244,165,35,.08);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:#f4a523">${excellenceCount}</div>
+        <div style="font-size:0.72rem;color:var(--muted)">🌟 شارات تميز</div>
+      </div>
+      <div style="background:rgba(155,89,182,.08);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:#9b59b6">${doneTasks}/${doneTasks+pendingTasks}</div>
+        <div style="font-size:0.72rem;color:var(--muted)">📋 مهام منجزة</div>
+      </div>
+    </div>
+    <div style="font-weight:700;font-size:0.82rem;color:var(--text);margin-bottom:10px">🏆 أكثر الأعضاء حضوراً</div>
+    ${top5.map((m,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg2);border-radius:10px;margin-bottom:6px">
+        <div style="font-weight:900;color:var(--blue3);min-width:20px">#${i+1}</div>
+        <div style="flex:1;font-size:0.82rem;font-weight:600">${esc(m.name)}</div>
+        <div style="font-size:0.78rem;color:#27ae60;font-weight:700">✅ ${m.attendance||0}</div>
+        <div style="font-size:0.78rem;color:#e74c3c;font-weight:700">❌ ${m.absence||0}</div>
+      </div>`).join('')}`;
+}
+// ===== EXPORT EXCEL =====
+window.exportExcel=function(){
+  const rows=[['الاسم','الجنس','الموبايل','واتساب','الرقم القومي','العمر','الصف','تاريخ الميلاد','الصفة الكشفية','الحضور','الغياب','النقاط','شارات التميز','الشارات','الدورات']];
+  members.forEach(m=>{
+    rows.push([
+      m.name||'',
+      m.gender==='male'?'ولد':'بنت',
+      m.phone||'',
+      m.whatsapp||'',
+      m.nationalId||'',
+      m.age||'',
+      m.grade||'',
+      m.dob||'',
+      m.role||'',
+      m.attendance||0,
+      m.absence||0,
+      calcPoints(m),
+      (m.excellence||[]).join(' | '),
+      (m.badges||[]).join(' | '),
+      (m.courses||[]).join(' | '),
+    ]);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const bom='\uFEFF';
+  const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`أعضاء_أسد_البحار_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.csv`;
+  a.click();
+  toast('تم تصدير البيانات ✅','ok');
+};
+window.exportAttendance=function(){
+  const rows=[['الاسم','التاريخ','نوع النشاط','الحضور']];
+  members.forEach(m=>{
+    (m.attendanceLog||[]).forEach(l=>{
+      rows.push([m.name||'',l.date||'',l.type||'',l.present?'حضور':'غياب']);
+    });
+  });
+  if(rows.length===1){toast('لا يوجد سجل حضور بعد ⚠️','err');return;}
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const bom='\uFEFF';
+  const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`سجل_الحضور_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.csv`;
+  a.click();
+  toast('تم تصدير سجل الحضور ✅','ok');
+};
+// ===== END STATS =====
 window.broadcastWA=function(gender){
   const msg=document.getElementById('broadcastMsg').value.trim();
   if(!msg){toast('اكتب الرسالة أولاً ⚠️','err');return;}
