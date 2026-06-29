@@ -557,20 +557,20 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="wrap">
 
     <!-- ANNOUNCEMENTS -->
-    <!-- Birthday announcements (auto-generated) -->
-    <div id="bdayBanner" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,#ff6b6b,#feca57);border-radius:18px;padding:16px;box-shadow:0 4px 18px rgba(255,107,107,.3)">
-      <div style="font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:6px">🎂 عيد ميلاد سعيد!</div>
-      <div id="bdayList" style="color:#fff;font-size:0.84rem;line-height:1.8"></div>
+    <div id="sec-ann" class="sec on">
+      <!-- Birthday banner -->
+      <div id="bdayBanner" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,#ff6b6b,#feca57);border-radius:18px;padding:16px;box-shadow:0 4px 18px rgba(255,107,107,.3)">
+        <div style="font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:6px">🎂 عيد ميلاد سعيد!</div>
+        <div id="bdayList" style="color:#fff;font-size:0.84rem;line-height:1.8"></div>
+      </div>
+      <!-- Upcoming events banner -->
+      <div id="upcomingBanner" style="display:none;margin:12px 16px 8px;background:linear-gradient(135deg,#1a3a6b,#2271b3);border-radius:18px;padding:16px;box-shadow:0 4px 18px rgba(26,58,107,.3)">
+        <div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:8px">📅 تذكير بفعالية قادمة!</div>
+        <div id="upcomingList" style="color:#e8f0fa;font-size:0.84rem;line-height:1.9"></div>
+        <button onclick="sendEventReminder()" style="margin-top:10px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:8px 18px;color:#fff;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer">📲 إرسال تذكير للأعضاء عبر واتساب</button>
+      </div>
+      <div class="page" id="annList"></div>
     </div>
-
-    <!-- Upcoming events reminder -->
-    <div id="upcomingBanner" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,#1a3a6b,#2271b3);border-radius:18px;padding:16px;box-shadow:0 4px 18px rgba(26,58,107,.3)">
-      <div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:8px">📅 تذكير بفعالية قادمة!</div>
-      <div id="upcomingList" style="color:#e8f0fa;font-size:0.84rem;line-height:1.9"></div>
-      <button onclick="sendEventReminder()" style="margin-top:10px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:8px 18px;color:#fff;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer">📲 إرسال تذكير للأعضاء عبر واتساب</button>
-    </div>
-
-    <div id="sec-ann" class="sec on"><div class="page" id="annList"></div></div>
 
     <!-- LEADERS -->
     <div id="sec-leaders" class="sec">
@@ -715,6 +715,16 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
           <div class="card-head">📞 تواصل مع الإدارة</div>
           <div id="contactDirect"></div>
         </div>
+        <!-- INBOX FORM -->
+        <div class="card">
+          <div class="card-head">📬 أرسل رسالة للإدارة</div>
+          <div class="pgrid">
+            <div class="pf full"><label>اسمك</label><input id="inSender" type="text" placeholder="اسمك الكامل"/></div>
+            <div class="pf full"><label>رقم موبايلك</label><input id="inPhone" type="tel" inputmode="numeric" placeholder="01xxxxxxxxx"/></div>
+            <div class="pf full"><label>رسالتك</label><textarea id="inMsg" rows="3" placeholder="اكتب رسالتك هنا..." style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-size:0.82rem;background:var(--bg);resize:none"></textarea></div>
+          </div>
+          <button class="sav-prof" onclick="sendInbox()">📤 إرسال</button>
+        </div>
       </div>
     </div>
 
@@ -821,8 +831,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
           <div class="lock-wrap">
             <div class="lock-ico">🔐</div>
             <h2>لوحة الإدارة</h2>
-            <p>للقادة فقط</p>
-            <input type="password" class="pass-in" id="passIn" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')doLogin()"/>
+            <p>للقادة والعرفاء فقط</p>
+            <input type="text" class="pass-in" id="adminUser" placeholder="اسم المستخدم" onkeydown="if(event.key==='Enter')doLogin()"/>
+            <input type="password" class="pass-in" id="passIn" placeholder="كلمة المرور" style="margin-top:8px" onkeydown="if(event.key==='Enter')doLogin()"/>
             <button class="login-btn" onclick="doLogin()">دخول ⚓</button>
           </div>
         </div>
@@ -830,7 +841,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="admin-panel" id="adminPanel">
           <div class="card">
             <div class="adm-hdr">
-              <div class="adm-title">🛡️ لوحة التحكم</div>
+              <div class="adm-title" id="adm-title">🛡️ لوحة التحكم</div>
               <button class="out-btn" onclick="doLogout()">خروج ↩</button>
             </div>
             <div class="atabs">
@@ -994,6 +1005,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                   <div class="pf"><label>المسؤول</label><input id="taskOwner" type="text" placeholder="اسم المسؤول (اختياري)"/></div>
                 </div>
                 <button class="sav-prof" onclick="addTask()">➕ إضافة المهمة</button>
+                <button class="sav-prof" onclick="broadcastTaskWA()" style="margin-top:8px;background:linear-gradient(135deg,#25963f,#2ecc71)">📲 إرسال إشعار المهمة للأعضاء عبر واتساب</button>
               </div>
               <div id="admTasksList"><div class="empty"><span>📋</span>لا توجد مهام بعد</div></div>
             </div>
@@ -1013,6 +1025,23 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 
             <!-- SETTINGS -->
             <div id="adm-settings" class="asec">
+              <!-- إدارة الأدمنز - يظهر للسوبر أدمن فقط -->
+              <div class="card" id="superAdminCard" style="display:none;margin-bottom:14px">
+                <div class="card-head">👥 إدارة المستخدمين</div>
+                <div id="adminsList" style="margin-bottom:12px"></div>
+                <div class="pgrid">
+                  <div class="pf full"><label>اسم المستخدم الجديد</label><input id="newAdminUser" type="text" placeholder="مثال: قائد أحمد"/></div>
+                  <div class="pf full"><label>كلمة المرور</label><input id="newAdminPass" type="text" placeholder="كلمة مرور قوية"/></div>
+                  <div class="pf full"><label>الدور</label>
+                    <select id="newAdminRole" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg)">
+                      <option value="admin">🛡️ قائد (صلاحيات كاملة)</option>
+                      <option value="patrol">📋 عريف طليعة (صلاحيات محدودة)</option>
+                    </select>
+                  </div>
+                  <div class="pf full" id="patrolNameWrap" style="display:none"><label>اسم الطليعة</label><input id="newAdminPatrol" type="text" placeholder="اسم الطليعة المسؤول عنها"/></div>
+                </div>
+                <button class="sav-prof" onclick="addAdmin()">➕ إضافة مستخدم</button>
+              </div>
               <div class="card" style="margin-bottom:14px">
                 <div class="card-head">▶️ الفيديو المميز (يوتيوب)</div>
                 <div class="pgrid">
@@ -1021,9 +1050,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <button class="sav-prof" onclick="saveFeaturedVideo()">💾 حفظ الفيديو المميز</button>
               </div>
               <div class="stgs">
-                <div class="stg-row"><div class="stg-ico">🔑</div><div class="stg-info"><div class="stg-lbl">تغيير كلمة المرور</div><div class="stg-desc">تعديل باسورد الإدارة</div></div><button class="stg-btn" onclick="chgPass()">تغيير</button></div>
                 <div class="stg-row"><div class="stg-ico">📲</div><div class="stg-info"><div class="stg-lbl">تثبيت التطبيق</div><div class="stg-desc">أضفه لشاشة الهوم</div></div><button class="stg-btn" onclick="doInstall()">تثبيت</button></div>
-                <div class="stg-row"><div class="stg-ico">🗑️</div><div class="stg-info"><div class="stg-lbl">مسح كل البيانات</div><div class="stg-desc">حذف نهائي لا يمكن التراجع</div></div><button class="stg-btn danger" onclick="clearAll()">مسح الكل</button></div>
+                <div class="stg-row" id="clearAllRow" style="display:none"><div class="stg-ico">🗑️</div><div class="stg-info"><div class="stg-lbl">مسح كل البيانات</div><div class="stg-desc">حذف نهائي لا يمكن التراجع</div></div><button class="stg-btn danger" onclick="clearAll()">مسح الكل</button></div>
               </div>
             </div>
 
@@ -1131,6 +1159,7 @@ const GRADES=['رياض الأطفال','ابتدائي','إعدادي','ثان�
 const RLBLS=['','ضعيف','مقبول','جيد','جيد جداً','ممتاز'];
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDate(ts){try{const d=ts?.toDate?ts.toDate():ts?new Date(ts):null;return d?d.toLocaleDateString('ar-EG'):'';}catch(e){return '';}}
 function fdate(d){if(!d)return '';try{return new Date(d).toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'});}catch{return d;}}
 function getPass(){return localStorage.getItem('adm_pass')||'asad2025';}
 
@@ -1572,15 +1601,20 @@ function checkUpcomingEvents(){
   const now=new Date();
   const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
   const tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
-  const dayAfter=new Date(today);dayAfter.setDate(today.getDate()+2);
+  const in3Days=new Date(today);in3Days.setDate(today.getDate()+3);
   upcomingEventsData=events.filter(e=>{
     if(!e.date)return false;
     const evDate=new Date(e.date);
-    return evDate>=tomorrow && evDate<=dayAfter;
+    return evDate>=tomorrow && evDate<=in3Days;
   });
   if(!upcomingEventsData.length){banner.style.display='none';return;}
   banner.style.display='block';
-  list.innerHTML=upcomingEventsData.map(e=>`🗓️ <b>${esc(e.name)}</b> — غداً ${new Date(e.date).toLocaleDateString('ar-EG')}`).join('<br>');
+  list.innerHTML=upcomingEventsData.map(e=>{
+    const evDate=new Date(e.date);
+    const diff=Math.round((evDate-today)/(1000*60*60*24));
+    const when=diff===1?'غداً':diff===2?'بعد غد':`بعد ${diff} أيام`;
+    return `🗓️ <b>${esc(e.name)}</b> — ${when} (${evDate.toLocaleDateString('ar-EG')})`;
+  }).join('<br>');
 }
 window.sendEventReminder=function(){
   if(!upcomingEventsData.length)return;
@@ -1678,15 +1712,34 @@ window.removeExcellence=async function(id,badge){
 // Attendance with date and activity type
 window.addAttendanceFull=async function(id,present){
   const m=members.find(x=>x.id===id);if(!m)return;
-  const today=new Date().toLocaleDateString('ar-EG-u-nu-latn',{day:'2-digit',month:'2-digit',year:'numeric'});
   const typeEl=document.getElementById('attType'+id);
   const actType=typeEl?typeEl.value:'تدريب';
+  const label=present?'✅ حضور':'❌ غياب';
+  if(!confirm(`تأكيد تسجيل ${label} لـ ${m.name}\nالنشاط: ${actType}`))return;
+  const today=new Date().toLocaleDateString('ar-EG-u-nu-latn',{day:'2-digit',month:'2-digit',year:'numeric'});
   const log=m.attendanceLog||[];
   log.push({date:today,type:actType,present});
   const att=(m.attendance||0)+(present?1:0);
   const abs=(m.absence||0)+(present?0:1);
   await updateDoc(doc(db,'members',id),{attendance:att,absence:abs,attendanceLog:log});
+  logActivity(`سجّل ${present?'حضور':'غياب'} للعضو: ${m.name} (${actType})`);
   toast(present?`✅ تم تسجيل حضور - ${today}`:`❌ تم تسجيل غياب - ${today}`,'ok');
+};
+window.undoAttendance=async function(id){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  const log=m.attendanceLog||[];
+  if(!log.length){toast('لا يوجد تسجيل للتراجع عنه ⚠️','err');return;}
+  const last=log[log.length-1];
+  if(!confirm(`تراجع عن: ${last.present?'✅ حضور':'❌ غياب'} - ${last.date} - ${last.name||m.name}`))return;
+  const newLog=log.slice(0,-1);
+  const att=(m.attendance||0)-(last.present?1:0);
+  const abs=(m.absence||0)-(last.present?0:1);
+  await updateDoc(doc(db,'members',id),{
+    attendance:Math.max(0,att),
+    absence:Math.max(0,abs),
+    attendanceLog:newLog
+  });
+  toast('تم التراجع عن آخر تسجيل ↩','ok');
 };
 window.uploadMemberImg=async function(id){
   const file=document.getElementById('mfi'+id).files[0];if(!file)return;
@@ -1733,9 +1786,13 @@ function renderAdmMems(){
   const stM=document.getElementById('stMales');const stF=document.getElementById('stFemales');
   if(stM)stM.textContent=malesCount;if(stF)stF.textContent=femalesCount;
   const el=document.getElementById('mList');
-  if(!members.length){el.innerHTML='<div class="empty"><span>👥</span>أضف أعضاء للمتابعة</div>';return;}
-  const males=[...members].filter(m=>m.gender==='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const females=[...members].filter(m=>m.gender!=='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  // Filter by patrol if patrol leader
+  const visibleMembers=(currentAdmin&&currentAdmin.role==='patrol'&&currentAdmin.patrol)
+    ? members.filter(m=>m.patrol===currentAdmin.patrol)
+    : members;
+  if(!visibleMembers.length){el.innerHTML='<div class="empty"><span>👥</span>لا يوجد أعضاء في طليعتك</div>';return;}
+  const males=[...visibleMembers].filter(m=>m.gender==='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const females=[...visibleMembers].filter(m=>m.gender!=='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const renderMemberCard=m=>{
     const r=m.rating||0;
     const stars=[1,2,3,4,5].map(i=>`<button class="star" onclick="setRat('${m.id}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
@@ -1748,7 +1805,7 @@ function renderAdmMems(){
     <div class="mcard">
       <div class="mtop" onclick="togProf('${m.id}')">
         <div class="mav">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:av}</div>
-        <div class="mi"><div class="mn">${esc(m.name)}</div><div class="mm">${esc(meta)} · 📅 ${m.createdAt?.toDate?.()?.toLocaleDateString('ar-EG')||''}</div></div>
+        <div class="mi"><div class="mn">${esc(m.name)}</div><div class="mm">${esc(meta)}${m.createdAt?' · 📅 '+fmtDate(m.createdAt):''}</div></div>
         <div class="macts" onclick="event.stopPropagation()">
           <button class="tog ${m.sent?'s':'p'}" onclick="togSent('${m.id}',${m.sent})">${m.sent?'✅ أرسل':'⏳ لم يُرسل'}</button>
           <button class="mdel" onclick="delMem('${m.id}')">🗑️</button>
@@ -1790,7 +1847,19 @@ function renderAdmMems(){
             <button onclick="addAttendanceFull('${m.id}',true)" style="flex:1;padding:9px;background:rgba(0,200,100,0.15);border:1px solid rgba(0,200,100,0.3);border-radius:8px;color:#4caf50;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer">✅ حضور (${m.attendance||0})</button>
             <button onclick="addAttendanceFull('${m.id}',false)" style="flex:1;padding:9px;background:rgba(192,57,43,0.12);border:1px solid rgba(192,57,43,0.28);border-radius:8px;color:#c0392b;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer">❌ غياب (${m.absence||0})</button>
           </div>
-          ${(m.attendanceLog||[]).length>0?`<div style="margin-top:8px;max-height:100px;overflow-y:auto;font-size:0.72rem;color:var(--muted)">${[...(m.attendanceLog||[])].reverse().slice(0,5).map(l=>`<div style="padding:3px 0;border-bottom:1px solid var(--border)">${l.present?'✅':'❌'} ${l.date} · ${l.type}</div>`).join('')}</div>`:''}
+          ${(m.attendanceLog||[]).length>0?`
+          <div style="margin-top:10px">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text);margin-bottom:6px">📋 سجل الحضور والغياب</div>
+            <div style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
+              ${[...(m.attendanceLog||[])].reverse().map((l,i,arr)=>`
+              <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:0.72rem">
+                <span style="min-width:20px">${l.present?'✅':'❌'}</span>
+                <span style="flex:1;color:var(--text)">${l.date}</span>
+                <span style="color:var(--muted)">${l.type||''}</span>
+                ${i===0?`<button onclick="undoAttendance('${m.id}')" style="background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:2px 8px;color:#c0392b;font-family:Cairo,sans-serif;font-size:0.68rem;cursor:pointer">↩ تراجع</button>`:''}
+              </div>`).join('')}
+            </div>
+          </div>`:''}
         </div>
         <div class="bdg-sec"><div class="sec-lbl">🏅 الشارات</div><div class="tags">${bdgs}</div><div class="tag-add"><input id="bi${m.id}" placeholder="اسم الشارة..." onkeydown="if(event.key==='Enter')addBadge('${m.id}')"/><button onclick="addBadge('${m.id}')">+ إضافة</button></div></div>
         <div class="bdg-sec">
@@ -2249,23 +2318,128 @@ window.sendChat=async function(){
 };
 
 // ── LOGIN
+// ===== MULTI-ADMIN AUTH SYSTEM =====
+const ADMINS_COL=collection(db,'admins');
+let currentAdmin=null;
 let loggedIn=false;
-window.doLogin=function(){
-  const inp=document.getElementById('passIn');
-  if(inp.value===getPass()){
-    loggedIn=true;
-    document.getElementById('lockCard').style.display='none';
-    document.getElementById('adminPanel').classList.add('on');
-    toast('مرحباً! تم الدخول ✅','ok');
-  }else{inp.classList.add('err');setTimeout(()=>inp.classList.remove('err'),600);toast('كلمة المرور خطأ ❌','err');}
+
+// Show/hide patrol name field based on role
+document.getElementById('newAdminRole')?.addEventListener('change',function(){
+  const wrap=document.getElementById('patrolNameWrap');
+  if(wrap) wrap.style.display=this.value==='patrol'?'block':'none';
+});
+
+window.doLogin=async function(){
+  const user=document.getElementById('adminUser').value.trim();
+  const pass=document.getElementById('passIn').value.trim();
+  if(!user||!pass){toast('أدخل اسم المستخدم وكلمة المرور ⚠️','err');return;}
+  // Check super admin first
+  if(user==='شادي' && pass==='741852'){
+    currentAdmin={id:'super',name:'شادي',role:'super',patrol:null};
+    loginSuccess();return;
+  }
+  // Check Firebase admins
+  try{
+    const snap=await getDocs(ADMINS_COL);
+    const found=snap.docs.map(d=>({id:d.id,...d.data()})).find(a=>a.username===user && a.password===pass);
+    if(found){currentAdmin=found;loginSuccess();}
+    else{
+      document.getElementById('passIn').classList.add('err');
+      setTimeout(()=>document.getElementById('passIn').classList.remove('err'),600);
+      toast('اسم المستخدم أو كلمة المرور خطأ ❌','err');
+    }
+  }catch(e){toast('خطأ في الاتصال ⚠️','err');}
 };
+
+function loginSuccess(){
+  loggedIn=true;
+  document.getElementById('lockCard').style.display='none';
+  document.getElementById('adminPanel').classList.add('on');
+  // Show admin name in header
+  document.getElementById('adm-title').textContent=`🛡️ ${currentAdmin.name}`;
+  // Super admin extras
+  if(currentAdmin.role==='super'){
+    document.getElementById('superAdminCard').style.display='block';
+    document.getElementById('clearAllRow').style.display='flex';
+    renderAdminsList();
+  }
+  // Patrol leader: hide some tabs
+  if(currentAdmin.role==='patrol'){
+    ['leaders','reqs','inbox','album','honor','stats'].forEach(t=>{
+      const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
+      if(btn) btn.style.display='none';
+    });
+  }
+  toast(`مرحباً ${currentAdmin.name}! ✅`,'ok');
+  logActivity('دخل لوحة التحكم');
+}
+
 window.doLogout=function(){
-  loggedIn=false;
+  loggedIn=false;currentAdmin=null;
   document.getElementById('lockCard').style.display='';
   document.getElementById('adminPanel').classList.remove('on');
   document.getElementById('passIn').value='';
+  document.getElementById('adminUser').value='';
+  document.getElementById('adm-title').textContent='🛡️ لوحة التحكم';
+  // Restore hidden tabs
+  document.querySelectorAll('.atab').forEach(b=>b.style.display='');
+  document.getElementById('superAdminCard').style.display='none';
+  document.getElementById('clearAllRow').style.display='none';
 };
-window.chgPass=function(){const p=prompt('كلمة المرور الجديدة:');if(!p)return;if(p.length<4){toast('قصيرة جداً','err');return;}localStorage.setItem('adm_pass',p);toast('تم التغيير ✅','ok');};
+
+async function logActivity(action){
+  if(!currentAdmin)return;
+  try{
+    await addDoc(collection(db,'activityLog'),{
+      adminName:currentAdmin.name,
+      adminRole:currentAdmin.role,
+      action,
+      at:serverTimestamp()
+    });
+  }catch(e){}
+}
+
+async function renderAdminsList(){
+  const el=document.getElementById('adminsList');if(!el)return;
+  const snap=await getDocs(ADMINS_COL);
+  const list=snap.docs.map(d=>({id:d.id,...d.data()}));
+  if(!list.length){el.innerHTML='<div style="color:var(--muted);font-size:0.8rem;margin-bottom:8px">لا يوجد مستخدمون مضافون بعد</div>';return;}
+  el.innerHTML=list.map(a=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg2);border-radius:10px;margin-bottom:6px">
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:0.82rem">${esc(a.username)}</div>
+        <div style="font-size:0.7rem;color:var(--muted)">${a.role==='admin'?'🛡️ قائد':'📋 عريف'}${a.patrol?' · '+a.patrol:''}</div>
+      </div>
+      <button onclick="deleteAdmin('${a.id}')" style="background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:4px 10px;color:#c0392b;font-family:Cairo,sans-serif;font-size:0.72rem;cursor:pointer">🗑️ حذف</button>
+    </div>`).join('');
+}
+
+window.addAdmin=async function(){
+  const username=document.getElementById('newAdminUser').value.trim();
+  const password=document.getElementById('newAdminPass').value.trim();
+  const role=document.getElementById('newAdminRole').value;
+  const patrol=document.getElementById('newAdminPatrol').value.trim();
+  if(!username||!password){toast('أدخل الاسم وكلمة المرور ⚠️','err');return;}
+  if(role==='patrol'&&!patrol){toast('أدخل اسم الطليعة ⚠️','err');return;}
+  await addDoc(ADMINS_COL,{username,password,role,patrol:patrol||null,createdAt:serverTimestamp()});
+  toast(`تم إضافة ${username} ✅`,'ok');
+  document.getElementById('newAdminUser').value='';
+  document.getElementById('newAdminPass').value='';
+  document.getElementById('newAdminPatrol').value='';
+  renderAdminsList();
+  logActivity(`أضاف مستخدم: ${username}`);
+};
+
+window.deleteAdmin=async function(id){
+  if(!confirm('حذف هذا المستخدم؟'))return;
+  await deleteDoc(doc(db,'admins',id));
+  toast('تم الحذف ✅','ok');
+  renderAdminsList();
+};
+
+window.chgPass=function(){toast('كل مستخدم يتواصل مع شادي لتغيير كلمة مروره','ok');};
+// ===== END MULTI-ADMIN AUTH =====
+
 // ===== Featured YouTube video =====
 function extractYtId(url){
   if(!url)return null;
@@ -2430,6 +2604,20 @@ function renderAdmTasks(){
     </div>`;
   }).join('');
 }
+window.broadcastTaskWA=function(){
+  const title=document.getElementById('taskTitle').value.trim();
+  const desc=document.getElementById('taskDesc').value.trim();
+  const due=document.getElementById('taskDue').value;
+  if(!title){toast('اكتب عنوان المهمة أولاً ⚠️','err');return;}
+  const phones=members.map(m=>m.whatsapp||m.phone).filter(Boolean).map(p=>p.replace(/^0/,'20'));
+  if(!phones.length){toast('لا توجد أرقام مسجلة ⚠️','err');return;}
+  const dueText=due?`\n📅 تاريخ الاستحقاق: ${new Date(due).toLocaleDateString('ar-EG')}`:'';
+  const descText=desc?`\n📝 ${desc}`:'';
+  const msg=encodeURIComponent(`📋 مهمة جديدة!\n\n✅ ${title}${descText}${dueText}\n\nمجموعة أسد البحار 🦁⚓`);
+  navigator.clipboard.writeText(phones.join(String.fromCharCode(10))).catch(()=>{});
+  window.open(`https://wa.me/${phones[0]}?text=${msg}`,'_blank');
+  toast('تم نسخ الأرقام — أرسل للقائمة ✅','ok');
+};
 window.addTask=async function(){
   const title=document.getElementById('taskTitle').value.trim();
   if(!title){toast('اكتب عنوان المهمة ⚠️','err');return;}
