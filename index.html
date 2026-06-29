@@ -1787,15 +1787,15 @@ function renderAdmMems(){
   if(stM)stM.textContent=malesCount;if(stF)stF.textContent=femalesCount;
   const el=document.getElementById('mList');
   // Filter by patrol if patrol leader
-  const visibleMembers=(currentAdmin&&currentAdmin.role==='patrol'&&currentAdmin.patrol)
+  const isPatrolUser=currentAdmin&&currentAdmin.role==='patrol'&&currentAdmin.patrol;
+  const visibleMembers=isPatrolUser
     ? members.filter(m=>m.patrol===currentAdmin.patrol)
     : members;
-  if(!visibleMembers.length){el.innerHTML='<div class="empty"><span>👥</span>لا يوجد أعضاء في طليعتك</div>';return;}
+  if(!visibleMembers.length){el.innerHTML=`<div class="empty"><span>👥</span>${isPatrolUser?'لا يوجد أعضاء في طليعتك بعد':'أضف أعضاء للمتابعة'}</div>`;return;}
   const males=[...visibleMembers].filter(m=>m.gender==='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const females=[...visibleMembers].filter(m=>m.gender!=='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const renderMemberCard=m=>{
-    const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
-    const r=m.rating||0;
+    const isPatrol=currentAdmin&&currentAdmin.role==='patrol';    const r=m.rating||0;
     const stars=isPatrol?'':[1,2,3,4,5].map(i=>`<button class="star" onclick="setRat('${m.id}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
     const bdgs=(m.badges||[]).map((b,i)=>`<span class="tag-b">🏅${esc(b)}${isPatrol?'':'<i class="xt" onclick="rmBadge(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد شارات</span>';
     const crss=(m.courses||[]).map((c,i)=>`<span class="tag-c">📚${esc(c)}${isPatrol?'':'<i class="xt" onclick="rmCourse(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد دورات</span>';
@@ -2345,7 +2345,7 @@ window.doLogin=async function(){
   const user=document.getElementById('adminUser').value.trim();
   const pass=document.getElementById('passIn').value.trim();
   if(!user||!pass){toast('أدخل اسم المستخدم وكلمة المرور ⚠️','err');return;}
-  // Check super admin first
+  // Check super admin first (no Firebase needed)
   if(user==='شادي' && pass==='741852'){
     currentAdmin={id:'super',name:'شادي',role:'super',patrol:null};
     loginSuccess();return;
@@ -2353,14 +2353,30 @@ window.doLogin=async function(){
   // Check Firebase admins
   try{
     const snap=await getDocs(ADMINS_COL);
-    const found=snap.docs.map(d=>({id:d.id,...d.data()})).find(a=>a.username===user && a.password===pass);
-    if(found){currentAdmin=found;loginSuccess();}
-    else{
+    const list=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const found=list.find(a=>a.username===user && a.password===pass);
+    if(found){
+      currentAdmin={
+        id:found.id,
+        name:found.username||found.name||user,
+        role:found.role||'admin',
+        patrol:found.patrol||null
+      };
+      loginSuccess();
+    }else{
       document.getElementById('passIn').classList.add('err');
       setTimeout(()=>document.getElementById('passIn').classList.remove('err'),600);
       toast('اسم المستخدم أو كلمة المرور خطأ ❌','err');
     }
-  }catch(e){toast('خطأ في الاتصال ⚠️','err');}
+  }catch(e){
+    // Firebase error - only super admin can login
+    if(user==='شادي' && pass==='741852'){
+      currentAdmin={id:'super',name:'شادي',role:'super',patrol:null};
+      loginSuccess();
+    }else{
+      toast('خطأ في الاتصال — تحقق من الإنترنت ⚠️','err');
+    }
+  }
 };
 
 function loginSuccess(){
@@ -2376,13 +2392,11 @@ function loginSuccess(){
   }
 
   if(currentAdmin.role==='patrol'){
-    // إخفاء كل التابات ما عدا الأعضاء والإعلانات والمهام
     const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','track','manann'];
     hideTabs.forEach(t=>{
       const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
       if(btn) btn.style.display='none';
     });
-    // الانتقال لتاب الأعضاء مباشرة
     goAdm('members');
   }
 
@@ -2602,6 +2616,10 @@ function renderTasks(){
 }
 function renderAdmTasks(){
   const el=document.getElementById('admTasksList');if(!el)return;
+  const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
+  // Show/hide add task card for patrol
+  const addCard=document.querySelector('#adm-tasks .card');
+  if(addCard) addCard.style.display=isPatrol?'none':'block';
   if(!tasks.length){el.innerHTML='<div class="empty"><span>📋</span>لا توجد مهام بعد</div>';return;}
   el.innerHTML=tasks.map(t=>{
     const due=t.due?`📅 ${t.due}`:'';
@@ -2611,12 +2629,12 @@ function renderAdmTasks(){
     return `<div style="padding:12px;background:var(--bg2);border-radius:12px;margin-bottom:10px;border:1px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="font-weight:700;color:var(--text);font-size:0.88rem">${esc(t.title)}</div>
-        <button onclick="updTaskStatus('${t.id}','${next}')" style="font-size:0.75rem;padding:4px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;white-space:nowrap;font-family:Cairo,sans-serif">${status}</button>
+        ${isPatrol?`<span style="font-size:0.75rem;padding:4px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg)">${status}</span>`:`<button onclick="updTaskStatus('${t.id}','${next}')" style="font-size:0.75rem;padding:4px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;white-space:nowrap;font-family:Cairo,sans-serif">${status}</button>`}
       </div>
       ${t.desc?`<div style="color:var(--muted);font-size:0.76rem;margin-top:4px">${esc(t.desc)}</div>`:''}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div style="font-size:0.7rem;color:var(--muted)">${due} ${owner}</div>
-        <button onclick="delTask('${t.id}')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:0.8rem">🗑️ حذف</button>
+        ${isPatrol?'':`<button onclick="delTask('${t.id}')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:0.8rem">🗑️ حذف</button>`}
       </div>
     </div>`;
   }).join('');
