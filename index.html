@@ -1794,10 +1794,11 @@ function renderAdmMems(){
   const males=[...visibleMembers].filter(m=>m.gender==='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const females=[...visibleMembers].filter(m=>m.gender!=='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const renderMemberCard=m=>{
+    const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
     const r=m.rating||0;
-    const stars=[1,2,3,4,5].map(i=>`<button class="star" onclick="setRat('${m.id}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
-    const bdgs=(m.badges||[]).map((b,i)=>`<span class="tag-b">🏅${esc(b)}<i class="xt" onclick="rmBadge('${m.id}',${i})">✕</i></span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد شارات</span>';
-    const crss=(m.courses||[]).map((c,i)=>`<span class="tag-c">📚${esc(c)}<i class="xt" onclick="rmCourse('${m.id}',${i})">✕</i></span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد دورات</span>';
+    const stars=isPatrol?'':[1,2,3,4,5].map(i=>`<button class="star" onclick="setRat('${m.id}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
+    const bdgs=(m.badges||[]).map((b,i)=>`<span class="tag-b">🏅${esc(b)}${isPatrol?'':'<i class="xt" onclick="rmBadge(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد شارات</span>';
+    const crss=(m.courses||[]).map((c,i)=>`<span class="tag-c">📚${esc(c)}${isPatrol?'':'<i class="xt" onclick="rmCourse(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد دورات</span>';
     const av=m.gender==='male'?'⛺':'🏕️';
     const rolesList=m.gender==='female'?ROLES_F:ROLES_M;
     const meta=[m.role,m.group,m.patrol,m.grade].filter(Boolean).join(' · ')||'اضغط لعرض البيانات';
@@ -1807,11 +1808,18 @@ function renderAdmMems(){
         <div class="mav">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:av}</div>
         <div class="mi"><div class="mn">${esc(m.name)}</div><div class="mm">${esc(meta)}${m.createdAt?' · 📅 '+fmtDate(m.createdAt):''}</div></div>
         <div class="macts" onclick="event.stopPropagation()">
-          <button class="tog ${m.sent?'s':'p'}" onclick="togSent('${m.id}',${m.sent})">${m.sent?'✅ أرسل':'⏳ لم يُرسل'}</button>
-          <button class="mdel" onclick="delMem('${m.id}')">🗑️</button>
+          ${isPatrol?'':`<button class="tog ${m.sent?'s':'p'}" onclick="togSent('${m.id}',${m.sent})">${m.sent?'✅ أرسل':'⏳ لم يُرسل'}</button>`}
+          ${isPatrol?'':`<button class="mdel" onclick="delMem('${m.id}')">🗑️</button>`}
         </div>
       </div>
       <div class="mdet" id="prof${m.id}">
+        ${isPatrol?`
+        <div style="padding:12px;background:var(--bg2);border-radius:12px;margin-bottom:12px;font-size:0.82rem">
+          <div style="font-weight:700;margin-bottom:4px">👤 ${esc(m.name)}</div>
+          <div style="color:var(--muted)">${m.role||''} ${m.patrol?'· طليعة '+esc(m.patrol):''}</div>
+          <div style="color:var(--muted);margin-top:2px">✅ حضور: ${m.attendance||0} · ❌ غياب: ${m.absence||0}</div>
+        </div>
+        `:`
         <div class="mimg-wrap">
           <div class="mimg-thumb">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:av}</div>
           <div class="mimg-info">صورة العضو<br><span id="mft${m.id}" style="font-size:0.68rem;color:var(--blue)"></span></div>
@@ -1822,7 +1830,8 @@ function renderAdmMems(){
           <div class="pf full"><label>✏️ اسم العضو</label><input id="nm${m.id}" type="text" value="${esc(m.name||'')}" placeholder="الاسم الكامل"/></div>
           <div class="pf"><label>رقم الموبايل</label><input id="ph${m.id}" type="tel" value="${esc(m.phone||'')}" placeholder="01xxxxxxxxx"/></div>
           <div class="pf"><label>واتساب (مع كود الدولة)</label><input id="wa${m.id}" type="tel" value="${esc(m.whatsapp||'')}" placeholder="201xxxxxxxxx"/></div>
-          <div class="pf full"><label>الرقم القومي</label><input id="nid${m.id}" type="text" value="${esc(m.nationalId||'')}" placeholder="14 رقم" maxlength="14"/></div><div class="pf"><label>العمر</label><input id="age${m.id}" type="number" value="${esc(m.age||'')}" placeholder="بالسنوات"/></div>
+          <div class="pf full"><label>الرقم القومي</label><input id="nid${m.id}" type="text" value="${esc(m.nationalId||'')}" placeholder="14 رقم" maxlength="14"/></div>
+          <div class="pf"><label>العمر</label><input id="age${m.id}" type="number" value="${esc(m.age||'')}" placeholder="بالسنوات"/></div>
           <div class="pf full"><label>تاريخ الميلاد</label><div style="display:flex;gap:6px">
             <input id="dobD${m.id}" type="tel" placeholder="يوم" maxlength="2" style="flex:1;text-align:center" value="${esc((m.dob||'').split('/')[0]||'')}"/>
             <input id="dobM${m.id}" type="tel" placeholder="شهر" maxlength="2" style="flex:1;text-align:center" value="${esc((m.dob||'').split('/')[1]||'')}"/>
@@ -1835,6 +1844,7 @@ function renderAdmMems(){
           <div class="pf full"><label>ملاحظات</label><textarea id="not${m.id}" rows="2" placeholder="ملاحظات...">${esc(m.notes||'')}</textarea></div>
         </div>
         <div class="rat-sec"><div class="sec-lbl">⭐ التقييم العام</div><div class="stars">${stars}</div><div class="rat-txt">${r?RLBLS[r]:''}</div></div>
+        `}
         <div class="rat-sec">
           <div class="sec-lbl">📋 الحضور والغياب</div>
           <select id="attType${m.id}" style="width:100%;margin:8px 0;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;font-size:0.8rem;background:var(--bg)">
@@ -1861,8 +1871,10 @@ function renderAdmMems(){
             </div>
           </div>`:''}
         </div>
-        <div class="bdg-sec"><div class="sec-lbl">🏅 الشارات</div><div class="tags">${bdgs}</div><div class="tag-add"><input id="bi${m.id}" placeholder="اسم الشارة..." onkeydown="if(event.key==='Enter')addBadge('${m.id}')"/><button onclick="addBadge('${m.id}')">+ إضافة</button></div></div>
-        <div class="bdg-sec">
+        <div class="bdg-sec"><div class="sec-lbl">🏅 الشارات</div><div class="tags">${bdgs}</div>${isPatrol?'':
+          `<div class="tag-add"><input id="bi${m.id}" placeholder="اسم الشارة..." onkeydown="if(event.key==='Enter')addBadge('${m.id}')"/><button onclick="addBadge('${m.id}')">+ إضافة</button></div>`}</div>
+        ${isPatrol?'':
+        `<div class="bdg-sec">
           <div class="sec-lbl">🌟 شارات التميز</div>
           <div class="tags" id="excTags${m.id}">${(m.excellence||[]).map(e=>`<span class="tag exc-tag">${e}<button onclick="removeExcellence('${m.id}','${e}')">✕</button></span>`).join('')}</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
@@ -1871,7 +1883,7 @@ function renderAdmMems(){
         </div>
         <div class="crs-sec"><div class="sec-lbl">📚 الدورات</div><div class="tags">${crss}</div><div class="tag-add"><input id="ci${m.id}" placeholder="اسم الدورة..." onkeydown="if(event.key==='Enter')addCourse('${m.id}')"/><button onclick="addCourse('${m.id}')">+ إضافة</button></div></div>
         <button class="sav-prof" onclick="savProf('${m.id}')">💾 حفظ البيانات</button>
-        <button class="print-btn" onclick="printMember('${m.id}')">🖨️ طباعة الاستمارة</button>
+        <button class="print-btn" onclick="printMember('${m.id}')">🖨️ طباعة الاستمارة</button>`}
       </div>
     </div>`;
   };
@@ -2355,23 +2367,28 @@ function loginSuccess(){
   loggedIn=true;
   document.getElementById('lockCard').style.display='none';
   document.getElementById('adminPanel').classList.add('on');
-  // Show admin name in header
   document.getElementById('adm-title').textContent=`🛡️ ${currentAdmin.name}`;
-  // Super admin extras
+
   if(currentAdmin.role==='super'){
     document.getElementById('superAdminCard').style.display='block';
     document.getElementById('clearAllRow').style.display='flex';
     renderAdminsList();
   }
-  // Patrol leader: hide some tabs
+
   if(currentAdmin.role==='patrol'){
-    ['leaders','reqs','inbox','album','honor','stats'].forEach(t=>{
+    // إخفاء كل التابات ما عدا الأعضاء والإعلانات والمهام
+    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','track','manann'];
+    hideTabs.forEach(t=>{
       const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
       if(btn) btn.style.display='none';
     });
+    // الانتقال لتاب الأعضاء مباشرة
+    goAdm('members');
   }
+
   toast(`مرحباً ${currentAdmin.name}! ✅`,'ok');
   logActivity('دخل لوحة التحكم');
+  renderAdmMems();
 }
 
 window.doLogout=function(){
