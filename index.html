@@ -1789,13 +1789,14 @@ function renderAdmMems(){
   // Filter by patrol if patrol leader
   const isPatrolUser=currentAdmin&&currentAdmin.role==='patrol'&&currentAdmin.patrol;
   const visibleMembers=isPatrolUser
-    ? members.filter(m=>m.patrol===currentAdmin.patrol)
+    ? members.filter(m=>(m.patrol||'').trim()===(currentAdmin.patrol||'').trim())
     : members;
   if(!visibleMembers.length){el.innerHTML=`<div class="empty"><span>👥</span>${isPatrolUser?'لا يوجد أعضاء في طليعتك بعد':'أضف أعضاء للمتابعة'}</div>`;return;}
   const males=[...visibleMembers].filter(m=>m.gender==='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const females=[...visibleMembers].filter(m=>m.gender!=='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const renderMemberCard=m=>{
-    const isPatrol=currentAdmin&&currentAdmin.role==='patrol';    const r=m.rating||0;
+    const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
+    const r=m.rating||0;
     const stars=isPatrol?'':[1,2,3,4,5].map(i=>`<button class="star" onclick="setRat('${m.id}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
     const bdgs=(m.badges||[]).map((b,i)=>`<span class="tag-b">🏅${esc(b)}${isPatrol?'':'<i class="xt" onclick="rmBadge(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد شارات</span>';
     const crss=(m.courses||[]).map((c,i)=>`<span class="tag-c">📚${esc(c)}${isPatrol?'':'<i class="xt" onclick="rmCourse(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد دورات</span>';
@@ -2354,11 +2355,11 @@ window.doLogin=async function(){
   try{
     const snap=await getDocs(ADMINS_COL);
     const list=snap.docs.map(d=>({id:d.id,...d.data()}));
-    const found=list.find(a=>a.username===user && a.password===pass);
+    const found=list.find(a=>(a.username||'').trim()===user && (a.password||'').trim()===pass);
     if(found){
       currentAdmin={
         id:found.id,
-        name:found.username||found.name||user,
+        name:found.username||user,
         role:found.role||'admin',
         patrol:found.patrol||null
       };
@@ -2369,13 +2370,8 @@ window.doLogin=async function(){
       toast('اسم المستخدم أو كلمة المرور خطأ ❌','err');
     }
   }catch(e){
-    // Firebase error - only super admin can login
-    if(user==='شادي' && pass==='741852'){
-      currentAdmin={id:'super',name:'شادي',role:'super',patrol:null};
-      loginSuccess();
-    }else{
-      toast('خطأ في الاتصال — تحقق من الإنترنت ⚠️','err');
-    }
+    console.error('Login error:',e);
+    toast('تعذر الاتصال بقاعدة البيانات — أعد المحاولة بعد ثوانٍ ⚠️','err');
   }
 };
 
@@ -2392,12 +2388,12 @@ function loginSuccess(){
   }
 
   if(currentAdmin.role==='patrol'){
-    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','track','manann'];
+    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','manann'];
     hideTabs.forEach(t=>{
       const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
       if(btn) btn.style.display='none';
     });
-    goAdm('members');
+    goAdm('track');
   }
 
   toast(`مرحباً ${currentAdmin.name}! ✅`,'ok');
