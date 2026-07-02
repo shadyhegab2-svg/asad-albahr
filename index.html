@@ -929,7 +929,15 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <!-- WHATSAPP BROADCAST -->
               <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
                 <div style="font-size:0.78rem;font-weight:700;color:var(--text);margin-bottom:8px">📢 رسالة جماعية على واتساب</div>
-                <textarea id="broadcastMsg" rows="3" placeholder="اكتب رسالتك هنا..." style="width:100%;padding:9px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:Cairo,sans-serif;font-size:0.82rem;outline:none;resize:none;margin-bottom:8px"></textarea>
+                <textarea id="broadcastMsg" rows="3" placeholder="اكتب رسالتك هنا..." style="width:100%;padding:9px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:Cairo,sans-serif;font-size:0.82rem;outline:none;resize:none;margin-bottom:6px"></textarea>
+                <div style="font-size:0.68rem;color:var(--muted);margin-bottom:8px">📌 هيتضاف تلقائيًا في آخر الرسالة: "هذه الرسالة من قبل الإدارة، لا تقم بالرد عليها"</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <label style="flex:1;padding:8px;background:rgba(0,0,0,0.2);border:1px dashed var(--border2);border-radius:8px;color:var(--muted);font-size:0.74rem;text-align:center;cursor:pointer;font-family:Cairo,sans-serif">
+                    📎 <span id="bcImageLabel">إرفاق صورة (اختياري)</span>
+                    <input type="file" id="bcImageInput" accept="image/*" onchange="bcOnImagePicked(this)" style="display:none">
+                  </label>
+                  <button id="bcImageClearBtn" onclick="bcClearImage()" style="display:none;padding:8px 10px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--muted);font-size:0.74rem;cursor:pointer;font-family:Cairo,sans-serif">✕</button>
+                </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 6px">
                   <div style="font-size:0.74rem;font-weight:700;color:var(--muted)">👥 حدد المستلمين (<span id="bcSelCount">0</span>)</div>
                   <div style="display:flex;gap:6px">
@@ -2858,13 +2866,33 @@ window.bcSelectAll=function(select){
   bcSelected=select?new Set(list.map(m=>m.id)):new Set();
   bcRenderList();
 };
+const BC_ADMIN_NOTICE="هذه الرسالة من قبل الإدارة، لا تقم بالرد عليها";
+let bcImageFile=null;
+window.bcOnImagePicked=function(input){
+  bcImageFile=(input.files&&input.files[0])?input.files[0]:null;
+  const label=document.getElementById('bcImageLabel');
+  const clearBtn=document.getElementById('bcImageClearBtn');
+  if(bcImageFile){
+    if(label) label.textContent=bcImageFile.name;
+    if(clearBtn) clearBtn.style.display='inline-block';
+  }else{
+    if(label) label.textContent='إرفاق صورة (اختياري)';
+    if(clearBtn) clearBtn.style.display='none';
+  }
+};
+window.bcClearImage=function(){
+  bcImageFile=null;
+  const input=document.getElementById('bcImageInput');if(input) input.value='';
+  const label=document.getElementById('bcImageLabel');if(label) label.textContent='إرفاق صورة (اختياري)';
+  const clearBtn=document.getElementById('bcImageClearBtn');if(clearBtn) clearBtn.style.display='none';
+};
 window.broadcastWA=function(gender){
   const msg=document.getElementById('broadcastMsg').value.trim();
   if(!msg){toast('اكتب الرسالة أولاً ⚠️','err');return;}
   const list=bcVisibleMembers().filter(m=>(gender==='all'||m.gender===(gender==='male'?'male':'female'))&&(m.whatsapp||m.phone));
   if(!list.length){toast('لا توجد أرقام مسجلة ⚠️','err');return;}
   bcQueue=list.map(m=>({id:m.id,name:m.name,phone:(m.whatsapp||m.phone).replace(/^0/,'20')}));
-  bcQueueMsg=msg;
+  bcQueueMsg=msg+"\n\n—\n"+BC_ADMIN_NOTICE;
   bcQueueIndex=0;
   bcRenderQueue();
   bcOpenCurrent();
@@ -2875,7 +2903,7 @@ window.broadcastSelected=async function(){
   const list=bcVisibleMembers().filter(m=>bcSelected.has(m.id)&&(m.whatsapp||m.phone));
   if(!list.length){toast('حدد عضو واحد على الأقل ⚠️','err');return;}
   bcQueue=list.map(m=>({id:m.id,name:m.name,phone:(m.whatsapp||m.phone).replace(/^0/,'20')}));
-  bcQueueMsg=msg;
+  bcQueueMsg=msg+"\n\n—\n"+BC_ADMIN_NOTICE;
   bcQueueIndex=0;
   bcRenderQueue();
 };
@@ -2889,10 +2917,12 @@ function bcRenderQueue(){
     return;
   }
   const cur=bcQueue[bcQueueIndex];
+  const imgNote=bcImageFile?`<div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">📎 هيتفتح شير الجهاز — اختار واتساب وشات "${esc(cur.name)}" يدويًا</div>`:'';
   result.innerHTML=`
     <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:8px;padding:10px;margin-top:4px">
       <div style="font-size:0.74rem;color:var(--muted);margin-bottom:6px">📤 جاري الإرسال — ${bcQueueIndex+1} من ${bcQueue.length}</div>
       <div style="font-weight:700;color:var(--text);font-size:0.86rem;margin-bottom:8px">${esc(cur.name)}</div>
+      ${imgNote}
       <div style="display:flex;gap:6px">
         <button onclick="bcOpenCurrent()" style="flex:1;padding:8px;background:rgba(0,200,100,0.15);border:1px solid rgba(0,200,100,0.3);border-radius:8px;color:#4caf50;font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">💬 فتح واتساب</button>
         <button onclick="bcNextQueue(true)" style="flex:1;padding:8px;background:rgba(33,150,243,0.15);border:1px solid var(--border2);border-radius:8px;color:var(--blue3);font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">✅ اتبعتت — التالي</button>
@@ -2900,9 +2930,19 @@ function bcRenderQueue(){
       </div>
     </div>`;
 }
-window.bcOpenCurrent=function(){
+window.bcOpenCurrent=async function(){
   if(bcQueueIndex>=bcQueue.length)return;
   const cur=bcQueue[bcQueueIndex];
+  // Image attached: use the device share sheet (WhatsApp can't receive a pre-attached
+  // image through a wa.me link — this is a WhatsApp/browser limitation, not app-specific).
+  if(bcImageFile&&navigator.share&&navigator.canShare&&navigator.canShare({files:[bcImageFile]})){
+    try{
+      await navigator.share({text:bcQueueMsg,files:[bcImageFile]});
+      return;
+    }catch(e){/* user cancelled the share sheet — fall through to text-only chat open */}
+  }else if(bcImageFile){
+    toast('المتصفح ده مش بيدعم مشاركة الصور، هيتفتح الشات بالنص بس وابعت الصورة يدويًا 📎','err');
+  }
   window.open(`https://wa.me/${cur.phone}?text=${encodeURIComponent(bcQueueMsg)}`,'_blank');
 };
 window.bcNextQueue=async function(markSent){
