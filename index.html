@@ -930,6 +930,16 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
                 <div style="font-size:0.78rem;font-weight:700;color:var(--text);margin-bottom:8px">📢 رسالة جماعية على واتساب</div>
                 <textarea id="broadcastMsg" rows="3" placeholder="اكتب رسالتك هنا..." style="width:100%;padding:9px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:Cairo,sans-serif;font-size:0.82rem;outline:none;resize:none;margin-bottom:8px"></textarea>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 6px">
+                  <div style="font-size:0.74rem;font-weight:700;color:var(--muted)">👥 حدد المستلمين (<span id="bcSelCount">0</span>)</div>
+                  <div style="display:flex;gap:6px">
+                    <button onclick="bcSelectAll(true)" style="font-size:0.68rem;padding:4px 9px;border-radius:14px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:Cairo,sans-serif">تحديد الكل</button>
+                    <button onclick="bcSelectAll(false)" style="font-size:0.68rem;padding:4px 9px;border-radius:14px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:Cairo,sans-serif">إلغاء التحديد</button>
+                  </div>
+                </div>
+                <div id="bcMemberList" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;margin-bottom:10px;padding:6px;background:rgba(0,0,0,0.15);border-radius:8px"></div>
+                <button onclick="broadcastSelected()" style="width:100%;padding:10px;background:linear-gradient(135deg,#25963f,#2ecc71);border:none;border-radius:8px;color:#fff;font-family:Cairo,sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer;margin-bottom:8px">🚀 إرسال للمحددين وتعليمهم "تم الإرسال"</button>
+                <div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">أو إرسال سريع بدون تحديد:</div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
                   <button onclick="broadcastWA('all')" style="flex:1;padding:9px;background:rgba(0,200,100,0.15);border:1px solid rgba(0,200,100,0.3);border-radius:8px;color:#4caf50;font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">💬 الكل</button>
                   <button onclick="broadcastWA('male')" style="flex:1;padding:9px;background:rgba(33,150,243,0.12);border:1px solid var(--border2);border-radius:8px;color:var(--blue3);font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">👦 أولاد</button>
@@ -989,7 +999,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <div id="adm-chat" class="asec">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
                 <div style="font-size:0.84rem;font-weight:700;color:var(--text)">💬 الشات العام</div>
-                <button class="stg-btn danger" onclick="clearChat()">🗑️ مسح الشات</button>
+                <button class="stg-btn danger" id="clearChatBtn" onclick="clearChat()">🗑️ مسح الشات</button>
               </div>
               <div id="admChatList"><div class="empty"><span>💬</span>لا توجد رسائل</div></div>
             </div>
@@ -1005,7 +1015,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                   <div class="pf"><label>المسؤول</label><input id="taskOwner" type="text" placeholder="اسم المسؤول (اختياري)"/></div>
                 </div>
                 <button class="sav-prof" onclick="addTask()">➕ إضافة المهمة</button>
-                <button class="sav-prof" onclick="broadcastTaskWA()" style="margin-top:8px;background:linear-gradient(135deg,#25963f,#2ecc71)">📲 إرسال إشعار المهمة للأعضاء عبر واتساب</button>
+              </div>
+              <div class="card" style="margin-bottom:14px">
+                <button class="sav-prof" onclick="broadcastTaskWA()" style="background:linear-gradient(135deg,#25963f,#2ecc71)">📲 إرسال إشعار المهام للأعضاء عبر واتساب</button>
               </div>
               <div id="admTasksList"><div class="empty"><span>📋</span>لا توجد مهام بعد</div></div>
             </div>
@@ -1785,6 +1797,7 @@ function renderAdmMems(){
   const femalesCount=members.length-malesCount;
   const stM=document.getElementById('stMales');const stF=document.getElementById('stFemales');
   if(stM)stM.textContent=malesCount;if(stF)stF.textContent=femalesCount;
+  bcRenderList();
   const el=document.getElementById('mList');
   // Filter by patrol if patrol leader
   const isPatrolUser=currentAdmin&&currentAdmin.role==='patrol'&&currentAdmin.patrol;
@@ -2613,24 +2626,24 @@ function renderTasks(){
 function renderAdmTasks(){
   const el=document.getElementById('admTasksList');if(!el)return;
   const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
-  // Show/hide add task card for patrol
-  const addCard=document.querySelector('#adm-tasks .card');
-  if(addCard) addCard.style.display=isPatrol?'none':'block';
   if(!tasks.length){el.innerHTML='<div class="empty"><span>📋</span>لا توجد مهام بعد</div>';return;}
   el.innerHTML=tasks.map(t=>{
     const due=t.due?`📅 ${t.due}`:'';
     const owner=t.owner?`👤 ${esc(t.owner)}`:'';
     const status=STATUS_LABELS[t.status||'pending'];
     const next=STATUS_NEXT[t.status||'pending'];
+    const isMine=isPatrol&&currentAdmin&&t.creatorId===currentAdmin.id;
+    const canManage=!isPatrol||isMine;
+    const patrolTag=t.patrol?` <span style="font-size:0.68rem;color:var(--cyan)">· طليعة ${esc(t.patrol)}</span>`:'';
     return `<div style="padding:12px;background:var(--bg2);border-radius:12px;margin-bottom:10px;border:1px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-        <div style="font-weight:700;color:var(--text);font-size:0.88rem">${esc(t.title)}</div>
-        ${isPatrol?`<span style="font-size:0.75rem;padding:4px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg)">${status}</span>`:`<button onclick="updTaskStatus('${t.id}','${next}')" style="font-size:0.75rem;padding:4px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;white-space:nowrap;font-family:Cairo,sans-serif">${status}</button>`}
+        <div style="font-weight:700;color:var(--text);font-size:0.88rem">${esc(t.title)}${patrolTag}</div>
+        ${canManage?`<button onclick="updTaskStatus('${t.id}','${next}')" style="font-size:0.75rem;padding:4px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;white-space:nowrap;font-family:Cairo,sans-serif">${status}</button>`:`<span style="font-size:0.75rem;padding:4px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg)">${status}</span>`}
       </div>
       ${t.desc?`<div style="color:var(--muted);font-size:0.76rem;margin-top:4px">${esc(t.desc)}</div>`:''}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div style="font-size:0.7rem;color:var(--muted)">${due} ${owner}</div>
-        ${isPatrol?'':`<button onclick="delTask('${t.id}')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:0.8rem">🗑️ حذف</button>`}
+        ${canManage?`<button onclick="delTask('${t.id}')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:0.8rem">🗑️ حذف</button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -2655,19 +2668,51 @@ window.addTask=async function(){
   const desc=document.getElementById('taskDesc').value.trim();
   const due=document.getElementById('taskDue').value;
   const owner=document.getElementById('taskOwner').value.trim();
-  await addDoc(TC,{title,desc,due,owner,status:'pending',createdAt:serverTimestamp()});
+  const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
+  const patrol=isPatrol?(currentAdmin.patrol||null):null;
+  const taskRef=await addDoc(TC,{
+    title,desc,due,owner,status:'pending',createdAt:serverTimestamp(),
+    patrol,
+    creatorId:currentAdmin?currentAdmin.id:null,
+    creatorName:currentAdmin?currentAdmin.name:null
+  });
+  // Auto-publish as announcement so all members see the new task
+  const dueText=due?`\n📅 تاريخ الاستحقاق: ${new Date(due).toLocaleDateString('ar-EG')}`:'';
+  const patrolText=patrol?` (طليعة ${patrol})`:'';
+  await addDoc(AC,{
+    title:`📋 مهمة جديدة${patrolText}: ${title}`,
+    body:`${desc||title}${dueText}`,
+    imgUrl:'',
+    date:new Date().toISOString().split('T')[0],
+    pinned:0,
+    createdAt:serverTimestamp(),
+    fromTask:true,
+    taskId:taskRef.id
+  });
   document.getElementById('taskTitle').value='';
   document.getElementById('taskDesc').value='';
   document.getElementById('taskDue').value='';
   document.getElementById('taskOwner').value='';
-  toast('تمت إضافة المهمة ✅','ok');
+  toast('تمت إضافة المهمة ونشرها كإعلان ✅','ok');
 };
 window.updTaskStatus=async function(id,status){
+  const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
+  if(isPatrol){
+    const t=tasks.find(x=>x.id===id);
+    if(!t||t.creatorId!==currentAdmin.id){toast('يمكنك تعديل مهامك فقط ⚠️','err');return;}
+  }
   await updateDoc(doc(db,'tasks',id),{status});
 };
 window.delTask=async function(id){
+  const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
+  if(isPatrol){
+    const t=tasks.find(x=>x.id===id);
+    if(!t||t.creatorId!==currentAdmin.id){toast('يمكنك حذف مهامك فقط ⚠️','err');return;}
+  }
   if(!confirm('حذف المهمة؟'))return;
   await deleteDoc(doc(db,'tasks',id));
+  const linked=anns.find(a=>a.fromTask&&a.taskId===id);
+  if(linked) await deleteDoc(doc(db,'announcements',linked.id));
   toast('تم الحذف','ok');
 };
 // ===== END TASKS =====
@@ -2774,23 +2819,80 @@ window.exportAttendance=function(){
   toast('تم تصدير سجل الحضور ✅','ok');
 };
 // ===== END STATS =====
-window.broadcastWA=function(gender){
+// ===== BULK WHATSAPP RECIPIENT SELECTION =====
+let bcSelected=new Set();
+function bcVisibleMembers(){
+  const isPatrolUser=currentAdmin&&currentAdmin.role==='patrol'&&currentAdmin.patrol;
+  return isPatrolUser
+    ? members.filter(m=>(m.patrol||'').trim()===(currentAdmin.patrol||'').trim())
+    : members;
+}
+function bcRenderList(){
+  const el=document.getElementById('bcMemberList');if(!el)return;
+  const list=bcVisibleMembers();
+  // Drop selections for members no longer present
+  bcSelected=new Set([...bcSelected].filter(id=>list.some(m=>m.id===id)));
+  if(!list.length){el.innerHTML='<div class="empty" style="padding:10px"><span>👥</span>لا يوجد أعضاء</div>';}
+  else{
+    el.innerHTML=[...list].sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(m=>{
+      const phone=m.whatsapp||m.phone||'';
+      const checked=bcSelected.has(m.id)?'checked':'';
+      const disabled=phone?'':'disabled';
+      return `<label style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid var(--border);cursor:${phone?'pointer':'not-allowed'};opacity:${phone?'1':'0.5'}">
+        <input type="checkbox" ${checked} ${disabled} onchange="bcToggle('${m.id}',this.checked)" style="width:16px;height:16px;flex-shrink:0"/>
+        <span style="flex:1;font-size:0.78rem;color:var(--text)">${esc(m.name)}${phone?'':' (لا يوجد رقم)'}</span>
+        ${m.sent?'<span style="font-size:0.68rem;color:#4caf50">✅ تم الإرسال</span>':''}
+      </label>`;
+    }).join('');
+  }
+  const cnt=document.getElementById('bcSelCount');
+  if(cnt) cnt.textContent=bcSelected.size;
+}
+window.bcToggle=function(id,checked){
+  if(checked) bcSelected.add(id); else bcSelected.delete(id);
+  const cnt=document.getElementById('bcSelCount');
+  if(cnt) cnt.textContent=bcSelected.size;
+};
+window.bcSelectAll=function(select){
+  const list=bcVisibleMembers().filter(m=>m.whatsapp||m.phone);
+  bcSelected=select?new Set(list.map(m=>m.id)):new Set();
+  bcRenderList();
+};
+window.broadcastWA=async function(gender){
   const msg=document.getElementById('broadcastMsg').value.trim();
   if(!msg){toast('اكتب الرسالة أولاً ⚠️','err');return;}
-  const filtered=gender==='all'?members:members.filter(m=>m.gender===(gender==='male'?'male':'female'));
-  const phones=filtered.map(m=>m.whatsapp||m.phone).filter(Boolean).map(p=>p.replace(/^0/,'20'));
+  const list=bcVisibleMembers().filter(m=>gender==='all'||m.gender===(gender==='male'?'male':'female'));
+  const phones=list.map(m=>m.whatsapp||m.phone).filter(Boolean).map(p=>p.replace(/^0/,'20'));
   if(!phones.length){toast('لا توجد أرقام مسجلة ⚠️','err');return;}
   // Copy all numbers + message
   const txt=phones.join("\n")+"\n\n---\nالرسالة:\n"+msg;
-  navigator.clipboard.writeText(txt).then(()=>{
-    toast('تم نسخ الأرقام والرسالة ✅','ok');
-  }).catch(()=>{});
+  navigator.clipboard.writeText(txt).catch(()=>{});
   // Open WhatsApp with first number as example
   const encoded=encodeURIComponent(msg);
-  const result=document.getElementById('broadcastResult');
-  if(result) result.innerHTML=`<span style="color:var(--ok)">✅ ${phones.length} رقم</span> — <button onclick="copyNumbers('${gender}')" style="background:none;border:none;color:var(--cyan);cursor:pointer;font-family:Cairo,sans-serif;font-size:0.72rem;font-weight:700">📋 نسخ الأرقام</button>`;
   window.open(`https://wa.me/${phones[0]}?text=${encoded}`,'_blank');
+  // Mark this group as sent
+  await Promise.all(list.filter(m=>m.whatsapp||m.phone).map(m=>updateDoc(doc(db,'members',m.id),{sent:true})));
+  const result=document.getElementById('broadcastResult');
+  if(result) result.innerHTML=`<span style="color:var(--ok)">✅ اتبعتت لـ ${phones.length} عضو وتم تعليمهم "تم الإرسال"</span> — <button onclick="copyNumbers('${gender}')" style="background:none;border:none;color:var(--cyan);cursor:pointer;font-family:Cairo,sans-serif;font-size:0.72rem;font-weight:700">📋 نسخ الأرقام</button>`;
+  toast('تم الإرسال والتعليم ✅','ok');
 };
+window.broadcastSelected=async function(){
+  const msg=document.getElementById('broadcastMsg').value.trim();
+  if(!msg){toast('اكتب الرسالة أولاً ⚠️','err');return;}
+  const list=bcVisibleMembers().filter(m=>bcSelected.has(m.id));
+  const phones=list.map(m=>m.whatsapp||m.phone).filter(Boolean).map(p=>p.replace(/^0/,'20'));
+  if(!phones.length){toast('حدد عضو واحد على الأقل ⚠️','err');return;}
+  const txt=phones.join("\n")+"\n\n---\nالرسالة:\n"+msg;
+  navigator.clipboard.writeText(txt).catch(()=>{});
+  const encoded=encodeURIComponent(msg);
+  window.open(`https://wa.me/${phones[0]}?text=${encoded}`,'_blank');
+  // Mark all selected members as sent
+  await Promise.all(list.map(m=>updateDoc(doc(db,'members',m.id),{sent:true})));
+  const result=document.getElementById('broadcastResult');
+  if(result) result.innerHTML=`<span style="color:var(--ok)">✅ اتبعتت لـ ${phones.length} عضو وتم تعليمهم "تم الإرسال"</span>`;
+  toast(`تم الإرسال لـ ${phones.length} عضو ✅`,'ok');
+};
+// ===== END BULK WHATSAPP RECIPIENT SELECTION =====
 window.copyNumbers=function(gender){
   const filtered=gender==='all'?members:members.filter(m=>m.gender===(gender==='male'?'male':'female'));
   const phones=filtered.map(m=>m.whatsapp||m.phone).filter(Boolean).map(p=>p.replace(/^0/,'20'));
@@ -2804,12 +2906,15 @@ window.clearAll=async function(){
   toast('تم مسح البيانات');
 };
 window.clearChat=async function(){
+  if(currentAdmin&&currentAdmin.role==='patrol'){toast('غير مسموح لك بمسح الشات ⚠️','err');return;}
   if(!confirm('مسح كل رسائل الدردشة؟'))return;
   const s=await getDocs(CHAT);await Promise.all(s.docs.map(d=>deleteDoc(d.ref)));
   toast('تم مسح الدردشة','ok');
 };
 function renderAdmChat(){
   const el=document.getElementById('admChatList');if(!el)return;
+  const clearBtn=document.getElementById('clearChatBtn');
+  if(clearBtn) clearBtn.style.display=(currentAdmin&&currentAdmin.role==='patrol')?'none':'';
   if(!chatMsgs.length){el.innerHTML='<div class="empty"><span>💬</span>لا توجد رسائل</div>';return;}
   el.innerHTML=[...chatMsgs].reverse().map(m=>`
     <div class="sitem" style="flex-wrap:wrap;gap:6px">
@@ -2817,10 +2922,11 @@ function renderAdmChat(){
         <div class="sitem-title">${esc(m.name||'زائر')}: ${esc(m.text)}</div>
         <div class="sitem-sub">📞 ${esc(m.phone||'—')} · ${m.createdAt?.toDate?.()?.toLocaleString('ar-EG')||'للتو'}</div>
       </div>
-      <div style="display:flex;gap:4px">
+      ${(currentAdmin&&currentAdmin.role==='patrol')?'':
+      `<div style="display:flex;gap:4px">
         <button class="del-btn" onclick="delChatMsg('${m.id}')">🗑️</button>
         <button class="del-btn" style="color:var(--danger)" onclick="banDevice('${m.devId||''}','${m.id}')">🚫</button>
-      </div>
+      </div>`}
     </div>`).join('');
 }
 window.delChatMsg=async function(id){await deleteDoc(doc(db,'chat',id));toast('تم الحذف');};
