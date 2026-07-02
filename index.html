@@ -2858,39 +2858,60 @@ window.bcSelectAll=function(select){
   bcSelected=select?new Set(list.map(m=>m.id)):new Set();
   bcRenderList();
 };
-window.broadcastWA=async function(gender){
+window.broadcastWA=function(gender){
   const msg=document.getElementById('broadcastMsg').value.trim();
   if(!msg){toast('اكتب الرسالة أولاً ⚠️','err');return;}
-  const list=bcVisibleMembers().filter(m=>gender==='all'||m.gender===(gender==='male'?'male':'female'));
-  const phones=list.map(m=>m.whatsapp||m.phone).filter(Boolean).map(p=>p.replace(/^0/,'20'));
-  if(!phones.length){toast('لا توجد أرقام مسجلة ⚠️','err');return;}
-  // Copy all numbers + message
-  const txt=phones.join("\n")+"\n\n---\nالرسالة:\n"+msg;
-  navigator.clipboard.writeText(txt).catch(()=>{});
-  // Open WhatsApp with first number as example
-  const encoded=encodeURIComponent(msg);
-  window.open(`https://wa.me/${phones[0]}?text=${encoded}`,'_blank');
-  // Mark this group as sent
-  await Promise.all(list.filter(m=>m.whatsapp||m.phone).map(m=>updateDoc(doc(db,'members',m.id),{sent:true})));
-  const result=document.getElementById('broadcastResult');
-  if(result) result.innerHTML=`<span style="color:var(--ok)">✅ اتبعتت لـ ${phones.length} عضو وتم تعليمهم "تم الإرسال"</span> — <button onclick="copyNumbers('${gender}')" style="background:none;border:none;color:var(--cyan);cursor:pointer;font-family:Cairo,sans-serif;font-size:0.72rem;font-weight:700">📋 نسخ الأرقام</button>`;
-  toast('تم الإرسال والتعليم ✅','ok');
+  const list=bcVisibleMembers().filter(m=>(gender==='all'||m.gender===(gender==='male'?'male':'female'))&&(m.whatsapp||m.phone));
+  if(!list.length){toast('لا توجد أرقام مسجلة ⚠️','err');return;}
+  bcQueue=list.map(m=>({id:m.id,name:m.name,phone:(m.whatsapp||m.phone).replace(/^0/,'20')}));
+  bcQueueMsg=msg;
+  bcQueueIndex=0;
+  bcRenderQueue();
+  bcOpenCurrent();
 };
 window.broadcastSelected=async function(){
   const msg=document.getElementById('broadcastMsg').value.trim();
   if(!msg){toast('اكتب الرسالة أولاً ⚠️','err');return;}
-  const list=bcVisibleMembers().filter(m=>bcSelected.has(m.id));
-  const phones=list.map(m=>m.whatsapp||m.phone).filter(Boolean).map(p=>p.replace(/^0/,'20'));
-  if(!phones.length){toast('حدد عضو واحد على الأقل ⚠️','err');return;}
-  const txt=phones.join("\n")+"\n\n---\nالرسالة:\n"+msg;
-  navigator.clipboard.writeText(txt).catch(()=>{});
-  const encoded=encodeURIComponent(msg);
-  window.open(`https://wa.me/${phones[0]}?text=${encoded}`,'_blank');
-  // Mark all selected members as sent
-  await Promise.all(list.map(m=>updateDoc(doc(db,'members',m.id),{sent:true})));
+  const list=bcVisibleMembers().filter(m=>bcSelected.has(m.id)&&(m.whatsapp||m.phone));
+  if(!list.length){toast('حدد عضو واحد على الأقل ⚠️','err');return;}
+  bcQueue=list.map(m=>({id:m.id,name:m.name,phone:(m.whatsapp||m.phone).replace(/^0/,'20')}));
+  bcQueueMsg=msg;
+  bcQueueIndex=0;
+  bcRenderQueue();
+};
+let bcQueue=[],bcQueueIndex=0,bcQueueMsg='';
+function bcRenderQueue(){
   const result=document.getElementById('broadcastResult');
-  if(result) result.innerHTML=`<span style="color:var(--ok)">✅ اتبعتت لـ ${phones.length} عضو وتم تعليمهم "تم الإرسال"</span>`;
-  toast(`تم الإرسال لـ ${phones.length} عضو ✅`,'ok');
+  if(!result)return;
+  if(!bcQueue.length||bcQueueIndex>=bcQueue.length){
+    if(bcQueue.length) result.innerHTML=`<span style="color:var(--ok)">✅ خلصت القائمة (${bcQueue.length} عضو)</span>`;
+    bcQueue=[];bcQueueIndex=0;
+    return;
+  }
+  const cur=bcQueue[bcQueueIndex];
+  result.innerHTML=`
+    <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:8px;padding:10px;margin-top:4px">
+      <div style="font-size:0.74rem;color:var(--muted);margin-bottom:6px">📤 جاري الإرسال — ${bcQueueIndex+1} من ${bcQueue.length}</div>
+      <div style="font-weight:700;color:var(--text);font-size:0.86rem;margin-bottom:8px">${esc(cur.name)}</div>
+      <div style="display:flex;gap:6px">
+        <button onclick="bcOpenCurrent()" style="flex:1;padding:8px;background:rgba(0,200,100,0.15);border:1px solid rgba(0,200,100,0.3);border-radius:8px;color:#4caf50;font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">💬 فتح واتساب</button>
+        <button onclick="bcNextQueue(true)" style="flex:1;padding:8px;background:rgba(33,150,243,0.15);border:1px solid var(--border2);border-radius:8px;color:var(--blue3);font-family:Cairo,sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer">✅ اتبعتت — التالي</button>
+        <button onclick="bcNextQueue(false)" style="padding:8px 10px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--muted);font-family:Cairo,sans-serif;font-size:0.76rem;cursor:pointer">⏭️ تخطي</button>
+      </div>
+    </div>`;
+}
+window.bcOpenCurrent=function(){
+  if(bcQueueIndex>=bcQueue.length)return;
+  const cur=bcQueue[bcQueueIndex];
+  window.open(`https://wa.me/${cur.phone}?text=${encodeURIComponent(bcQueueMsg)}`,'_blank');
+};
+window.bcNextQueue=async function(markSent){
+  if(bcQueueIndex>=bcQueue.length)return;
+  const cur=bcQueue[bcQueueIndex];
+  if(markSent) await updateDoc(doc(db,'members',cur.id),{sent:true});
+  bcQueueIndex++;
+  bcRenderQueue();
+  if(bcQueueIndex<bcQueue.length) bcOpenCurrent();
 };
 // ===== END BULK WHATSAPP RECIPIENT SELECTION =====
 window.copyNumbers=function(gender){
