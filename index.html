@@ -809,8 +809,13 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <input type="tel" id="myaccWhatsapp" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
           </div>
           <div class="nh-acc-field">
-            <label>الصفة الكشفية 🔒</label>
+            <label>الرتبة الكشفية 🔒</label>
             <input type="text" id="myaccRole" disabled/>
+            <div class="nh-acc-locked">🔒 لا يمكن تعديل هذا الحقل - من اختصاص الإدارة</div>
+          </div>
+          <div class="nh-acc-field">
+            <label>الصفة في الطليعة 🔒</label>
+            <input type="text" id="myaccPosition" disabled/>
             <div class="nh-acc-locked">🔒 لا يمكن تعديل هذا الحقل - من اختصاص الإدارة</div>
           </div>
           <div class="nh-acc-field">
@@ -1173,8 +1178,9 @@ const VISIT=collection(db,'visitors');
 
 const CLOUD='dmzyqkiay', PRESET='asad_albahr';
 
-const ROLES_M=['برعم','شبل','كشاف','كشاف متقدم','مرشد','جوال','عريف','مساعد عريف','إعلامي','أمين الصندوق','مسعف','مثامر','عضو'];
-const ROLES_F=['برعمة','زهرة','مرشدة','مرشدة متقدمة','جوالة','عريف','مساعد عريف','إعلامية','أمينة الصندوق','مسعفة','مثامرة','عضوة'];
+const RANKS_M=['برعم','شبل','كشاف','كشاف متقدم','جوال','خريج'];
+const RANKS_F=['برعم','زهرة','مرشدة','مرشدة متقدم','جوالة','خريجة'];
+const PATROL_POSITIONS=['عريف اول','عريف','مساعد عريف','سكرتير','أمين صندوق','أمين عهدة','مسعف','رياضي','مسامر','أمين التموين','الإعلامي','المصور'];
 const GRADES=['رياض الأطفال','ابتدائي','إعدادي','ثانوي','جامعي','خريج'];
 const RLBLS=['','ضعيف','مقبول','جيد','جيد جداً','ممتاز'];
 
@@ -1564,6 +1570,7 @@ function renderPubMems(){
           <div style="flex:1">
             <div class="mem-pub-name">${esc(m.name)}</div>
             ${m.role?`<span class="mem-pub-role" style="display:inline-block;margin-bottom:3px">🎖️ ${esc(m.role)}</span>`:''}
+            ${m.position?`<span class="mem-pub-role" style="display:inline-block;margin-bottom:3px;margin-right:4px">📋 ${esc(m.position)}</span>`:''}
             <div class="mem-pub-meta">${esc(meta)||'&nbsp;'}</div>
             <div class="mem-contact-btns">
               ${m.phone?`<a class="lbtn lbtn-ph" href="tel:${esc(m.phone)}" style="font-size:0.65rem;padding:3px 8px">📞 ${esc(m.phone)}</a>`:''}
@@ -1712,7 +1719,7 @@ window.savProf=async function(id){
   const y=toEn(g('dobY')).trim();
   const dob=(d&&mo&&y)?`${d.padStart(2,'0')}/${mo.padStart(2,'0')}/${y}`:'';
   const name=g('nm').trim();
-  const updates={phone:g('ph'),whatsapp:g('wa'),nationalId:g('nid'),age:g('age'),grade:g('gr'),group:g('grp'),patrol:g('pat'),role:g('rol'),notes:g('not'),dob};
+  const updates={phone:g('ph'),whatsapp:g('wa'),nationalId:g('nid'),age:g('age'),grade:g('gr'),group:g('grp'),patrol:g('pat'),role:g('rol'),position:g('pos'),notes:g('not'),dob};
   if(name) updates.name=name;
   await updateDoc(doc(db,'members',id),updates);
   toast('تم حفظ البيانات ✅','ok');
@@ -1777,7 +1784,8 @@ window.printMember=function(id){
   <div class="field"><div class="lbl">الجنس</div><div class="val">${m.gender==='male'?'ولد':'بنت'}</div></div>
   <div class="field"><div class="lbl">العمر</div><div class="val">${esc(m.age)||'—'}</div></div>
   <div class="field"><div class="lbl">المرحلة الدراسية</div><div class="val">${esc(m.grade)||'—'}</div></div>
-  <div class="field"><div class="lbl">الصفة في المجموعة</div><div class="val">${esc(m.role)||'—'}</div></div>
+  <div class="field"><div class="lbl">الرتبة الكشفية</div><div class="val">${esc(m.role)||'—'}</div></div>
+  <div class="field"><div class="lbl">الصفة في الطليعة</div><div class="val">${esc(m.position)||'—'}</div></div>
   <div class="field"><div class="lbl">اسم المجموعة</div><div class="val">${esc(m.group)||'—'}</div></div>
   <div class="field"><div class="lbl">اسم الطليعة</div><div class="val">${esc(m.patrol)||'—'}</div></div>
   <div class="field"><div class="lbl">رقم الموبايل</div><div class="val">${esc(m.phone)||'—'}</div></div>
@@ -1822,8 +1830,8 @@ function renderAdmMems(){
     const bdgs=(m.badges||[]).map((b,i)=>`<span class="tag-b">🏅${esc(b)}${isPatrol?'':'<i class="xt" onclick="rmBadge(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد شارات</span>';
     const crss=(m.courses||[]).map((c,i)=>`<span class="tag-c">📚${esc(c)}${isPatrol?'':'<i class="xt" onclick="rmCourse(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد دورات</span>';
     const av=m.gender==='male'?'⛺':'🏕️';
-    const rolesList=m.gender==='female'?ROLES_F:ROLES_M;
-    const meta=[m.role,m.group,m.patrol,m.grade].filter(Boolean).join(' · ')||'اضغط لعرض البيانات';
+    const ranksList=m.gender==='female'?RANKS_F:RANKS_M;
+    const meta=[m.role,m.position,m.group,m.patrol,m.grade].filter(Boolean).join(' · ')||'اضغط لعرض البيانات';
     return `
     <div class="mcard">
       <div class="mtop" onclick="togProf('${m.id}')">
@@ -1838,7 +1846,7 @@ function renderAdmMems(){
         ${isPatrol?`
         <div style="padding:12px;background:var(--bg2);border-radius:12px;margin-bottom:12px;font-size:0.82rem">
           <div style="font-weight:700;margin-bottom:4px">👤 ${esc(m.name)}</div>
-          <div style="color:var(--muted)">${m.role||''} ${m.patrol?'· طليعة '+esc(m.patrol):''}</div>
+          <div style="color:var(--muted)">${m.role||''}${m.position?' · '+m.position:''} ${m.patrol?'· طليعة '+esc(m.patrol):''}</div>
           <div style="color:var(--muted);margin-top:2px">✅ حضور: ${m.attendance||0} · ❌ غياب: ${m.absence||0}</div>
         </div>
         `:`
@@ -1860,7 +1868,8 @@ function renderAdmMems(){
             <input id="dobY${m.id}" type="tel" placeholder="سنة" maxlength="4" style="flex:2;text-align:center" value="${esc((m.dob||'').split('/')[2]||'')}"/>
           </div></div>
           <div class="pf"><label>المرحلة الدراسية</label><select id="gr${m.id}">${['<option value="">اختر...</option>',...GRADES.map(g=>`<option ${m.grade===g?'selected':''}>${g}</option>`)].join('')}</select></div>
-          <div class="pf"><label>الصفة في المجموعة</label><select id="rol${m.id}">${['<option value="">اختر...</option>',...rolesList.map(r=>`<option ${m.role===r?'selected':''}>${r}</option>`)].join('')}</select></div>
+          <div class="pf"><label>الرتبة الكشفية</label><select id="rol${m.id}">${['<option value="">اختر...</option>',...ranksList.map(r=>`<option ${m.role===r?'selected':''}>${r}</option>`)].join('')}</select></div>
+          <div class="pf"><label>الصفة في الطليعة</label><select id="pos${m.id}">${['<option value="">بدون</option>',...PATROL_POSITIONS.map(p=>`<option ${m.position===p?'selected':''}>${p}</option>`)].join('')}</select></div>
           <div class="pf"><label>اسم المجموعة</label><input id="grp${m.id}" type="text" value="${esc(m.group||'')}" placeholder="اسم المجموعة"/></div>
           <div class="pf"><label>اسم الطليعة</label><input id="pat${m.id}" type="text" value="${esc(m.patrol||'')}" placeholder="اسم الطليعة"/></div>
           <div class="pf full"><label>ملاحظات</label><textarea id="not${m.id}" rows="2" placeholder="ملاحظات...">${esc(m.notes||'')}</textarea></div>
@@ -2549,6 +2558,7 @@ window.myaccLogin=function(){
   document.getElementById('myaccPhone').value=found.phone||'';
   document.getElementById('myaccWhatsapp').value=found.whatsapp||'';
   document.getElementById('myaccRole').value=found.role||'—';
+  document.getElementById('myaccPosition').value=found.position||'—';
   document.getElementById('myaccRating').value=found.rating?('⭐'.repeat(found.rating)):'—';
   document.getElementById('myaccAttCount').textContent=found.attendance||0;
   document.getElementById('myaccAbsCount').textContent=found.absence||0;
@@ -2780,7 +2790,7 @@ function renderStats(){
 }
 // ===== EXPORT EXCEL =====
 window.exportExcel=function(){
-  const rows=[['الاسم','الجنس','الموبايل','واتساب','الرقم القومي','العمر','الصف','تاريخ الميلاد','الصفة الكشفية','الحضور','الغياب','النقاط','شارات التميز','الشارات','الدورات']];
+  const rows=[['الاسم','الجنس','الموبايل','واتساب','الرقم القومي','العمر','الصف','تاريخ الميلاد','الرتبة الكشفية','الصفة في الطليعة','الحضور','الغياب','النقاط','شارات التميز','الشارات','الدورات']];
   members.forEach(m=>{
     rows.push([
       m.name||'',
@@ -2792,6 +2802,7 @@ window.exportExcel=function(){
       m.grade||'',
       m.dob||'',
       m.role||'',
+      m.position||'',
       m.attendance||0,
       m.absence||0,
       calcPoints(m),
