@@ -543,6 +543,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="nav">
     <button class="ntab on" onclick="goTab('ann')">📢 إعلانات</button>
     <button class="ntab" onclick="goTab('leaders')">👨‍✈️ القادة</button>
+    <button class="ntab" onclick="goTab('patrolLeaders')">🎖️ العرفاء</button>
     <button class="ntab" onclick="goTab('members')">👥 الأعضاء</button>
     <button class="ntab" onclick="goTab('register')">📝 تسجيل</button>
     <button class="ntab" onclick="goTab('chat')" id="chatNavBtn" style="position:relative">💬 شات<div class="nbadge" id="chatBadge"></div></button>
@@ -613,6 +614,16 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="page" id="pubMemsList"></div>
     </div>
 
+    <!-- PATROL LEADERS (عرفاء) -->
+    <div id="sec-patrolLeaders" class="sec">
+      <div class="page">
+        <div class="card">
+          <div class="card-head">🎖️ العرفاء ومساعدوهم</div>
+          <div id="patrolLeadersList"><div class="empty"><span>🎖️</span>لا يوجد عرفاء بعد</div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- REGISTER -->
     <div id="sec-register" class="sec">
       <div class="page">
@@ -651,6 +662,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
           <div class="fr2">
             <div class="ff"><label>رقم الموبايل *</label><input type="tel" id="regPhone" placeholder="01xxxxxxxxx"/></div>
             <div class="ff"><label>واتساب</label><input type="tel" id="regWa" placeholder="201xxxxxxxxx"/></div>
+          </div>
+          <div class="fr2">
+            <div class="ff"><label>البريد الإلكتروني (اختياري)</label><input type="email" id="regEmail" placeholder="name@example.com"/></div>
+            <div class="ff"><label>رابط صفحة الفيسبوك (اختياري)</label><input type="text" id="regFacebook" placeholder="facebook.com/username"/></div>
           </div>
           <div class="ff"><label>ملاحظة / سبب الانضمام</label><textarea id="regNote" placeholder="اكتب أي ملاحظة..." rows="2"></textarea></div>
           <button class="sbtn" onclick="submitReg()">📤 إرسال طلب الانضمام</button>
@@ -1118,7 +1133,7 @@ window.goTab=window.goTab||function(t){
   document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
   const sec=document.getElementById('sec-'+t);
   if(sec)sec.classList.add('on');
-  const tabs=['ann','leaders','members','register','chat','album','honor','rank','tasks','myacc','admin'];
+  const tabs=['ann','leaders','patrolLeaders','members','register','chat','album','honor','rank','tasks','myacc','admin'];
   const idx=tabs.indexOf(t);
   if(idx>=0 && document.querySelectorAll('.ntab')[idx]) document.querySelectorAll('.ntab')[idx].classList.add('on');
 };
@@ -1221,7 +1236,7 @@ window.goTab=function(t){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
   document.getElementById('sec-'+t).classList.add('on');
-  const tabs=['ann','leaders','members','register','chat','album','honor','rank','tasks','myacc','admin'];
+  const tabs=['ann','leaders','patrolLeaders','members','register','chat','album','honor','rank','tasks','myacc','admin'];
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll('.ntab')[idx].classList.add('on');
   if(t==='chat'){renderContactDirect();document.getElementById('chatBadge').style.display='none';}
@@ -1470,6 +1485,27 @@ function renderLeadersPub(){
       </div>
     </div>`).join('');
 }
+const PATROL_LEADER_POSITIONS=['عريف اول','عريف','مساعد عريف'];
+function renderPatrolLeadersPub(){
+  const el=document.getElementById('patrolLeadersList');
+  if(!el)return;
+  const list=(typeof members!=='undefined'?members:[]).filter(m=>PATROL_LEADER_POSITIONS.includes(m.position));
+  if(!list.length){el.innerHTML='<div class="empty"><span>🎖️</span>لا يوجد عرفاء بعد</div>';return;}
+  // رتّب: عريف اول أولاً، ثم عريف، ثم مساعد عريف
+  const order={'عريف اول':0,'عريف':1,'مساعد عريف':2};
+  const sorted=[...list].sort((a,b)=>(order[a.position]??9)-(order[b.position]??9));
+  el.innerHTML=sorted.map(m=>`
+    <div class="leader-card">
+      <div class="leader-img">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:(m.gender==='male'?'⛺':'🏕️')}</div>
+      <div>
+        <div class="leader-name">${esc(m.name)}</div>
+        <div class="leader-role">${esc(m.position)}${m.role?' · '+esc(m.role):''}${m.patrol?' · طليعة '+esc(m.patrol):''}</div>
+        <div class="leader-btns">
+          ${m.facebook?`<a class="lbtn lbtn-fb" href="${m.facebook.startsWith('http')?esc(m.facebook):'https://'+esc(m.facebook)}" target="_blank">👤 فيسبوك</a>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
 function renderContactDirect(){
   const el=document.getElementById('contactDirect');if(!el)return;
   if(!leaders.length){el.innerHTML='<div class="empty"><span>📞</span>لا توجد جهات تواصل</div>';return;}
@@ -1541,7 +1577,7 @@ window.editLeader=function(id){
 let members=[];
 onSnapshot(MC,snap=>{
   members=snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderPubMems();renderAdmMems();renderRank();
+  renderPubMems();renderAdmMems();renderRank();renderPatrolLeadersPub();
   checkBirthdays();
   // Update header counter
   const el=document.getElementById('cntMembers');
@@ -1573,8 +1609,7 @@ function renderPubMems(){
             ${m.position?`<span class="mem-pub-role" style="display:inline-block;margin-bottom:3px;margin-right:4px">📋 ${esc(m.position)}</span>`:''}
             <div class="mem-pub-meta">${esc(meta)||'&nbsp;'}</div>
             <div class="mem-contact-btns">
-              ${m.phone?`<a class="lbtn lbtn-ph" href="tel:${esc(m.phone)}" style="font-size:0.65rem;padding:3px 8px">📞 ${esc(m.phone)}</a>`:''}
-              ${m.whatsapp?`<a class="lbtn lbtn-wa" href="https://wa.me/${esc(m.whatsapp)}" target="_blank" style="font-size:0.65rem;padding:3px 8px">💬 واتساب</a>`:''}
+              ${m.facebook?`<a class="lbtn lbtn-fb" href="${m.facebook.startsWith('http')?esc(m.facebook):'https://'+esc(m.facebook)}" target="_blank" style="font-size:0.65rem;padding:3px 8px">👤 فيسبوك</a>`:''}
             </div>
           </div>
         </div>`;
@@ -1719,7 +1754,7 @@ window.savProf=async function(id){
   const y=toEn(g('dobY')).trim();
   const dob=(d&&mo&&y)?`${d.padStart(2,'0')}/${mo.padStart(2,'0')}/${y}`:'';
   const name=g('nm').trim();
-  const updates={phone:g('ph'),whatsapp:g('wa'),nationalId:g('nid'),age:g('age'),grade:g('gr'),group:g('grp'),patrol:g('pat'),role:g('rol'),position:g('pos'),notes:g('not'),dob};
+  const updates={phone:g('ph'),whatsapp:g('wa'),email:g('em'),facebook:g('fb'),nationalId:g('nid'),age:g('age'),grade:g('gr'),group:g('grp'),patrol:g('pat'),role:g('rol'),position:g('pos'),notes:g('not'),dob};
   if(name) updates.name=name;
   await updateDoc(doc(db,'members',id),updates);
   toast('تم حفظ البيانات ✅','ok');
@@ -1860,6 +1895,8 @@ function renderAdmMems(){
           <div class="pf full"><label>✏️ اسم العضو</label><input id="nm${m.id}" type="text" value="${esc(m.name||'')}" placeholder="الاسم الكامل"/></div>
           <div class="pf"><label>رقم الموبايل</label><input id="ph${m.id}" type="tel" value="${esc(m.phone||'')}" placeholder="01xxxxxxxxx"/></div>
           <div class="pf"><label>واتساب (مع كود الدولة)</label><input id="wa${m.id}" type="tel" value="${esc(m.whatsapp||'')}" placeholder="201xxxxxxxxx"/></div>
+          <div class="pf"><label>البريد الإلكتروني (اختياري)</label><input id="em${m.id}" type="email" value="${esc(m.email||'')}" placeholder="name@example.com"/></div>
+          <div class="pf"><label>رابط الفيسبوك (اختياري)</label><input id="fb${m.id}" type="text" value="${esc(m.facebook||'')}" placeholder="facebook.com/username"/></div>
           <div class="pf full"><label>الرقم القومي</label><input id="nid${m.id}" type="text" value="${esc(m.nationalId||'')}" placeholder="14 رقم" maxlength="14"/></div>
           <div class="pf"><label>العمر</label><input id="age${m.id}" type="number" value="${esc(m.age||'')}" placeholder="بالسنوات"/></div>
           <div class="pf full"><label>تاريخ الميلاد</label><div style="display:flex;gap:6px">
@@ -2119,12 +2156,14 @@ window.submitReg=async function(){
       grade:document.getElementById('regGrade').value,
       phone,
       whatsapp:document.getElementById('regWa').value.trim(),
+      email:document.getElementById('regEmail').value.trim(),
+      facebook:document.getElementById('regFacebook').value.trim(),
       note:document.getElementById('regNote').value.trim(),
       status:'pending',
       createdAt:serverTimestamp()
     });
     status.innerHTML='<span style="color:var(--ok)">✅ تم إرسال طلبك! سيتم مراجعته خلال 24-48 ساعة</span>';
-    ['regName','regNationalId','regAge','regPhone','regWa','regNote'].forEach(id=>document.getElementById(id).value='');
+    ['regName','regNationalId','regAge','regPhone','regWa','regEmail','regFacebook','regNote'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('regGender').value='';
     document.getElementById('regGrade').value='';
     document.getElementById('nidMsg').textContent='';
@@ -2197,7 +2236,8 @@ window.approveReq=async function(id){
   await addDoc(MC,{
     name:req.name,gender:req.gender,nationalId:req.nationalId,
     age:req.age||'',phone:req.phone||'',whatsapp:req.whatsapp||'',
-    grade:req.grade||'',group:'',patrol:'',role:'',
+    email:req.email||'',facebook:req.facebook||'',
+    grade:req.grade||'',group:'',patrol:'',role:'',position:'',
     imgUrl:'',badges:[],courses:[],rating:0,sent:false,notes:req.note||'',
     createdAt:serverTimestamp()
   });
@@ -2879,20 +2919,27 @@ window.bcSelectAll=function(select){
 };
 const BC_ADMIN_NOTICE="هذه الرسالة من قبل الإدارة، لا تقم بالرد عليها";
 let bcImageFile=null;
-window.bcOnImagePicked=function(input){
+let bcImageBuffer=null,bcImageName='',bcImageType='';
+window.bcOnImagePicked=async function(input){
   bcImageFile=(input.files&&input.files[0])?input.files[0]:null;
   const label=document.getElementById('bcImageLabel');
   const clearBtn=document.getElementById('bcImageClearBtn');
   if(bcImageFile){
+    // اقرأ الصورة كبيانات خام مرة واحدة، عشان نقدر نعمل منها ملف جديد صالح
+    // للمشاركة في كل مرة بدل ما نعيد استخدام نفس الملف (اللي بيفشل بعد أول مشاركة)
+    bcImageBuffer=await bcImageFile.arrayBuffer();
+    bcImageName=bcImageFile.name;
+    bcImageType=bcImageFile.type;
     if(label) label.textContent=bcImageFile.name;
     if(clearBtn) clearBtn.style.display='inline-block';
   }else{
+    bcImageBuffer=null;
     if(label) label.textContent='إرفاق صورة (اختياري)';
     if(clearBtn) clearBtn.style.display='none';
   }
 };
 window.bcClearImage=function(){
-  bcImageFile=null;
+  bcImageFile=null;bcImageBuffer=null;
   const input=document.getElementById('bcImageInput');if(input) input.value='';
   const label=document.getElementById('bcImageLabel');if(label) label.textContent='إرفاق صورة (اختياري)';
   const clearBtn=document.getElementById('bcImageClearBtn');if(clearBtn) clearBtn.style.display='none';
@@ -2928,7 +2975,7 @@ function bcRenderQueue(){
     return;
   }
   const cur=bcQueue[bcQueueIndex];
-  const imgNote=bcImageFile?`<div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">📎 هيتفتح شير الجهاز — اختار واتساب وشات "${esc(cur.name)}" يدويًا</div>`:'';
+  const imgNote=bcImageBuffer?`<div style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">📎 هيتفتح شير الجهاز — اختار واتساب وشات "${esc(cur.name)}" يدويًا</div>`:'';
   result.innerHTML=`
     <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:8px;padding:10px;margin-top:4px">
       <div style="font-size:0.74rem;color:var(--muted);margin-bottom:6px">📤 جاري الإرسال — ${bcQueueIndex+1} من ${bcQueue.length}</div>
@@ -2946,13 +2993,18 @@ window.bcOpenCurrent=async function(){
   const cur=bcQueue[bcQueueIndex];
   // Image attached: use the device share sheet (WhatsApp can't receive a pre-attached
   // image through a wa.me link — this is a WhatsApp/browser limitation, not app-specific).
-  if(bcImageFile&&navigator.share&&navigator.canShare&&navigator.canShare({files:[bcImageFile]})){
-    try{
-      await navigator.share({text:bcQueueMsg,files:[bcImageFile]});
-      return;
-    }catch(e){/* user cancelled the share sheet — fall through to text-only chat open */}
-  }else if(bcImageFile){
-    toast('المتصفح ده مش بيدعم مشاركة الصور، هيتفتح الشات بالنص بس وابعت الصورة يدويًا 📎','err');
+  if(bcImageBuffer){
+    // نبني ملف جديد من البيانات المحفوظة في كل مرة، عشان المشاركة تنجح لكل شخص
+    // (إعادة استخدام نفس كائن الملف بتفشل من المرة التانية في متصفحات كتير)
+    const freshFile=new File([bcImageBuffer], bcImageName, {type:bcImageType});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[freshFile]})){
+      try{
+        await navigator.share({text:bcQueueMsg,files:[freshFile]});
+        return;
+      }catch(e){/* المستخدم قفل شاشة المشاركة — نكمل عادي ونفتح الشات بالنص بس */}
+    }else{
+      toast('المتصفح ده مش بيدعم مشاركة الصور، هيتفتح الشات بالنص بس وابعت الصورة يدويًا 📎','err');
+    }
   }
   window.open(`https://wa.me/${cur.phone}?text=${encodeURIComponent(bcQueueMsg)}`,'_blank');
 };
@@ -2962,7 +3014,9 @@ window.bcNextQueue=async function(markSent){
   if(markSent) await updateDoc(doc(db,'members',cur.id),{sent:true});
   bcQueueIndex++;
   bcRenderQueue();
-  if(bcQueueIndex<bcQueue.length) bcOpenCurrent();
+  // ⚠️ متفتحش واتساب تلقائي هنا: بعد أي "await" المتصفح بيعتبر إن لمسة المستخدم
+  // انتهت وبيمنع فتح نافذة جديدة بصمت. عشان كده سيبنا زرار "فتح واتساب" يدوي
+  // في بطاقة الشخص التالي (bcRenderQueue) بدل الفتح التلقائي اللي كان بيفشل.
 };
 // ===== END BULK WHATSAPP RECIPIENT SELECTION =====
 window.copyNumbers=function(gender){
