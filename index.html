@@ -517,6 +517,18 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
   </div>
 
+  <!-- Patrol leader (عريف) modal -->
+  <div class="nh-modal-bg" id="plModalBg" onclick="if(event.target===this)closePatrolLeaderModal()">
+    <div class="nh-modal">
+      <button class="nh-modal-close" onclick="closePatrolLeaderModal()">✕</button>
+      <div class="nh-modal-av" id="plAvatar"></div>
+      <h3 id="plName"></h3>
+      <div class="nh-modal-role" id="plPosition"></div>
+      <div style="font-size:0.8rem;color:#5a6b85;margin-top:2px" id="plMeta"></div>
+      <div class="nh-modal-actions" id="plActions"></div>
+    </div>
+  </div>
+
   <!-- About modal -->
   <div class="nh-modal-bg" id="aboutModalBg" onclick="if(event.target===this)closeAboutModal()">
     <div class="nh-modal" style="text-align:right">
@@ -1486,6 +1498,7 @@ function renderLeadersPub(){
     </div>`).join('');
 }
 const PATROL_LEADER_POSITIONS=['عريف اول','عريف','مساعد عريف'];
+let patrolLeadersSorted=[];
 function renderPatrolLeadersPub(){
   const el=document.getElementById('patrolLeadersList');
   if(!el)return;
@@ -1493,19 +1506,33 @@ function renderPatrolLeadersPub(){
   if(!list.length){el.innerHTML='<div class="empty"><span>🎖️</span>لا يوجد عرفاء بعد</div>';return;}
   // رتّب: عريف اول أولاً، ثم عريف، ثم مساعد عريف
   const order={'عريف اول':0,'عريف':1,'مساعد عريف':2};
-  const sorted=[...list].sort((a,b)=>(order[a.position]??9)-(order[b.position]??9));
-  el.innerHTML=sorted.map(m=>`
-    <div class="leader-card">
+  patrolLeadersSorted=[...list].sort((a,b)=>(order[a.position]??9)-(order[b.position]??9));
+  el.innerHTML=patrolLeadersSorted.map((m,i)=>`
+    <div class="leader-card" onclick="openPatrolLeaderModal(${i})" style="cursor:pointer">
       <div class="leader-img">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:(m.gender==='male'?'⛺':'🏕️')}</div>
       <div>
         <div class="leader-name">${esc(m.name)}</div>
         <div class="leader-role">${esc(m.position)}${m.role?' · '+esc(m.role):''}${m.patrol?' · طليعة '+esc(m.patrol):''}</div>
-        <div class="leader-btns">
-          ${m.facebook?`<a class="lbtn lbtn-fb" href="${m.facebook.startsWith('http')?esc(m.facebook):'https://'+esc(m.facebook)}" target="_blank">👤 فيسبوك</a>`:''}
-        </div>
       </div>
     </div>`).join('');
 }
+window.openPatrolLeaderModal=function(i){
+  const m=patrolLeadersSorted[i];if(!m)return;
+  const av=m.gender==='male'?'⛺':'🏕️';
+  document.getElementById('plAvatar').innerHTML=m.imgUrl?`<img src="${esc(m.imgUrl)}"/>`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;background:#dde8f5">${av}</div>`;
+  document.getElementById('plName').textContent=m.name||'';
+  document.getElementById('plPosition').textContent=m.position||'';
+  document.getElementById('plMeta').textContent=[m.role,m.patrol?'طليعة '+m.patrol:''].filter(Boolean).join(' · ');
+  const actions=document.getElementById('plActions');
+  let html='';
+  if(m.facebook) html+=`<a class="nh-modal-btn fb" href="${m.facebook.startsWith('http')?esc(m.facebook):'https://'+esc(m.facebook)}" target="_blank">📘 صفحة فيسبوك</a>`;
+  if(!html) html='<div style="color:#8094b3;font-size:0.85rem;padding:10px 0">لا توجد بيانات تواصل عامة لهذا العريف</div>';
+  actions.innerHTML=html;
+  document.getElementById('plModalBg').classList.add('on');
+};
+window.closePatrolLeaderModal=function(){
+  document.getElementById('plModalBg').classList.remove('on');
+};
 function renderContactDirect(){
   const el=document.getElementById('contactDirect');if(!el)return;
   if(!leaders.length){el.innerHTML='<div class="empty"><span>📞</span>لا توجد جهات تواصل</div>';return;}
@@ -1588,8 +1615,9 @@ onSnapshot(MC,snap=>{
 function renderPubMems(){
   const el=document.getElementById('pubMemsList');
   if(!members.length){el.innerHTML='<div class="page"><div class="empty"><span>👥</span>لا يوجد أعضاء بعد</div></div>';return;}
-  const males=[...members].filter(m=>m.gender==='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const females=[...members].filter(m=>m.gender!=='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const byOldest=(a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0);
+  const males=[...members].filter(m=>m.gender==='male').sort(byOldest);
+  const females=[...members].filter(m=>m.gender!=='male').sort(byOldest);
   const renderGroup=(list,icon,label,color)=>{
     if(!list.length) return '';
     return `<div style="margin-bottom:18px">
@@ -1629,7 +1657,13 @@ window.addMember=async function(){
 };
 window.togSent=async function(id,cur){await updateDoc(doc(db,'members',id),{sent:!cur});};
 window.delMem=async function(id){if(!confirm('تأكيد الحذف؟'))return;await deleteDoc(doc(db,'members',id));toast('تم الحذف');};
-window.togProf=function(id){document.getElementById('prof'+id).classList.toggle('on');};
+window.togProf=function(id){
+  const el=document.getElementById('prof'+id);
+  el.classList.toggle('on');
+  if(el.classList.contains('on')) openProfileIds.add(id);
+  else openProfileIds.delete(id);
+};
+let openProfileIds=new Set();
 window.addBadge=async function(id){const inp=document.getElementById('bi'+id);const v=inp.value.trim();if(!v)return;const m=members.find(x=>x.id===id);await updateDoc(doc(db,'members',id),{badges:[...(m.badges||[]),v]});inp.value='';};
 window.rmBadge=async function(id,i){const m=members.find(x=>x.id===id);await updateDoc(doc(db,'members',id),{badges:(m.badges||[]).filter((_,j)=>j!==i)});};
 window.addCourse=async function(id){const inp=document.getElementById('ci'+id);const v=inp.value.trim();if(!v)return;const m=members.find(x=>x.id===id);await updateDoc(doc(db,'members',id),{courses:[...(m.courses||[]),v]});inp.value='';};
@@ -1729,22 +1763,32 @@ function renderRank(){
   const el=document.getElementById('rankList');
   if(!el)return;
   if(!members.length){el.innerHTML='<div class="empty"><span>🏆</span>لا يوجد أعضاء بعد</div>';return;}
-  const ranked=[...members].map(m=>({...m,points:calcPoints(m)})).sort((a,b)=>b.points-a.points);
   const medals=['🥇','🥈','🥉'];
-  el.innerHTML=ranked.map((m,i)=>{
-    const av=m.gender==='male'?'⛺':'🏕️';
-    const medal=i<3?medals[i]:`#${i+1}`;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:${i<3?'rgba(244,165,35,0.08)':'var(--bg2)'};border-radius:12px;margin-bottom:8px;border:1px solid ${i<3?'rgba(244,165,35,0.25)':'var(--border)'}">
-      <div style="font-size:${i<3?'1.4rem':'0.9rem'};font-weight:900;color:${i<3?'#f4a523':'var(--muted)'};min-width:32px;text-align:center">${medal}</div>
-      <div class="mav" style="width:40px;height:40px;flex-shrink:0">${m.imgUrl?`<img src="${esc(m.imgUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`:av}</div>
-      <div style="flex:1">
-        <div style="font-weight:700;color:var(--text);font-size:0.88rem">${esc(m.name)}</div>
-        <div style="font-size:0.68rem;color:var(--muted)">⭐${m.rating||0} · 🏅${(m.badges||[]).length} · 📚${(m.courses||[]).length} · ✅${m.attendance||0} · ❌${m.absence||0}</div>
-        ${(m.excellence||[]).length>0?`<div style="font-size:0.7rem;margin-top:4px">${(m.excellence||[]).join(' · ')}</div>`:''}
-      </div>
-      <div style="font-family:Tajawal,sans-serif;font-weight:900;font-size:1.1rem;color:var(--blue3)">${m.points}</div>
-    </div>`;
-  }).join('');
+  const buildList=(list)=>{
+    const ranked=[...list].map(m=>({...m,points:calcPoints(m)})).sort((a,b)=>b.points-a.points);
+    return ranked.map((m,i)=>{
+      const av=m.gender==='male'?'⛺':'🏕️';
+      const medal=i<3?medals[i]:`#${i+1}`;
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:${i<3?'rgba(244,165,35,0.08)':'var(--bg2)'};border-radius:12px;margin-bottom:8px;border:1px solid ${i<3?'rgba(244,165,35,0.25)':'var(--border)'}">
+        <div style="font-size:${i<3?'1.4rem':'0.9rem'};font-weight:900;color:${i<3?'#f4a523':'var(--muted)'};min-width:32px;text-align:center">${medal}</div>
+        <div class="mav" style="width:40px;height:40px;flex-shrink:0">${m.imgUrl?`<img src="${esc(m.imgUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`:av}</div>
+        <div style="flex:1">
+          <div style="font-weight:700;color:var(--text);font-size:0.88rem">${esc(m.name)}</div>
+          <div style="font-size:0.68rem;color:var(--muted)">⭐${m.rating||0} · 🏅${(m.badges||[]).length} · 📚${(m.courses||[]).length} · ✅${m.attendance||0} · ❌${m.absence||0}</div>
+          ${(m.excellence||[]).length>0?`<div style="font-size:0.7rem;margin-top:4px">${(m.excellence||[]).join(' · ')}</div>`:''}
+        </div>
+        <div style="font-family:Tajawal,sans-serif;font-weight:900;font-size:1.1rem;color:var(--blue3)">${m.points}</div>
+      </div>`;
+    }).join('');
+  };
+  const males=members.filter(m=>m.gender==='male');
+  const females=members.filter(m=>m.gender!=='male');
+  el.innerHTML=`
+    <div style="font-weight:800;color:var(--text);font-size:0.9rem;margin-bottom:8px">👦 ترتيب الأولاد</div>
+    ${males.length?buildList(males):'<div class="empty"><span>👦</span>لا يوجد أولاد بعد</div>'}
+    <div style="font-weight:800;color:var(--text);font-size:0.9rem;margin:16px 0 8px">👧 ترتيب البنات</div>
+    ${females.length?buildList(females):'<div class="empty"><span>👧</span>لا يوجد بنات بعد</div>'}
+  `;
 }
 window.savProf=async function(id){
   const g=s=>document.getElementById(s+id)?.value||'';
@@ -1856,8 +1900,9 @@ function renderAdmMems(){
     ? members.filter(m=>(m.patrol||'').trim()===(currentAdmin.patrol||'').trim())
     : members;
   if(!visibleMembers.length){el.innerHTML=`<div class="empty"><span>👥</span>${isPatrolUser?'لا يوجد أعضاء في طليعتك بعد':'أضف أعضاء للمتابعة'}</div>`;return;}
-  const males=[...visibleMembers].filter(m=>m.gender==='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const females=[...visibleMembers].filter(m=>m.gender!=='male').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const byOldest=(a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0);
+  const males=[...visibleMembers].filter(m=>m.gender==='male').sort(byOldest);
+  const females=[...visibleMembers].filter(m=>m.gender!=='male').sort(byOldest);
   const renderMemberCard=m=>{
     const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
     const r=m.rating||0;
@@ -1962,9 +2007,17 @@ function renderAdmMems(){
       <span style="font-weight:700;color:#fff;font-size:0.88rem">${label}</span>
       <span style="background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:1px 8px;font-size:0.7rem;margin-right:auto">${count} عضو</span>
     </div>`;
+  const scrollY=window.scrollY;
   el.innerHTML=
     (males.length?groupHeader('الأولاد','👦','linear-gradient(135deg,#0a2a5e,#1565c0)',males.length)+males.map(renderMemberCard).join(''):'')+
     (females.length?groupHeader('البنات','👧','linear-gradient(135deg,#880e4f,#c2185b)',females.length)+females.map(renderMemberCard).join(''):'');
+  // رجّع فتح أي كارت عضو كان متفتّح قبل التحديث (عشان تسجيل الحضور/الغياب
+  // ميقفلش الكارت ويرميك برّه الترتيب في كل مرة تدوس)
+  openProfileIds.forEach(id=>{
+    const profEl=document.getElementById('prof'+id);
+    if(profEl) profEl.classList.add('on');
+  });
+  window.scrollTo(0,scrollY);
 }
 
 // INBOX
@@ -2604,7 +2657,8 @@ window.myaccLogin=function(){
   document.getElementById('myaccAbsCount').textContent=found.absence||0;
   const myPoints=calcPoints(found);
   document.getElementById('myaccPointsVal').textContent=myPoints;
-  const ranked=[...members].map(m=>({id:m.id,points:calcPoints(m)})).sort((a,b)=>b.points-a.points);
+  const sameGenderMembers=members.filter(m=>m.gender===found.gender);
+  const ranked=sameGenderMembers.map(m=>({id:m.id,points:calcPoints(m)})).sort((a,b)=>b.points-a.points);
   const myRank=ranked.findIndex(m=>m.id===found.id)+1;
   document.getElementById('myaccRankRow').textContent=myRank>0?`الترتيب: #${myRank} من ${members.length}`:'';
   const avImg=document.getElementById('myaccAvatarPrev');
