@@ -81,6 +81,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .ann-date{font-size:0.67rem;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:4px}
 .ann-title{font-family:'Tajawal',sans-serif;font-size:1rem;font-weight:800;color:var(--navy);margin-bottom:8px}
 .ann-img{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:8px}
+.media-embed{width:100%;margin-bottom:8px}
+.media-embed iframe{width:100%;border:none;border-radius:10px}
+.media-yt iframe{aspect-ratio:16/9;height:auto}
+.media-ig iframe{aspect-ratio:9/16;height:auto;max-width:340px;margin:0 auto;display:block}
 .ann-body{font-size:0.84rem;line-height:1.9;color:var(--text2);white-space:pre-line;max-height:85px;overflow:hidden;transition:max-height 0.4s}
 .ann-body.exp{max-height:4000px}
 .ann-more{font-size:0.72rem;color:var(--blue2);cursor:pointer;border:none;background:none;font-family:'Cairo',sans-serif;padding:4px 0;margin-top:4px;font-weight:700}
@@ -525,6 +529,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <h3 id="plName"></h3>
       <div class="nh-modal-role" id="plPosition"></div>
       <div style="font-size:0.8rem;color:#5a6b85;margin-top:2px" id="plMeta"></div>
+      <div style="font-size:1.1rem;margin-top:8px" id="plRating"></div>
+      <div style="font-size:0.78rem;color:#5a6b85;margin-top:4px" id="plPatrolRating"></div>
       <div class="nh-modal-actions" id="plActions"></div>
     </div>
   </div>
@@ -896,6 +902,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <button class="atab" onclick="goAdm('manann')">📋 إعلانات</button>
               <button class="atab" onclick="goAdm('leaders')">👨‍✈️ قادة</button>
               <button class="atab" onclick="goAdm('track')">👥 أعضاء</button>
+              <button class="atab" onclick="goAdm('patrolrate')">🏕️ الطلائع</button>
               <button class="atab" onclick="goAdm('reqs')" id="reqsTab">📋 طلبات<div class="nbadge" id="reqsBadge" style="position:absolute;top:5px;right:3px;width:7px;height:7px;background:var(--danger);border-radius:50%;display:none;box-shadow:0 0 5px var(--danger)"></div></button>
               <button class="atab" onclick="goAdm('inbox')">📬 رسائل</button>
               <button class="atab" onclick="goAdm('chat')">💬 شات</button>
@@ -918,6 +925,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 </div>
               </div>
               <div class="ff"><label>نص الإعلان *</label><textarea id="aBody" placeholder="اكتب الإعلان هنا..."></textarea></div>
+              <div class="ff"><label>أو الصق رابط (يوتيوب / انستجرام / تيك توك / فيسبوك / صورة) (اختياري)</label><input type="text" id="annLink" placeholder="https://..."/></div>
               <div class="fr2">
                 <div class="ff"><label>التاريخ</label><input type="date" id="aDate"/></div>
                 <div class="ff"><label>تثبيت؟</label><select id="aPin"><option value="0">لا</option><option value="1">نعم ثبّت</option></select></div>
@@ -1005,6 +1013,13 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <div class="mlist" id="mList"></div>
             </div>
 
+            <!-- PATROL RATINGS ADMIN -->
+            <div id="adm-patrolrate" class="asec">
+              <div style="font-size:0.84rem;font-weight:700;color:var(--navy);margin-bottom:10px">🏕️ تقييم الطلائع</div>
+              <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">قيّم كل طليعة ككل بالنجوم (منفصل عن تقييم كل عضو)</div>
+              <div id="patrolRatingsList"></div>
+            </div>
+
             <!-- INBOX ADMIN -->
             <div id="adm-inbox" class="asec">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1022,6 +1037,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <input type="file" id="evtImgs" accept="image/*" multiple style="padding:8px;background:var(--bg);border:1.5px solid var(--border2);border-radius:10px;color:var(--text)"/>
               </div>
               <span class="up-txt" id="evtUpTxt"></span>
+              <div class="ff"><label>أو الصق رابط فيديو/صورة (يوتيوب / انستجرام / تيك توك / فيسبوك) (اختياري)</label><input type="text" id="evtLink" placeholder="https://..."/></div>
               <button class="sbtn" onclick="saveEvent()">💾 حفظ الفعالية</button>
               <div style="margin-top:14px" id="eventsAdmList"></div>
             </div>
@@ -1216,9 +1232,12 @@ const HON=collection(db,'honor');
 const CHAT=collection(db,'chat');
 const REQ=collection(db,'requests');
 const RATE=collection(db,'ratings');
+const PRC=collection(db,'patrolRatings');
 const VISIT=collection(db,'visitors');
 
 const CLOUD='dmzyqkiay', PRESET='asad_albahr';
+// حساب Cloudinary منفصل خاص بصور البروفايل فقط (صور الأعضاء/حسابي الشخصية) — عدّل القيم دي لحساب Cloudinary تاني خاص بيك لو عايز تفصلهم فعليًا
+const CLOUD_PROFILE='dmzyqkiay', PRESET_PROFILE='asad_albahr_profiles';
 
 const RANKS_M=['برعم','شبل','كشاف','كشاف متقدم','جوال','خريج'];
 const RANKS_F=['برعم','زهرة','مرشدة','مرشدة متقدم','جوالة','خريجة'];
@@ -1304,9 +1323,10 @@ window.goAdm=function(t){
   document.querySelectorAll('.asec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.atab').forEach(b=>b.classList.remove('on'));
   document.getElementById('adm-'+t).classList.add('on');
-  const tabs=['ann','manann','leaders','track','reqs','inbox','chat','album','honor','tasks','stats','settings'];
+  const tabs=['ann','manann','leaders','track','patrolrate','reqs','inbox','chat','album','honor','tasks','stats','settings'];
   if(t==='reqs') renderAdmReqs();
   if(t==='chat') renderAdmChat();
+  if(t==='patrolrate') renderPatrolRatingsAdm();
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll('.atab')[idx].classList.add('on');
   if(t==='manann') renderSavedAnns();
@@ -1343,6 +1363,61 @@ async function uploadMultiple(files,txtEl){
   return urls;
 }
 
+// رفع صورة البروفايل فقط - على حساب Cloudinary منفصل
+async function uploadProfileImg(file,txtEl){
+  if(!file)return null;
+  if(txtEl)txtEl.textContent='جاري الرفع...';
+  const fd=new FormData();
+  fd.append('file',file);fd.append('upload_preset',PRESET_PROFILE);fd.append('folder','asad_albahr_profiles');
+  try{
+    const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_PROFILE}/image/upload`,{method:'POST',body:fd});
+    const d=await r.json();
+    if(txtEl)txtEl.textContent='تم ✅';
+    return d.secure_url;
+  }catch{if(txtEl)txtEl.textContent='فشل ❌';return null;}
+}
+
+// ===== كاشف نوع الروابط العام (يوتيوب / انستجرام / تيك توك / فيسبوك / صورة / فيديو مباشر / رابط عادي) =====
+function detectMediaType(url){
+  if(!url)return null;
+  const u=url.trim();
+  if(!u)return null;
+  if(/youtube\.com\/shorts\/|youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\//i.test(u))return 'youtube';
+  if(/instagram\.com\/(reel|p|tv)\//i.test(u))return 'instagram';
+  if(/tiktok\.com\//i.test(u))return 'tiktok';
+  if(/facebook\.com\/.*\/videos\/|fb\.watch\//i.test(u))return 'facebook';
+  if(/\.(jpe?g|png|gif|webp|bmp|svg)(\?.*)?$/i.test(u))return 'image';
+  if(/\.(mp4|webm|mov|ogg)(\?.*)?$/i.test(u))return 'video';
+  return 'link';
+}
+// يرجع HTML مناسب لعرض الرابط حسب نوعه
+function mediaEmbedHtml(url){
+  const type=detectMediaType(url);
+  if(!type)return '';
+  const safe=esc(url);
+  if(type==='youtube'){
+    const vid=extractYtId(url);
+    if(!vid)return `<a href="${safe}" target="_blank" class="lbtn">▶️ فتح الفيديو</a>`;
+    return `<div class="media-embed media-yt"><iframe src="https://www.youtube.com/embed/${vid}" frameborder="0" allowfullscreen loading="lazy"></iframe></div>`;
+  }
+  if(type==='instagram'){
+    return `<div class="media-embed media-ig"><iframe src="${safe}embed" frameborder="0" scrolling="no" allowtransparency="true" loading="lazy"></iframe></div>`;
+  }
+  if(type==='tiktok'){
+    return `<div class="media-embed media-tt"><a href="${safe}" target="_blank" class="lbtn">🎵 مشاهدة على تيك توك</a></div>`;
+  }
+  if(type==='facebook'){
+    return `<div class="media-embed media-fb"><a href="${safe}" target="_blank" class="lbtn">📘 مشاهدة على فيسبوك</a></div>`;
+  }
+  if(type==='image'){
+    return `<img class="ann-img" src="${safe}" loading="lazy" onclick="openLightbox('${safe}')"/>`;
+  }
+  if(type==='video'){
+    return `<video class="media-video" src="${safe}" controls preload="metadata" style="width:100%;border-radius:10px"></video>`;
+  }
+  return `<a href="${safe}" target="_blank" class="lbtn">🔗 فتح الرابط</a>`;
+}
+
 window.prevImg=function(inputId,prevId){
   const file=document.getElementById(inputId).files[0];if(!file)return;
   const r=new FileReader();r.onload=e=>{document.getElementById(prevId).innerHTML=`<img src="${e.target.result}"/>`;};r.readAsDataURL(file);
@@ -1375,6 +1450,7 @@ function renderAnns(){
       <div class="ann-date">${a.pinned?'📌 مثبت · ':''}📅 ${fdate(a.date)}</div>
       <div class="ann-title">${esc(a.title)}</div>
       ${a.imgUrl?`<img class="ann-img" src="${esc(a.imgUrl)}" onclick="openLightbox('${esc(a.imgUrl)}')" loading="lazy"/>`:''}
+      ${a.link?mediaEmbedHtml(a.link):''}
       <div class="ann-body" id="ab${a.id}">${esc(a.body)}</div>
       <button class="ann-more" onclick="xp('${a.id}')"><span id="ae${a.id}">اقرأ المزيد ↓</span></button>
       <div class="ann-actions">
@@ -1393,9 +1469,11 @@ window.saveAnn=async function(){
   const file=document.getElementById('annImgFile').files[0];
   let imgUrl='';
   if(file) imgUrl=await uploadImg(file,document.getElementById('annImgTxt'))||'';
+  const linkVal=document.getElementById('annLink').value.trim();
+  const link=linkVal||'';
   if(window._editAnnId){
     // UPDATE existing
-    const upd={title,body,date,pinned};
+    const upd={title,body,date,pinned,link};
     if(imgUrl) upd.imgUrl=imgUrl;
     await updateDoc(doc(db,'announcements',window._editAnnId),upd);
     window._editAnnId=null;
@@ -1403,7 +1481,7 @@ window.saveAnn=async function(){
     if(btn){btn.textContent='📢 نشر الإعلان';btn.style.background='';}
     toast('تم تحديث الإعلان ✅','ok');
   } else {
-    await addDoc(AC,{title,body,imgUrl,date,pinned,createdAt:serverTimestamp()});
+    await addDoc(AC,{title,body,imgUrl,link,date,pinned,createdAt:serverTimestamp()});
     toast('تم نشر الإعلان 📢','ok');
   }
   document.getElementById('aTitle').value='';document.getElementById('aBody').value='';
@@ -1411,6 +1489,7 @@ window.saveAnn=async function(){
   document.getElementById('annImgPrev').innerHTML='🖼️';
   document.getElementById('annImgFile').value='';
   document.getElementById('annImgTxt').textContent='';
+  document.getElementById('annLink').value='';
   goAdm('manann');
 };
 function renderSavedAnns(){
@@ -1418,7 +1497,7 @@ function renderSavedAnns(){
   if(!anns.length){el.innerHTML='<div class="empty"><span>📭</span>لا توجد إعلانات</div>';return;}
   el.innerHTML=anns.map(a=>`
     <div class="sitem">
-      <div class="sitem-info"><div class="sitem-title">${esc(a.title)}</div><div class="sitem-sub">📅 ${fdate(a.date)} ${a.pinned?'· 📌':''} ${a.imgUrl?'· 🖼️':''}</div></div>
+      <div class="sitem-info"><div class="sitem-title">${esc(a.title)}</div><div class="sitem-sub">📅 ${fdate(a.date)} ${a.pinned?'· 📌':''} ${a.imgUrl?'· 🖼️':''} ${a.link?'· 🔗':''}</div></div>
       <button class="pin-btn ${a.pinned?'on':''}" onclick="togPin('${a.id}',${a.pinned?0:1})">📌</button>
       <button class="del-btn" style="color:var(--blue3)" onclick="editAnn('${a.id}')">✏️</button>
       <button class="del-btn" onclick="delAnn('${a.id}')">🗑️</button>
@@ -1432,6 +1511,7 @@ window.editAnn=function(id){
   document.getElementById('aBody').value=a.body||'';
   document.getElementById('aDate').value=a.date||'';
   document.getElementById('aPin').value=a.pinned||0;
+  document.getElementById('annLink').value=a.link||'';
   if(a.imgUrl){const p=document.getElementById('annImgPrev');if(p)p.innerHTML=`<img src="${a.imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;}
   // Switch to ann tab and set edit mode
   window._editAnnId=id;
@@ -1556,6 +1636,7 @@ function renderPatrolLeadersPub(){
       <div>
         <div class="leader-name">${esc(m.name)}</div>
         <div class="leader-role">${esc(m.position)}${m.role?' · '+esc(m.role):''}${m.patrol?' · طليعة '+esc(m.patrol):''}</div>
+        ${m.patrol&&patrolRatings[m.patrol.trim()]?`<div style="font-size:0.72rem">${'⭐'.repeat(patrolRatings[m.patrol.trim()])}</div>`:''}
       </div>
     </div>`).join('');
 }
@@ -1566,6 +1647,9 @@ window.openPatrolLeaderModal=function(i){
   document.getElementById('plName').textContent=m.name||'';
   document.getElementById('plPosition').textContent=m.position||'';
   document.getElementById('plMeta').textContent=[m.role,m.patrol?'طليعة '+m.patrol:''].filter(Boolean).join(' · ');
+  document.getElementById('plRating').textContent=m.rating?'⭐'.repeat(m.rating):'—';
+  const pr=m.patrol?(patrolRatings[m.patrol.trim()]||0):0;
+  document.getElementById('plPatrolRating').textContent=m.patrol?`تقييم طليعة ${m.patrol}: ${pr?'⭐'.repeat(pr):'—'}`:'';
   const actions=document.getElementById('plActions');
   let html='';
   if(m.facebook) html+=`<a class="nh-modal-btn fb" href="${m.facebook.startsWith('http')?esc(m.facebook):'https://'+esc(m.facebook)}" target="_blank">📘 صفحة فيسبوك</a>`;
@@ -1670,7 +1754,7 @@ window.editLeader=function(id){
 let members=[];
 onSnapshot(MC,snap=>{
   members=snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderPubMems();renderAdmMems();renderRank();renderPatrolLeadersPub();
+  renderPubMems();renderAdmMems();renderRank();renderPatrolLeadersPub();renderPatrolRatingsAdm();
   checkBirthdays();
   // Update header counter
   const el=document.getElementById('cntMembers');
@@ -1678,6 +1762,33 @@ onSnapshot(MC,snap=>{
   // Update chips
   renderChips();
 });
+// ===== تقييم الطلائع (rating a whole طليعة/patrol, not frد member) =====
+let patrolRatings={}; // {patrolName: rating}
+onSnapshot(PRC,snap=>{
+  patrolRatings={};
+  snap.docs.forEach(d=>{patrolRatings[d.id]=d.data().rating||0;});
+  renderPatrolLeadersPub();renderPatrolRatingsAdm();
+});
+function getDistinctPatrols(){
+  const set=new Set();
+  members.forEach(m=>{if(m.patrol&&m.patrol.trim())set.add(m.patrol.trim());});
+  return [...set].sort((a,b)=>a.localeCompare('ar'));
+}
+window.setPatrolRating=async function(name,r){
+  await setDoc(doc(db,'patrolRatings',name),{rating:r,name,updatedAt:serverTimestamp()},{merge:true});
+};
+function renderPatrolRatingsAdm(){
+  const el=document.getElementById('patrolRatingsList');
+  if(!el)return;
+  const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
+  const patrols=getDistinctPatrols();
+  if(!patrols.length){el.innerHTML='<div class="empty"><span>🏕️</span>لا توجد طلائع بعد (أضف طليعة للأعضاء أولاً)</div>';return;}
+  el.innerHTML=patrols.map(name=>{
+    const r=patrolRatings[name]||0;
+    const stars=isPatrol?'⭐'.repeat(r)||'—':[1,2,3,4,5].map(i=>`<button class="star" onclick="setPatrolRating('${esc(name)}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
+    return `<div class="sitem"><div class="sitem-info"><div class="sitem-title">🏕️ طليعة ${esc(name)}</div><div class="sitem-sub">${stars}</div></div></div>`;
+  }).join('');
+}
 function renderPubMems(){
   const el=document.getElementById('pubMemsList');
   if(!members.length){el.innerHTML='<div class="page"><div class="empty"><span>👥</span>لا يوجد أعضاء بعد</div></div>';return;}
@@ -1925,7 +2036,7 @@ window.undoAttendance=async function(id){
 };
 window.uploadMemberImg=async function(id){
   const file=document.getElementById('mfi'+id).files[0];if(!file)return;
-  const url=await uploadImg(file,document.getElementById('mft'+id));
+  const url=await uploadProfileImg(file,document.getElementById('mft'+id));
   if(url){await updateDoc(doc(db,'members',id),{imgUrl:url});toast('تم رفع الصورة ✅','ok');}
 };
 window.printMember=function(id){
@@ -2158,6 +2269,7 @@ function renderAlbum(){
       <div class="album-grid">
         ${(ev.images||[]).map(url=>`<img class="album-img" src="${esc(url)}" loading="lazy" onclick="openLightbox('${esc(url)}')"/>`).join('')}
       </div>
+      ${(ev.links&&ev.links.length)?`<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">${ev.links.map(l=>mediaEmbedHtml(l)).join('')}</div>`:''}
     </div>`).join('')+'</div>';
 }
 window.saveEvent=async function(){
@@ -2167,19 +2279,23 @@ window.saveEvent=async function(){
   const txt=document.getElementById('evtUpTxt');
   let newImages=[];
   if(files.length) newImages=await uploadMultiple(files,txt);
+  const linkVal=document.getElementById('evtLink').value.trim();
+  const newLinks=linkVal?[linkVal]:[];
   if(window._editEventId){
     const ev=events.find(e=>e.id===window._editEventId);
     const allImgs=[...(ev?.images||[]),...newImages];
-    await updateDoc(doc(db,'events',window._editEventId),{name,date:document.getElementById('evtDate').value,images:allImgs});
+    const allLinks=[...(ev?.links||[]),...newLinks];
+    await updateDoc(doc(db,'events',window._editEventId),{name,date:document.getElementById('evtDate').value,images:allImgs,links:allLinks});
     window._editEventId=null;
     const btn=document.querySelector('[onclick="saveEvent()"]');
     if(btn){btn.textContent='💾 حفظ الفعالية';btn.style.background='';}
     toast('تم تحديث الفعالية ✅','ok');
   } else {
-    await addDoc(EVC,{name,date:document.getElementById('evtDate').value,images:newImages,createdAt:serverTimestamp()});
+    await addDoc(EVC,{name,date:document.getElementById('evtDate').value,images:newImages,links:newLinks,createdAt:serverTimestamp()});
     toast('تم حفظ الفعالية ✅','ok');
   }
   document.getElementById('evtName').value='';document.getElementById('evtDate').value='';document.getElementById('evtImgs').value='';
+  document.getElementById('evtLink').value='';
   if(txt)txt.textContent='';
 };
 function renderEventsAdm(){
@@ -2187,7 +2303,7 @@ function renderEventsAdm(){
   if(!events.length){el.innerHTML='<div class="empty"><span>📸</span>لا توجد فعاليات</div>';return;}
   el.innerHTML=events.map(ev=>`
     <div class="sitem" style="flex-wrap:wrap">
-      <div class="sitem-info"><div class="sitem-title">${esc(ev.name)}</div><div class="sitem-sub">📅 ${fdate(ev.date)} · ${(ev.images||[]).length} صورة</div></div>
+      <div class="sitem-info"><div class="sitem-title">${esc(ev.name)}</div><div class="sitem-sub">📅 ${fdate(ev.date)} · ${(ev.images||[]).length} صورة ${(ev.links&&ev.links.length)?'· '+ev.links.length+' رابط':''}</div></div>
       <div style="display:flex;gap:4px">
         <button class="del-btn" style="color:var(--blue3)" onclick="editEvent('${ev.id}')">✏️</button>
         <button class="del-btn" onclick="delEvent('${ev.id}')">🗑️</button>
@@ -2195,8 +2311,16 @@ function renderEventsAdm(){
       <div style="display:flex;flex-wrap:wrap;gap:5px;width:100%;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
         ${(ev.images||[]).map((url,i)=>`<div style="position:relative;width:56px;height:56px"><img src="${esc(url)}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border)"/><button onclick="delEventImg('${ev.id}',${i})" style="position:absolute;top:-5px;right:-5px;width:18px;height:18px;background:var(--danger);border:none;border-radius:50%;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button></div>`).join('')}
       </div>
+      ${(ev.links&&ev.links.length)?`<div style="display:flex;flex-direction:column;gap:4px;width:100%;margin-top:6px">${ev.links.map((l,i)=>`<div style="display:flex;align-items:center;gap:6px;font-size:0.68rem"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">🔗 ${esc(l)}</span><button onclick="delEventLink('${ev.id}',${i})" style="border:none;background:var(--danger);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer">✕</button></div>`).join('')}</div>`:''}
     </div>`).join('');
 }
+window.delEventLink=async function(evId,linkIdx){
+  if(!confirm('حذف هذا الرابط؟'))return;
+  const ev=events.find(e=>e.id===evId);if(!ev)return;
+  const links=[...(ev.links||[])];links.splice(linkIdx,1);
+  await updateDoc(doc(db,'events',evId),{links});
+  toast('تم حذف الرابط','ok');
+};
 window.delEvent=async function(id){if(!confirm('تأكيد الحذف؟'))return;await deleteDoc(doc(db,'events',id));toast('تم الحذف');};
 window.delEventImg=async function(evId,imgIdx){
   if(!confirm('حذف هذه الصورة؟'))return;
@@ -2209,6 +2333,7 @@ window.editEvent=function(id){
   const ev=events.find(e=>e.id===id);if(!ev)return;
   document.getElementById('evtName').value=ev.name||'';
   document.getElementById('evtDate').value=ev.date||'';
+  document.getElementById('evtLink').value='';
   window._editEventId=id;
   document.getElementById('evtName').scrollIntoView({behavior:'smooth',block:'center'});
   const btn=document.querySelector('[onclick="saveEvent()"]');
@@ -2595,7 +2720,7 @@ function loginSuccess(){
   }
 
   if(currentAdmin.role==='patrol'){
-    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','manann'];
+    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','manann','patrolrate'];
     hideTabs.forEach(t=>{
       const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
       if(btn) btn.style.display='none';
@@ -2775,7 +2900,7 @@ window.myaccSave=async function(){
     whatsapp:document.getElementById('myaccWhatsapp').value.trim()
   };
   if(myaccNewImgUrl==='PENDING' && window._myaccFile){
-    const newUrl=await uploadImg(window._myaccFile,null);
+    const newUrl=await uploadProfileImg(window._myaccFile,null);
     if(newUrl) upd.imgUrl=newUrl;
   }
   try{
