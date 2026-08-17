@@ -832,7 +832,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
           <input type="file" id="myaccImgFile" accept="image/*" style="display:none" onchange="myaccImgPreview(this)"/>
           <div class="ff" style="display:flex;gap:6px;align-items:flex-end;margin:8px 0 4px">
             <div style="flex:1"><label style="font-size:0.68rem;color:var(--muted)">أو الصق رابط صورة (فيسبوك/موقع رفع...) - صور فقط</label><input type="text" id="myaccImgLink" placeholder="https://..."/></div>
-            <button class="nh-acc-btn" style="white-space:nowrap;padding:9px 14px" onclick="myaccSetImgLink()">🔗 حفظ</button>
+            <button class="nh-acc-btn" id="myaccImgLinkBtn" style="white-space:nowrap;padding:9px 14px" onclick="myaccSetImgLink()">🔗 حفظ</button>
           </div>
           <div class="nh-acc-stats" id="myaccStats" style="display:flex;gap:8px;margin-bottom:16px">
             <div style="flex:1;background:rgba(0,200,100,0.1);border:1px solid rgba(0,200,100,0.25);border-radius:12px;padding:12px;text-align:center">
@@ -951,6 +951,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <button class="img-up-btn" onclick="document.getElementById('lImgFile').click()">📷 رفع صورة</button>
                 <span class="up-txt" id="lUpTxt"></span>
               </div>
+              <div class="ff"><label>أو الصق رابط صورة (فيسبوك/موقع رفع...) - صور فقط</label><input type="text" id="lImgLink" placeholder="https://..."/></div>
               <div class="ff"><label>الاسم الكامل *</label><input type="text" id="lName" placeholder="اسم القائد"/></div>
               <div class="ff"><label>الدور / المنصب</label><input type="text" id="lRole" placeholder="قائد المجموعة..."/></div>
               <div class="fr2">
@@ -1721,6 +1722,21 @@ window.saveLeader=async function(){
   const file=document.getElementById('lImgFile').files[0];
   let imgUrl='';
   if(file) imgUrl=await uploadImg(file,document.getElementById('lUpTxt'))||'';
+  const linkInp=document.getElementById('lImgLink');
+  const linkVal=linkInp.value.trim();
+  if(!imgUrl && linkVal){
+    const type=detectMediaType(linkVal);
+    if(type==='video'){toast('الرابط ده فيديو، محتاجين رابط صورة بس ⚠️','err');return;}
+    const btn=document.querySelector('[onclick="saveLeader()"]');
+    if(btn)btn.disabled=true;
+    const ok=await testImageLoads(linkVal);
+    if(btn)btn.disabled=false;
+    if(!ok){
+      toast('الرابط ده مش صورة مباشرة (زي رابط بوست فيسبوك) - افتحي الصورة، دوسي كليك يمين عليها واختاري "نسخ عنوان الصورة" وحطي الرابط ده ⚠️','err');
+      return;
+    }
+    imgUrl=linkVal;
+  }
   if(window._editLeaderId){
     const upd={name,role:document.getElementById('lRole').value.trim(),whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim()};
     if(imgUrl) upd.imgUrl=imgUrl;
@@ -1733,7 +1749,7 @@ window.saveLeader=async function(){
     await addDoc(LC,{name,role:document.getElementById('lRole').value.trim(),imgUrl,whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim(),createdAt:serverTimestamp()});
     toast('تم حفظ القائد ✅','ok');
   }
-  ['lName','lRole','lWa','lPh','lFb'].forEach(id=>document.getElementById(id).value='');
+  ['lName','lRole','lWa','lPh','lFb','lImgLink'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('lImgPrev').innerHTML='👨‍✈️';
   document.getElementById('lImgFile').value='';
   document.getElementById('lUpTxt').textContent='';
@@ -2053,10 +2069,29 @@ window.setMemberImgLink=async function(id){
   if(!url){toast('الصق رابط الصورة أولاً ⚠️','err');return;}
   const type=detectMediaType(url);
   if(type==='video'){toast('الرابط ده فيديو، محتاجين رابط صورة بس ⚠️','err');return;}
+  const btn=document.getElementById('mfl-btn'+id);
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  const ok=await testImageLoads(url);
+  if(btn){btn.disabled=false;btn.textContent='🔗 حفظ';}
+  if(!ok){
+    toast('الرابط ده مش صورة مباشرة (زي رابط بوست فيسبوك) - افتحي الصورة، دوسي كليك يمين عليها واختاري "نسخ عنوان الصورة" (Copy image address) وحطي الرابط ده ⚠️','err');
+    return;
+  }
   await updateDoc(doc(db,'members',id),{imgUrl:url});
   inp.value='';
   toast('تم حفظ صورة العضو ✅','ok');
 };
+// يتأكد إن الرابط فعلاً بيحمّل كصورة قبل ما نحفظه
+function testImageLoads(url){
+  return new Promise(res=>{
+    const img=new Image();
+    const t=setTimeout(()=>res(false),8000);
+    img.onload=()=>{clearTimeout(t);res(true);};
+    img.onerror=()=>{clearTimeout(t);res(false);};
+    img.referrerPolicy='no-referrer';
+    img.src=url;
+  });
+}
 window.printMember=function(id){
   const m=members.find(x=>x.id===id);if(!m)return;
   const w=window.open('','_blank');
@@ -2146,7 +2181,7 @@ function renderAdmMems(){
         </div>
         <div class="ff" style="display:flex;gap:6px;align-items:flex-end;margin-bottom:10px">
           <div style="flex:1"><label style="font-size:0.68rem;color:var(--muted)">أو الصق رابط صورة (فيسبوك/موقع رفع...) - صور فقط</label><input type="text" id="mfl${m.id}" placeholder="https://..."/></div>
-          <button class="mimg-btn" style="white-space:nowrap" onclick="setMemberImgLink('${m.id}')">🔗 حفظ</button>
+          <button class="mimg-btn" id="mfl-btn${m.id}" style="white-space:nowrap" onclick="setMemberImgLink('${m.id}')">🔗 حفظ</button>
         </div>
         <div class="pgrid">
           <div class="pf full"><label>✏️ اسم العضو</label><input id="nm${m.id}" type="text" value="${esc(m.name||'')}" placeholder="الاسم الكامل"/></div>
@@ -2923,6 +2958,14 @@ window.myaccSetImgLink=async function(){
   if(!url){toast('الصق رابط الصورة أولاً ⚠️','err');return;}
   const type=detectMediaType(url);
   if(type==='video'){toast('الرابط ده فيديو، محتاجين رابط صورة بس ⚠️','err');return;}
+  const btn=document.getElementById('myaccImgLinkBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  const ok=await testImageLoads(url);
+  if(btn){btn.disabled=false;btn.textContent='🔗 حفظ';}
+  if(!ok){
+    toast('الرابط ده مش صورة مباشرة (زي رابط بوست فيسبوك) - افتحي الصورة، دوسي كليك يمين عليها واختاري "نسخ عنوان الصورة" (Copy image address) وحطي الرابط ده ⚠️','err');
+    return;
+  }
   await updateDoc(doc(db,'members',myaccCurrentId),{imgUrl:url});
   document.getElementById('myaccAvatarPrev').src=url;
   document.getElementById('myaccAvatarPrev').style.display='block';
