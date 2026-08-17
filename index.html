@@ -529,7 +529,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <h3 id="plName"></h3>
       <div class="nh-modal-role" id="plPosition"></div>
       <div style="font-size:0.8rem;color:#5a6b85;margin-top:2px" id="plMeta"></div>
-      <div style="font-size:1.1rem;margin-top:8px" id="plRating"></div>
+      <div style="font-size:0.7rem;color:#8094b3;margin-top:6px">⭐ تقييم الأداء القيادي</div>
+      <div style="font-size:1.1rem" id="plRating"></div>
       <div style="font-size:0.78rem;color:#5a6b85;margin-top:4px" id="plPatrolRating"></div>
       <div class="nh-modal-actions" id="plActions"></div>
     </div>
@@ -829,6 +830,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <div class="nh-edit-badge">✏️</div>
           </div>
           <input type="file" id="myaccImgFile" accept="image/*" style="display:none" onchange="myaccImgPreview(this)"/>
+          <div class="ff" style="display:flex;gap:6px;align-items:flex-end;margin:8px 0 4px">
+            <div style="flex:1"><label style="font-size:0.68rem;color:var(--muted)">أو الصق رابط صورة (فيسبوك/موقع رفع...) - صور فقط</label><input type="text" id="myaccImgLink" placeholder="https://..."/></div>
+            <button class="nh-acc-btn" style="white-space:nowrap;padding:9px 14px" onclick="myaccSetImgLink()">🔗 حفظ</button>
+          </div>
           <div class="nh-acc-stats" id="myaccStats" style="display:flex;gap:8px;margin-bottom:16px">
             <div style="flex:1;background:rgba(0,200,100,0.1);border:1px solid rgba(0,200,100,0.25);border-radius:12px;padding:12px;text-align:center">
               <div style="font-size:1.3rem;font-weight:900;color:#4caf50" id="myaccAttCount">0</div>
@@ -1647,7 +1652,7 @@ window.openPatrolLeaderModal=function(i){
   document.getElementById('plName').textContent=m.name||'';
   document.getElementById('plPosition').textContent=m.position||'';
   document.getElementById('plMeta').textContent=[m.role,m.patrol?'طليعة '+m.patrol:''].filter(Boolean).join(' · ');
-  document.getElementById('plRating').textContent=m.rating?'⭐'.repeat(m.rating):'—';
+  document.getElementById('plRating').textContent=m.leaderRating?'⭐'.repeat(m.leaderRating):'—';
   const pr=m.patrol?(patrolRatings[m.patrol.trim()]||0):0;
   document.getElementById('plPatrolRating').textContent=m.patrol?`تقييم طليعة ${m.patrol}: ${pr?'⭐'.repeat(pr):'—'}`:'';
   const actions=document.getElementById('plActions');
@@ -1854,6 +1859,8 @@ window.rmBadge=async function(id,i){const m=members.find(x=>x.id===id);await upd
 window.addCourse=async function(id){const inp=document.getElementById('ci'+id);const v=inp.value.trim();if(!v)return;const m=members.find(x=>x.id===id);await updateDoc(doc(db,'members',id),{courses:[...(m.courses||[]),v]});inp.value='';};
 window.rmCourse=async function(id,i){const m=members.find(x=>x.id===id);await updateDoc(doc(db,'members',id),{courses:(m.courses||[]).filter((_,j)=>j!==i)});};
 window.setRat=async function(id,r){await updateDoc(doc(db,'members',id),{rating:r});};
+// تقييم منفصل خاص بمنصب عريف/مساعد عريف (قيادي) - لا يمس تقييم العضو العادي
+window.setLeaderRating=async function(id,r){await updateDoc(doc(db,'members',id),{leaderRating:r});};
 window.addAttendance=async function(id,present){
   const m=members.find(x=>x.id===id);if(!m)return;
   if(present){
@@ -2039,6 +2046,17 @@ window.uploadMemberImg=async function(id){
   const url=await uploadProfileImg(file,document.getElementById('mft'+id));
   if(url){await updateDoc(doc(db,'members',id),{imgUrl:url});toast('تم رفع الصورة ✅','ok');}
 };
+// حفظ صورة العضو عن طريق لصق رابط صورة جاهز (فيسبوك/مواقع رفع...) بدل رفع ملف - صور فقط، مش فيديو
+window.setMemberImgLink=async function(id){
+  const inp=document.getElementById('mfl'+id);
+  const url=inp.value.trim();
+  if(!url){toast('الصق رابط الصورة أولاً ⚠️','err');return;}
+  const type=detectMediaType(url);
+  if(type==='video'){toast('الرابط ده فيديو، محتاجين رابط صورة بس ⚠️','err');return;}
+  await updateDoc(doc(db,'members',id),{imgUrl:url});
+  inp.value='';
+  toast('تم حفظ صورة العضو ✅','ok');
+};
 window.printMember=function(id){
   const m=members.find(x=>x.id===id);if(!m)return;
   const w=window.open('','_blank');
@@ -2094,6 +2112,9 @@ function renderAdmMems(){
     const isPatrol=currentAdmin&&currentAdmin.role==='patrol';
     const r=m.rating||0;
     const stars=isPatrol?'':[1,2,3,4,5].map(i=>`<button class="star" onclick="setRat('${m.id}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
+    const isLeaderPos=PATROL_LEADER_POSITIONS.includes(m.position);
+    const lr=m.leaderRating||0;
+    const leaderStars=(!isLeaderPos)?'':`<div style="margin-top:4px"><span style="font-size:0.68rem;color:var(--muted);margin-left:4px">تقييم كـ${esc(m.position)}:</span>${isPatrol?('⭐'.repeat(lr)||'—'):[1,2,3,4,5].map(i=>`<button class="star" onclick="setLeaderRating('${m.id}',${i})">${i<=lr?'⭐':'☆'}</button>`).join('')}</div>`;
     const bdgs=(m.badges||[]).map((b,i)=>`<span class="tag-b">🏅${esc(b)}${isPatrol?'':'<i class="xt" onclick="rmBadge(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد شارات</span>';
     const crss=(m.courses||[]).map((c,i)=>`<span class="tag-c">📚${esc(c)}${isPatrol?'':'<i class="xt" onclick="rmCourse(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد دورات</span>';
     const av=m.gender==='male'?'⛺':'🏕️';
@@ -2123,6 +2144,10 @@ function renderAdmMems(){
           <input type="file" id="mfi${m.id}" accept="image/*" style="display:none" onchange="uploadMemberImg('${m.id}')"/>
           <button class="mimg-btn" onclick="document.getElementById('mfi${m.id}').click()">📷 رفع</button>
         </div>
+        <div class="ff" style="display:flex;gap:6px;align-items:flex-end;margin-bottom:10px">
+          <div style="flex:1"><label style="font-size:0.68rem;color:var(--muted)">أو الصق رابط صورة (فيسبوك/موقع رفع...) - صور فقط</label><input type="text" id="mfl${m.id}" placeholder="https://..."/></div>
+          <button class="mimg-btn" style="white-space:nowrap" onclick="setMemberImgLink('${m.id}')">🔗 حفظ</button>
+        </div>
         <div class="pgrid">
           <div class="pf full"><label>✏️ اسم العضو</label><input id="nm${m.id}" type="text" value="${esc(m.name||'')}" placeholder="الاسم الكامل"/></div>
           <div class="pf"><label>رقم الموبايل</label><input id="ph${m.id}" type="tel" value="${esc(m.phone||'')}" placeholder="01xxxxxxxxx"/>
@@ -2148,7 +2173,7 @@ function renderAdmMems(){
           <div class="pf"><label>اسم الطليعة</label><input id="pat${m.id}" type="text" value="${esc(m.patrol||'')}" placeholder="اسم الطليعة"/></div>
           <div class="pf full"><label>ملاحظات</label><textarea id="not${m.id}" rows="2" placeholder="ملاحظات...">${esc(m.notes||'')}</textarea></div>
         </div>
-        <div class="rat-sec"><div class="sec-lbl">⭐ التقييم العام</div><div class="stars">${stars}</div><div class="rat-txt">${r?RLBLS[r]:''}</div></div>
+        <div class="rat-sec"><div class="sec-lbl">⭐ التقييم العام</div><div class="stars">${stars}</div><div class="rat-txt">${r?RLBLS[r]:''}</div>${leaderStars}</div>
         `}
         <div class="rat-sec">
           <div class="sec-lbl">📋 الحضور والغياب</div>
@@ -2889,6 +2914,22 @@ window.myaccImgPreview=function(input){
   reader.readAsDataURL(file);
   myaccNewImgUrl='PENDING';
   window._myaccFile=file;
+};
+// حفظ صورة الحساب عن طريق لصق رابط صورة جاهز بدل رفع ملف - صور فقط، مش فيديو
+window.myaccSetImgLink=async function(){
+  if(!myaccCurrentId){toast('سجّل دخولك أولاً ⚠️','err');return;}
+  const inp=document.getElementById('myaccImgLink');
+  const url=inp.value.trim();
+  if(!url){toast('الصق رابط الصورة أولاً ⚠️','err');return;}
+  const type=detectMediaType(url);
+  if(type==='video'){toast('الرابط ده فيديو، محتاجين رابط صورة بس ⚠️','err');return;}
+  await updateDoc(doc(db,'members',myaccCurrentId),{imgUrl:url});
+  document.getElementById('myaccAvatarPrev').src=url;
+  document.getElementById('myaccAvatarPrev').style.display='block';
+  document.getElementById('myaccAvatarPlaceholder').style.display='none';
+  inp.value='';
+  myaccNewImgUrl=null;window._myaccFile=null;
+  toast('تم حفظ صورتك ✅','ok');
 };
 window.myaccSave=async function(){
   if(!myaccCurrentId)return;
