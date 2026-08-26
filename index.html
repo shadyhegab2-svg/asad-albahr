@@ -1673,7 +1673,7 @@ window.openPubMemberModal=function(id){
   document.getElementById('pmName').textContent=m.name||'';
   document.getElementById('pmRole').textContent=[m.role,m.position].filter(Boolean).join(' · ');
   document.getElementById('pmMeta').textContent=[m.grade,m.group,m.patrol?'طليعة '+m.patrol:''].filter(Boolean).join(' · ');
-  document.getElementById('pmRating').textContent='⭐'.repeat(m.rating||0)||'—';
+  document.getElementById('pmRating').textContent=starsDisplay(m);
   const badgesEl=document.getElementById('pmBadges');
   badgesEl.innerHTML=(m.badges||[]).length?(m.badges||[]).map(b=>`<span class="tag-b">🏅 ${esc(b)}</span>`).join(''):'<span style="font-size:0.78rem;color:#8094b3">لا توجد شارات بعد</span>';
   const coursesEl=document.getElementById('pmCourses');
@@ -1843,7 +1843,7 @@ function renderPubMems(){
             ${m.position?`<span class="mem-pub-role" style="display:inline-block;margin-bottom:3px;margin-right:4px">📋 ${esc(m.position)}</span>`:''}
             <div class="mem-pub-meta">${esc(meta)||'&nbsp;'}</div>
             ${dobLine}
-            <div class="mem-pub-meta">${'⭐'.repeat(m.rating||0)||'—'} · 🏅${(m.badges||[]).length} شارة</div>
+            <div class="mem-pub-meta">${starsDisplay(m)} · 🏅${(m.badges||[]).length} شارة</div>
             <div class="mem-contact-btns">${contactBtns}</div>
           </div>
         </div>`;
@@ -1877,6 +1877,23 @@ window.rmCourse=async function(id,i){const m=members.find(x=>x.id===id);await up
 window.setRat=async function(id,r){await updateDoc(doc(db,'members',id),{rating:r});};
 // تقييم منفصل خاص بمنصب عريف/مساعد عريف (قيادي) - لا يمس تقييم العضو العادي
 window.setLeaderRating=async function(id,r){await updateDoc(doc(db,'members',id),{leaderRating:r});};
+// ===== نظام الدرجات اليدوي - إضافة/خصم درجات حسب الموقف؛ كل 10 درجات = نجمة إضافية تلقائية بدون سقف =====
+window.addManualDegrees=async function(id){
+  const inp=document.getElementById('deg'+id);
+  const reasonInp=document.getElementById('degR'+id);
+  const val=parseInt(inp.value,10);
+  if(!val){toast('اكتب عدد الدرجات (رقم موجب للإضافة أو سالب للخصم) ⚠️','err');return;}
+  const reason=(reasonInp?.value||'').trim();
+  const m=members.find(x=>x.id===id);if(!m)return;
+  const before=bonusStarsOf(m);
+  const newTotal=(m.manualDegrees||0)+val;
+  const log=[...(m.degreesLog||[]),{delta:val,reason,date:new Date().toLocaleDateString('ar-EG-u-nu-latn')}].slice(-20);
+  await updateDoc(doc(db,'members',id),{manualDegrees:newTotal,degreesLog:log});
+  const after=bonusStarsOf({manualDegrees:newTotal});
+  inp.value='';if(reasonInp)reasonInp.value='';
+  if(after>before) toast(`تمت الإضافة ✅ ومبروك: نجمة إضافية تلقائية جديدة 🌟`,'ok');
+  else toast(val>0?`تمت إضافة ${val} درجة ✅`:`تم خصم ${Math.abs(val)} درجة`,'ok');
+};
 window.addAttendance=async function(id,present){
   const m=members.find(x=>x.id===id);if(!m)return;
   if(present){
@@ -1888,13 +1905,22 @@ window.addAttendance=async function(id,present){
   }
 };
 function calcPoints(m){
-  const rating=(m.rating||0)*10;
+  const bonusStars=Math.floor((m.manualDegrees||0)/10);
+  const rating=((m.rating||0)+bonusStars)*10;
   const badges=(m.badges||[]).length*5;
   const courses=(m.courses||[]).length*8;
   const excellence=(m.excellence||[]).length*6;
   const att=(m.attendance||0)*3;
   const abs=(m.absence||0)*2;
   return rating+badges+courses+excellence+att-abs;
+}
+// عدد النجوم الإضافية اللي بتتضاف تلقائيًا كل 10 درجات يدوية - حتى لو عدّى السقف الأساسي (5)
+function bonusStarsOf(m){return Math.floor((m.manualDegrees||0)/10);}
+// نص عرض التقييم الكامل: نجوم يدوية (⭐ حتى 5) + نجوم إضافية تلقائية (🌟 بدون سقف)
+function starsDisplay(m){
+  const r=m.rating||0, b=bonusStarsOf(m);
+  if(!r&&!b)return '—';
+  return '⭐'.repeat(r)+(b?'🌟'.repeat(b):'');
 }
 // ===== UPCOMING EVENTS =====
 let upcomingEventsData=[];
@@ -1982,20 +2008,36 @@ function renderRank(){
         <div class="mav" style="width:40px;height:40px;flex-shrink:0">${m.imgUrl?`<img src="${esc(m.imgUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`:av}</div>
         <div style="flex:1">
           <div style="font-weight:700;color:var(--text);font-size:0.88rem">${esc(m.name)}</div>
-          <div style="font-size:0.68rem;color:var(--muted)">⭐${m.rating||0} · 🏅${(m.badges||[]).length} · 📚${(m.courses||[]).length} · ✅${m.attendance||0} · ❌${m.absence||0}</div>
+          <div style="font-size:0.68rem;color:var(--muted)">${starsDisplay(m)} · 🏅${(m.badges||[]).length} · 📚${(m.courses||[]).length} · ✅${m.attendance||0} · ❌${m.absence||0}</div>
           ${(m.excellence||[]).length>0?`<div style="font-size:0.7rem;margin-top:4px">${(m.excellence||[]).join(' · ')}</div>`:''}
         </div>
         <div style="font-family:Tajawal,sans-serif;font-weight:900;font-size:1.1rem;color:var(--blue3)">${m.points}</div>
       </div>`;
     }).join('');
   };
+  // ترتيب الرتب الكشفية من الأعلى (الأكبر سنًا) للأقل، كل رتبة ليها ترتيبها المستقل (المركز الأول داخل رتبته مش بين الجميع)
+  const maleOrder=[...RANKS_M].reverse();   // خريج، جوال، كشاف متقدم، كشاف، شبل، برعم
+  const femaleOrder=[...RANKS_F].reverse(); // خريجة، جوالة، مرشدة متقدم، مرشدة، زهرة، برعم
+  const buildByRank=(list,order)=>{
+    let html='';
+    order.forEach(rank=>{
+      const group=list.filter(m=>m.role===rank);
+      if(!group.length)return;
+      html+=`<div style="font-weight:800;color:var(--blue3);font-size:0.8rem;margin:14px 0 8px;padding-bottom:4px;border-bottom:1.5px solid var(--border)">🎖️ ${esc(rank)}</div>${buildList(group)}`;
+    });
+    const noRank=list.filter(m=>!m.role);
+    if(noRank.length){
+      html+=`<div style="font-weight:800;color:var(--muted);font-size:0.8rem;margin:14px 0 8px;padding-bottom:4px;border-bottom:1.5px solid var(--border)">🎖️ بدون رتبة محددة</div>${buildList(noRank)}`;
+    }
+    return html;
+  };
   const males=members.filter(m=>m.gender==='male');
   const females=members.filter(m=>m.gender!=='male');
   el.innerHTML=`
-    <div style="font-weight:800;color:var(--text);font-size:0.9rem;margin-bottom:8px">👦 ترتيب الأولاد</div>
-    ${males.length?buildList(males):'<div class="empty"><span>👦</span>لا يوجد أولاد بعد</div>'}
-    <div style="font-weight:800;color:var(--text);font-size:0.9rem;margin:16px 0 8px">👧 ترتيب البنات</div>
-    ${females.length?buildList(females):'<div class="empty"><span>👧</span>لا يوجد بنات بعد</div>'}
+    <div style="font-weight:800;color:var(--text);font-size:0.9rem;margin-bottom:8px">👦 ترتيب الأولاد (منفصل حسب الرتبة الكشفية)</div>
+    ${males.length?buildByRank(males,maleOrder):'<div class="empty"><span>👦</span>لا يوجد أولاد بعد</div>'}
+    <div style="font-weight:800;color:var(--text);font-size:0.9rem;margin:16px 0 8px">👧 ترتيب البنات (منفصل حسب الرتبة الكشفية)</div>
+    ${females.length?buildByRank(females,femaleOrder):'<div class="empty"><span>👧</span>لا يوجد بنات بعد</div>'}
   `;
 }
 window.savProf=async function(id){
@@ -2209,6 +2251,18 @@ function renderAdmMems(){
           <div class="pf full"><label>ملاحظات</label><textarea id="not${m.id}" rows="2" placeholder="ملاحظات...">${esc(m.notes||'')}</textarea></div>
         </div>
         <div class="rat-sec"><div class="sec-lbl">⭐ التقييم العام</div><div class="stars">${stars}</div><div class="rat-txt">${r?RLBLS[r]:''}</div>${leaderStars}</div>
+        <div class="rat-sec">
+          <div class="sec-lbl">🎯 الدرجات (نظام يدوي حسب الموقف - كل 10 درجات = نجمة إضافية تلقائية 🌟 بدون سقف)</div>
+          <div style="font-weight:800;font-size:1rem;color:var(--blue3)">${m.manualDegrees||0} درجة${bonusStarsOf(m)?` · +${bonusStarsOf(m)} 🌟`:''}</div>
+          ${isPatrol?'':`
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input type="number" id="deg${m.id}" placeholder="مثال: 5 أو -3" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg);color:var(--text)"/>
+            <button class="mimg-btn" onclick="addManualDegrees('${m.id}')">➕ تسجيل</button>
+          </div>
+          <input type="text" id="degR${m.id}" placeholder="السبب (اختياري)" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;font-size:0.78rem;background:var(--bg);color:var(--text)"/>
+          `}
+          ${(m.degreesLog&&m.degreesLog.length)?`<div style="margin-top:8px;font-size:0.7rem;color:var(--muted)">${[...m.degreesLog].reverse().slice(0,5).map(l=>`${l.delta>0?'+':''}${l.delta}${l.reason?' – '+esc(l.reason):''} <span style="opacity:.6">(${l.date})</span>`).join('<br>')}</div>`:''}
+        </div>
         `}
         <div class="rat-sec">
           <div class="sec-lbl">📋 الحضور والغياب</div>
