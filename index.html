@@ -1878,11 +1878,12 @@ window.setRat=async function(id,r){await updateDoc(doc(db,'members',id),{rating:
 // تقييم منفصل خاص بمنصب عريف/مساعد عريف (قيادي) - لا يمس تقييم العضو العادي
 window.setLeaderRating=async function(id,r){await updateDoc(doc(db,'members',id),{leaderRating:r});};
 // ===== نظام الدرجات اليدوي - إضافة/خصم درجات حسب الموقف؛ كل 10 درجات = نجمة إضافية تلقائية بدون سقف =====
-window.addManualDegrees=async function(id){
+window.addManualDegrees=async function(id,sign){
   const inp=document.getElementById('deg'+id);
   const reasonInp=document.getElementById('degR'+id);
-  const val=parseInt(inp.value,10);
-  if(!val){toast('اكتب عدد الدرجات (رقم موجب للإضافة أو سالب للخصم) ⚠️','err');return;}
+  const raw=parseInt(inp.value,10);
+  if(!raw){toast('اكتب عدد الدرجات (رقم موجب)، وبعدين اختر إضافة أو خصم ⚠️','err');return;}
+  const val=Math.abs(raw)*(sign||1);
   const reason=(reasonInp?.value||'').trim();
   const m=members.find(x=>x.id===id);if(!m)return;
   const before=bonusStarsOf(m);
@@ -1891,8 +1892,8 @@ window.addManualDegrees=async function(id){
   await updateDoc(doc(db,'members',id),{manualDegrees:newTotal,degreesLog:log});
   const after=bonusStarsOf({manualDegrees:newTotal});
   inp.value='';if(reasonInp)reasonInp.value='';
-  if(after>before) toast(`تمت الإضافة ✅ ومبروك: نجمة إضافية تلقائية جديدة 🌟`,'ok');
-  else toast(val>0?`تمت إضافة ${val} درجة ✅`:`تم خصم ${Math.abs(val)} درجة`,'ok');
+  if(sign>0 && after>before) toast(`تمت الإضافة ✅ ومبروك: نجمة إضافية تلقائية جديدة 🌟`,'ok');
+  else toast(val>0?`تمت إضافة ${val} درجة ✅`:`تم خصم ${Math.abs(val)} درجة ⚠️`,'ok');
 };
 window.addAttendance=async function(id,present){
   const m=members.find(x=>x.id===id);if(!m)return;
@@ -1905,14 +1906,14 @@ window.addAttendance=async function(id,present){
   }
 };
 function calcPoints(m){
-  const bonusStars=Math.floor((m.manualDegrees||0)/10);
-  const rating=((m.rating||0)+bonusStars)*10;
+  const rating=(m.rating||0)*10;
   const badges=(m.badges||[]).length*5;
   const courses=(m.courses||[]).length*8;
   const excellence=(m.excellence||[]).length*6;
   const att=(m.attendance||0)*3;
   const abs=(m.absence||0)*2;
-  return rating+badges+courses+excellence+att-abs;
+  const degrees=(m.manualDegrees||0); // الدرجات اليدوية بتدخل مباشرة في الترتيب (إضافة أو خصم فوري)
+  return rating+badges+courses+excellence+att-abs+degrees;
 }
 // عدد النجوم الإضافية اللي بتتضاف تلقائيًا كل 10 درجات يدوية - حتى لو عدّى السقف الأساسي (5)
 function bonusStarsOf(m){return Math.floor((m.manualDegrees||0)/10);}
@@ -2256,8 +2257,9 @@ function renderAdmMems(){
           <div style="font-weight:800;font-size:1rem;color:var(--blue3)">${m.manualDegrees||0} درجة${bonusStarsOf(m)?` · +${bonusStarsOf(m)} 🌟`:''}</div>
           ${isPatrol?'':`
           <div style="display:flex;gap:6px;margin-top:8px">
-            <input type="number" id="deg${m.id}" placeholder="مثال: 5 أو -3" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg);color:var(--text)"/>
-            <button class="mimg-btn" onclick="addManualDegrees('${m.id}')">➕ تسجيل</button>
+            <input type="number" id="deg${m.id}" min="1" placeholder="عدد الدرجات (مثال: 5)" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg);color:var(--text)"/>
+            <button class="mimg-btn" onclick="addManualDegrees('${m.id}',1)">➕ إضافة</button>
+            <button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="addManualDegrees('${m.id}',-1)">➖ خصم</button>
           </div>
           <input type="text" id="degR${m.id}" placeholder="السبب (اختياري)" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;font-size:0.78rem;background:var(--bg);color:var(--text)"/>
           `}
