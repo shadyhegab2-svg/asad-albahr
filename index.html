@@ -81,6 +81,23 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .ann-date{font-size:0.67rem;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:4px}
 .ann-title{font-family:'Tajawal',sans-serif;font-size:1rem;font-weight:800;color:var(--navy);margin-bottom:8px}
 .ann-img{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:8px}
+.hof-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.hof-card{background:linear-gradient(160deg,rgba(244,165,35,0.1),var(--bg2));border:1px solid rgba(244,165,35,0.3);border-radius:14px;padding:12px;text-align:center}
+.hof-icon{font-size:1.3rem;margin-bottom:2px}
+.hof-title{font-size:0.68rem;font-weight:800;color:var(--muted);margin-bottom:8px}
+.hof-avatar{width:52px;height:52px;border-radius:50%;background:#dde8f5;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 6px;overflow:hidden}
+.hof-avatar img{width:100%;height:100%;object-fit:cover}
+.hof-name{font-weight:700;font-size:0.82rem;color:var(--text)}
+.hof-score{font-size:0.9rem;margin-top:4px}
+.hof-empty{font-size:0.72rem;color:var(--muted);padding:10px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-head{font-size:0.68rem;font-weight:800;color:var(--muted);text-align:center;padding:4px 0}
+.cal-cell{aspect-ratio:1;border-radius:8px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--border);position:relative}
+.cal-cell.empty-cell{background:transparent;border:none;cursor:default}
+.cal-daynum{font-size:0.74rem;font-weight:700;color:var(--text)}
+.cal-today{border:2px solid var(--blue3)}
+.cal-has{background:rgba(244,165,35,0.12);border-color:rgba(244,165,35,0.4)}
+.cal-dot{width:5px;height:5px;border-radius:50%;background:#f4a523;margin-top:2px}
 .media-embed{width:100%;margin-bottom:8px}
 .media-embed iframe{width:100%;border:none;border-radius:10px}
 .media-yt iframe{aspect-ratio:16/9;height:auto}
@@ -582,6 +599,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
     <button class="ntab" onclick="goTab('register')">📝 تسجيل</button>
     <button class="ntab" onclick="goTab('chat')" id="chatNavBtn" style="position:relative">💬 شات<div class="nbadge" id="chatBadge"></div></button>
     <button class="ntab" onclick="goTab('album')">📸 ألبوم</button>
+    <button class="ntab" onclick="goTab('calendar')">📅 التقويم</button>
     <button class="ntab" onclick="goTab('honor')">🏆 الشرف</button>
     <button class="ntab" onclick="goTab('rank')">📊 الترتيب</button>
     <button class="ntab" onclick="goTab('tasks')">📋 المهام</button>
@@ -782,6 +800,22 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="page" id="albumView"><div class="empty"><span>📸</span>لا توجد صور بعد</div></div>
     </div>
 
+    <!-- CALENDAR (تقويم موحد شهري) -->
+    <div id="sec-calendar" class="sec">
+      <div class="page">
+        <div class="card">
+          <div class="card-head">📅 التقويم الشهري</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <button class="mimg-btn" onclick="calShift(-1)">◀ السابق</button>
+            <div id="calMonthLabel" style="font-weight:800;color:var(--blue3)"></div>
+            <button class="mimg-btn" onclick="calShift(1)">التالي ▶</button>
+          </div>
+          <div id="calGrid" class="cal-grid"></div>
+          <div id="calDayDetail" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- HONOR BOARD -->
     <div id="sec-honor" class="sec">
       <div class="page">
@@ -795,9 +829,14 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- LEADERBOARD (الترتيب) -->
     <div id="sec-rank" class="sec">
       <div class="page">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-head">🏆 لوحة الأبطال</div>
+          <p style="font-size:0.72rem;color:var(--muted);margin-bottom:14px">تتحدث أوتوماتيك حسب الأداء - من غير أي تدخل يدوي من الإدارة</p>
+          <div id="hallOfFame"></div>
+        </div>
         <div class="card">
           <div class="card-head">🏆 ترتيب الأعضاء</div>
-          <p style="font-size:0.72rem;color:var(--muted);margin-bottom:14px">النقاط = (التقييم×10) + (الشارات×5) + (الكورسات×8) + (الحضور×3) − (الغياب×2)</p>
+          <p style="font-size:0.72rem;color:var(--muted);margin-bottom:14px">النقاط = (التقييم×10) + (الشارات×5) + (الكورسات×8) + (الحضور×3) − (الغياب×2) + (الدرجات)</p>
           <div id="rankList"><div class="empty"><span>🏆</span>لا يوجد أعضاء بعد</div></div>
         </div>
       </div>
@@ -824,6 +863,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
           <button class="nh-acc-btn" onclick="myaccLogin()">دخول</button>
         </div>
         <div class="nh-acc-card" id="myaccProfileCard" style="display:none">
+          <div id="myaccAchieveBanner" style="display:none;background:linear-gradient(135deg,#ff9f43,#feca57);color:#fff;font-weight:800;font-size:0.84rem;text-align:center;padding:12px;border-radius:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(254,202,87,.4)"></div>
           <div class="nh-acc-avatar-edit" onclick="document.getElementById('myaccImgFile').click()">
             <img id="myaccAvatarPrev" src="" style="display:none"/>
             <div id="myaccAvatarPlaceholder" style="width:100%;height:100%;border-radius:50%;background:#dde8f5;display:flex;align-items:center;justify-content:center;font-size:36px">👤</div>
@@ -849,6 +889,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             </div>
           </div>
           <div id="myaccRankRow" style="text-align:center;font-size:0.78rem;color:var(--muted);margin-bottom:16px"></div>
+          <div style="margin-bottom:16px">
+            <div style="font-weight:800;color:var(--text);font-size:0.84rem;margin-bottom:8px">💰 الاشتراكات</div>
+            <div id="myaccDuesList"></div>
+          </div>
           <div class="nh-acc-field">
             <label>الاسم</label>
             <input type="text" id="myaccName"/>
@@ -908,6 +952,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <button class="atab" onclick="goAdm('leaders')">👨‍✈️ قادة</button>
               <button class="atab" onclick="goAdm('track')">👥 أعضاء</button>
               <button class="atab" onclick="goAdm('patrolrate')">🏕️ الطلائع</button>
+              <button class="atab" onclick="goAdm('dues')">💰 الاشتراكات</button>
               <button class="atab" onclick="goAdm('reqs')" id="reqsTab">📋 طلبات<div class="nbadge" id="reqsBadge" style="position:absolute;top:5px;right:3px;width:7px;height:7px;background:var(--danger);border-radius:50%;display:none;box-shadow:0 0 5px var(--danger)"></div></button>
               <button class="atab" onclick="goAdm('inbox')">📬 رسائل</button>
               <button class="atab" onclick="goAdm('chat')">💬 شات</button>
@@ -1026,6 +1071,29 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <div id="patrolRatingsList"></div>
             </div>
 
+            <!-- DUES / SUBSCRIPTIONS ADMIN -->
+            <div id="adm-dues" class="asec">
+              <div style="font-size:0.84rem;font-weight:700;color:var(--navy);margin-bottom:10px">💰 الاشتراكات والمصروفات</div>
+              <div class="card" style="margin-bottom:14px">
+                <div class="pgrid">
+                  <div class="pf"><label>قيمة الاشتراك الافتراضية (جنيه)</label><input type="number" id="duesDefaultAmount" placeholder="مثال: 50"/></div>
+                  <div class="pf"><label>الشهر</label><input type="month" id="duesGenMonth" value="${new Date().toISOString().slice(0,7)}"/></div>
+                </div>
+                <button class="sav-prof" onclick="generateMonthlyDues()">➕ توليد اشتراكات هذا الشهر لكل الأعضاء</button>
+              </div>
+              <div class="pgrid" style="margin-bottom:10px">
+                <div class="pf"><label>عرض شهر</label><input type="month" id="duesFilterMonth" value="${new Date().toISOString().slice(0,7)}" onchange="renderDuesAdm()"/></div>
+                <div class="pf"><label>الحالة</label><select id="duesFilterStatus" onchange="renderDuesAdm()">
+                  <option value="">الكل</option>
+                  <option value="unpaid">لسه ما اتدفعش</option>
+                  <option value="submitted">بانتظار الموافقة</option>
+                  <option value="paid">مدفوع ✅</option>
+                  <option value="rejected">مرفوض</option>
+                </select></div>
+              </div>
+              <div id="duesList"></div>
+            </div>
+
             <!-- INBOX ADMIN -->
             <div id="adm-inbox" class="asec">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1109,6 +1177,20 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <div class="card-head">💾 تصدير البيانات</div>
                 <button class="sav-prof" onclick="exportExcel()" style="margin-bottom:8px">📥 تصدير بيانات الأعضاء (Excel)</button>
                 <button class="sav-prof" onclick="exportAttendance()" style="background:linear-gradient(135deg,#27ae60,#2ecc71)">📥 تصدير سجل الحضور (Excel)</button>
+              </div>
+              <div class="card" style="margin-top:14px">
+                <div class="card-head">🖨️ تقرير شهري لطليعة (للاجتماعات)</div>
+                <div class="pgrid">
+                  <div class="pf"><label>الطليعة</label><select id="reportPatrol"></select></div>
+                  <div class="pf"><label>الشهر</label><input type="month" id="reportMonth" value="${new Date().toISOString().slice(0,7)}"/></div>
+                </div>
+                <button class="sav-prof" onclick="printPatrolReport()" style="margin-bottom:8px">🖨️ طباعة التقرير (PDF)</button>
+                <button class="sav-prof" onclick="exportPatrolReportCSV()" style="background:linear-gradient(135deg,#27ae60,#2ecc71)">📥 تصدير Excel</button>
+              </div>
+              <div class="card" style="margin-top:14px">
+                <div class="card-head">🗄️ نسخة احتياطية</div>
+                <p style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">تصدير نسخة كاملة من كل بيانات التطبيق (أعضاء، إعلانات، فعاليات، قادة، تقييم الطلائع...) كملف JSON على جهازك. يُنصح بعمل ده بشكل دوري يدويًا.</p>
+                <button class="sav-prof" onclick="backupAllData()" style="background:linear-gradient(135deg,#8e44ad,#9b59b6)">🗄️ تنزيل نسخة احتياطية كاملة</button>
               </div>
             </div>
 
@@ -1239,6 +1321,7 @@ const CHAT=collection(db,'chat');
 const REQ=collection(db,'requests');
 const RATE=collection(db,'ratings');
 const PRC=collection(db,'patrolRatings');
+const DUES=collection(db,'dues');
 const VISIT=collection(db,'visitors');
 
 const CLOUD='dmzyqkiay', PRESET='asad_albahr';
@@ -1315,11 +1398,12 @@ window.goTab=function(t){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
   document.getElementById('sec-'+t).classList.add('on');
-  const tabs=['ann','leaders','patrolLeaders','members','register','chat','album','honor','rank','tasks','myacc','admin'];
+  const tabs=['ann','leaders','patrolLeaders','members','register','chat','album','calendar','honor','rank','tasks','myacc','admin'];
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll('.ntab')[idx].classList.add('on');
   if(t==='chat'){renderContactDirect();document.getElementById('chatBadge').style.display='none';}
   if(t==='album') renderAlbum();
+  if(t==='calendar') renderCalendar();
   if(t==='honor') renderHonor();
   if(t==='rank') renderRank();
   if(t==='tasks') renderTasks();
@@ -1329,10 +1413,11 @@ window.goAdm=function(t){
   document.querySelectorAll('.asec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.atab').forEach(b=>b.classList.remove('on'));
   document.getElementById('adm-'+t).classList.add('on');
-  const tabs=['ann','manann','leaders','track','patrolrate','reqs','inbox','chat','album','honor','tasks','stats','settings'];
+  const tabs=['ann','manann','leaders','track','patrolrate','dues','reqs','inbox','chat','album','honor','tasks','stats','settings'];
   if(t==='reqs') renderAdmReqs();
   if(t==='chat') renderAdmChat();
   if(t==='patrolrate') renderPatrolRatingsAdm();
+  if(t==='dues') renderDuesAdm();
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll('.atab')[idx].classList.add('on');
   if(t==='manann') renderSavedAnns();
@@ -1445,7 +1530,7 @@ window.closeLightbox=function(){document.getElementById('lightbox').classList.re
 let anns=[];
 onSnapshot(query(AC,orderBy('createdAt','desc')),snap=>{
   anns=snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderAnns();renderSavedAnns();
+  renderAnns();renderSavedAnns();renderCalendar();
 });
 function renderAnns(){
   const el=document.getElementById('annList');
@@ -1642,7 +1727,7 @@ function renderPatrolLeadersPub(){
       <div>
         <div class="leader-name">${esc(m.name)}</div>
         <div class="leader-role">${esc(m.position)}${m.role?' · '+esc(m.role):''}${m.patrol?' · طليعة '+esc(m.patrol):''}</div>
-        ${m.patrol&&patrolRatings[m.patrol.trim()]?`<div style="font-size:0.72rem">${'⭐'.repeat(patrolRatings[m.patrol.trim()])}</div>`:''}
+        ${m.patrol&&patrolRatings[m.patrol.trim()]?`<div style="font-size:0.72rem">${patrolStarsDisplay(m.patrol.trim())}</div>`:''}
       </div>
     </div>`).join('');
 }
@@ -1653,9 +1738,8 @@ window.openPatrolLeaderModal=function(i){
   document.getElementById('plName').textContent=m.name||'';
   document.getElementById('plPosition').textContent=m.position||'';
   document.getElementById('plMeta').textContent=[m.role,m.patrol?'طليعة '+m.patrol:''].filter(Boolean).join(' · ');
-  document.getElementById('plRating').textContent=m.leaderRating?'⭐'.repeat(m.leaderRating):'—';
-  const pr=m.patrol?(patrolRatings[m.patrol.trim()]||0):0;
-  document.getElementById('plPatrolRating').textContent=m.patrol?`تقييم طليعة ${m.patrol}: ${pr?'⭐'.repeat(pr):'—'}`:'';
+  document.getElementById('plRating').textContent=(m.leaderRating||leaderBonusStarsOf(m))?('⭐'.repeat(m.leaderRating||0)+'🌟'.repeat(leaderBonusStarsOf(m))):'—';
+  document.getElementById('plPatrolRating').textContent=m.patrol?`تقييم طليعة ${m.patrol}: ${patrolStarsDisplay(m.patrol.trim())}`:'';
   const actions=document.getElementById('plActions');
   let html='';
   if(m.facebook) html+=`<a class="nh-modal-btn fb" href="${m.facebook.startsWith('http')?esc(m.facebook):'https://'+esc(m.facebook)}" target="_blank">📘 صفحة فيسبوك</a>`;
@@ -1775,7 +1859,7 @@ window.editLeader=function(id){
 let members=[];
 onSnapshot(MC,snap=>{
   members=snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderPubMems();renderAdmMems();renderRank();renderPatrolLeadersPub();renderPatrolRatingsAdm();
+  renderPubMems();renderAdmMems();renderRank();renderPatrolLeadersPub();renderPatrolRatingsAdm();renderHallOfFame();fillReportPatrolSelect();
   checkBirthdays();
   // Update header counter
   const el=document.getElementById('cntMembers');
@@ -1784,19 +1868,53 @@ onSnapshot(MC,snap=>{
   renderChips();
 });
 // ===== تقييم الطلائع (rating a whole طليعة/patrol, not frد member) =====
-let patrolRatings={}; // {patrolName: rating}
+let patrolRatings={}; // {patrolName: {rating, degrees, log}}
 onSnapshot(PRC,snap=>{
   patrolRatings={};
-  snap.docs.forEach(d=>{patrolRatings[d.id]=d.data().rating||0;});
-  renderPatrolLeadersPub();renderPatrolRatingsAdm();
+  snap.docs.forEach(d=>{const v=d.data();patrolRatings[d.id]={rating:v.rating||0,degrees:v.degrees||0,log:v.log||[],imgUrl:v.imgUrl||''};});
+  renderPatrolLeadersPub();renderPatrolRatingsAdm();renderHallOfFame();
 });
 function getDistinctPatrols(){
   const set=new Set();
   members.forEach(m=>{if(m.patrol&&m.patrol.trim())set.add(m.patrol.trim());});
   return [...set].sort((a,b)=>a.localeCompare('ar'));
 }
+function patrolBonusStars(name){const p=patrolRatings[name];return p?Math.floor((p.degrees||0)/10):0;}
+function patrolStarsDisplay(name){
+  const p=patrolRatings[name];if(!p)return '—';
+  const r=p.rating||0,b=patrolBonusStars(name);
+  if(!r&&!b)return '—';
+  return '⭐'.repeat(r)+(b?'🌟'.repeat(b):'');
+}
+function patrolScore(name){const p=patrolRatings[name];if(!p)return 0;return (p.rating||0)*10+(p.degrees||0);}
 window.setPatrolRating=async function(name,r){
   await setDoc(doc(db,'patrolRatings',name),{rating:r,name,updatedAt:serverTimestamp()},{merge:true});
+};
+window.setPatrolImg=async function(name){
+  const inp=document.getElementById('pimg_'+name);
+  const url=inp.value.trim();
+  if(url){
+    const type=detectMediaType(url);
+    if(type==='video'){toast('الرابط ده فيديو، محتاجين رابط صورة بس ⚠️','err');return;}
+    const ok=await testImageLoads(url);
+    if(!ok){toast('الرابط ده مش صورة مباشرة - جيب رابط الصورة المباشر ⚠️','err');return;}
+  }
+  await setDoc(doc(db,'patrolRatings',name),{name,imgUrl:url,updatedAt:serverTimestamp()},{merge:true});
+  toast('تم حفظ صورة الطليعة ✅','ok');
+};
+window.addPatrolDegrees=async function(name,sign){
+  const inp=document.getElementById('pdeg_'+name);
+  const reasonInp=document.getElementById('pdegR_'+name);
+  const raw=parseInt(inp.value,10);
+  if(!raw){toast('اكتب عدد الدرجات (رقم موجب) ⚠️','err');return;}
+  const val=Math.abs(raw)*(sign||1);
+  const reason=(reasonInp?.value||'').trim();
+  const cur=patrolRatings[name]||{rating:0,degrees:0,log:[]};
+  const newTotal=(cur.degrees||0)+val;
+  const log=[...(cur.log||[]),{delta:val,reason,date:new Date().toLocaleDateString('ar-EG-u-nu-latn')}].slice(-20);
+  await setDoc(doc(db,'patrolRatings',name),{name,degrees:newTotal,log,updatedAt:serverTimestamp()},{merge:true});
+  inp.value='';if(reasonInp)reasonInp.value='';
+  toast(val>0?`تمت إضافة ${val} درجة لطليعة ${name} ✅`:`تم خصم ${Math.abs(val)} درجة من طليعة ${name} ⚠️`,'ok');
 };
 function renderPatrolRatingsAdm(){
   const el=document.getElementById('patrolRatingsList');
@@ -1805,11 +1923,111 @@ function renderPatrolRatingsAdm(){
   const patrols=getDistinctPatrols();
   if(!patrols.length){el.innerHTML='<div class="empty"><span>🏕️</span>لا توجد طلائع بعد (أضف طليعة للأعضاء أولاً)</div>';return;}
   el.innerHTML=patrols.map(name=>{
-    const r=patrolRatings[name]||0;
-    const stars=isPatrol?'⭐'.repeat(r)||'—':[1,2,3,4,5].map(i=>`<button class="star" onclick="setPatrolRating('${esc(name)}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
-    return `<div class="sitem"><div class="sitem-info"><div class="sitem-title">🏕️ طليعة ${esc(name)}</div><div class="sitem-sub">${stars}</div></div></div>`;
+    const r=(patrolRatings[name]?.rating)||0;
+    const deg=(patrolRatings[name]?.degrees)||0;
+    const img=(patrolRatings[name]?.imgUrl)||'';
+    const stars=isPatrol?(patrolStarsDisplay(name)):[1,2,3,4,5].map(i=>`<button class="star" onclick="setPatrolRating('${esc(name)}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
+    const log=patrolRatings[name]?.log||[];
+    return `<div class="sitem" style="flex-direction:column;align-items:stretch">
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="mav" style="width:44px;height:44px;flex-shrink:0">${img?`<img src="${esc(img)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`:'🏕️'}</div>
+        <div class="sitem-info"><div class="sitem-title">🏕️ طليعة ${esc(name)}</div><div class="sitem-sub">${stars}</div></div>
+      </div>
+      ${isPatrol?'':`
+      <div class="ff" style="display:flex;gap:6px;align-items:flex-end;margin-top:8px">
+        <div style="flex:1"><label style="font-size:0.68rem;color:var(--muted)">صورة الطليعة (رابط صورة مباشر)</label><input type="text" id="pimg_${esc(name)}" placeholder="https://..." value="${esc(img)}"/></div>
+        <button class="mimg-btn" style="white-space:nowrap" onclick="setPatrolImg('${esc(name)}')">🔗 حفظ</button>
+      </div>
+      `}
+      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)">
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">🎯 درجات الطليعة: <b style="color:var(--blue3)">${deg}</b>${patrolBonusStars(name)?` · +${patrolBonusStars(name)} 🌟`:''}</div>
+        ${isPatrol?'':`
+        <div style="display:flex;gap:6px">
+          <input type="number" id="pdeg_${esc(name)}" min="1" placeholder="عدد الدرجات" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg);color:var(--text)"/>
+          <button class="mimg-btn" onclick="addPatrolDegrees('${esc(name)}',1)">➕</button>
+          <button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="addPatrolDegrees('${esc(name)}',-1)">➖</button>
+        </div>
+        <input type="text" id="pdegR_${esc(name)}" placeholder="السبب (اختياري)" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;font-size:0.78rem;background:var(--bg);color:var(--text)"/>
+        `}
+        ${log.length?`<div style="margin-top:8px;font-size:0.68rem;color:var(--muted)">${[...log].reverse().slice(0,5).map(l=>`${l.delta>0?'+':''}${l.delta}${l.reason?' – '+esc(l.reason):''} <span style="opacity:.6">(${l.date})</span>`).join('<br>')}</div>`:''}
+      </div>
+    </div>`;
   }).join('');
 }
+// ===== نظام الاشتراكات/المصروفات مع موافقة الإدارة =====
+let dues=[];
+onSnapshot(DUES,snap=>{
+  dues=snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderDuesAdm();renderMyaccDues();
+});
+window.generateMonthlyDues=async function(){
+  const amount=parseFloat(document.getElementById('duesDefaultAmount').value);
+  const month=document.getElementById('duesGenMonth').value;
+  if(!amount||amount<=0){toast('أدخل قيمة اشتراك صحيحة ⚠️','err');return;}
+  if(!month){toast('اختر الشهر ⚠️','err');return;}
+  const existing=new Set(dues.filter(d=>d.month===month).map(d=>d.memberId));
+  const toCreate=members.filter(m=>!existing.has(m.id));
+  if(!toCreate.length){toast('كل الأعضاء عندهم اشتراك مسجل للشهر ده بالفعل ✅','ok');return;}
+  for(const m of toCreate){
+    await addDoc(DUES,{memberId:m.id,memberName:m.name,patrol:m.patrol||'',month,amount,status:'unpaid',createdAt:serverTimestamp()});
+  }
+  toast(`تم توليد ${toCreate.length} اشتراك لشهر ${month} ✅`,'ok');
+};
+window.setDueStatus=async function(id,status){
+  await updateDoc(doc(db,'dues',id),{status,...(status==='paid'?{approvedAt:serverTimestamp()}:{})});
+  toast(status==='paid'?'تم تأكيد الدفع ✅':status==='rejected'?'تم رفض الطلب ⚠️':'تم التحديث','ok');
+};
+window.deleteDue=async function(id){
+  if(!confirm('حذف سجل الاشتراك ده؟'))return;
+  await deleteDoc(doc(db,'dues',id));
+};
+function renderDuesAdm(){
+  const el=document.getElementById('duesList');
+  if(!el)return;
+  const month=document.getElementById('duesFilterMonth')?.value;
+  const status=document.getElementById('duesFilterStatus')?.value;
+  let list=[...dues];
+  if(month) list=list.filter(d=>d.month===month);
+  if(status) list=list.filter(d=>d.status===status);
+  if(!list.length){el.innerHTML='<div class="empty"><span>💰</span>لا توجد سجلات مطابقة</div>';return;}
+  const statusLabel={unpaid:'⏳ لسه ما اتدفعش',submitted:'📤 بانتظار الموافقة',paid:'✅ مدفوع',rejected:'❌ مرفوض'};
+  const statusColor={unpaid:'#f4a523',submitted:'#3b82f6',paid:'#27ae60',rejected:'#c0392b'};
+  el.innerHTML=list.sort((a,b)=>(a.status==='submitted'?-1:1)).map(d=>`
+    <div class="sitem">
+      <div class="sitem-info">
+        <div class="sitem-title">${esc(d.memberName)} ${d.patrol?'· 🏕️'+esc(d.patrol):''}</div>
+        <div class="sitem-sub" style="color:${statusColor[d.status]||'var(--muted)'}">${statusLabel[d.status]||d.status} · ${d.amount} ج.م · ${d.month}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${d.status==='submitted'?`<button class="mimg-btn" onclick="setDueStatus('${d.id}','paid')">✅ موافقة</button><button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="setDueStatus('${d.id}','rejected')">❌ رفض</button>`:''}
+        ${d.status==='unpaid'||d.status==='rejected'?`<button class="mimg-btn" onclick="setDueStatus('${d.id}','paid')">✅ تحديد كمدفوع</button>`:''}
+        ${d.status==='paid'?`<button class="mimg-btn" onclick="setDueStatus('${d.id}','unpaid')">↩ إلغاء الدفع</button>`:''}
+        <button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="deleteDue('${d.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+// عرض اشتراكات العضو نفسه في "حسابي" + إمكانية الإبلاغ بالدفع
+function renderMyaccDues(){
+  const el=document.getElementById('myaccDuesList');
+  if(!el||!myaccCurrentId)return;
+  const mine=dues.filter(d=>d.memberId===myaccCurrentId).sort((a,b)=>b.month.localeCompare(a.month));
+  if(!mine.length){el.innerHTML='<div class="empty"><span>💰</span>لا توجد اشتراكات مسجلة</div>';return;}
+  const statusLabel={unpaid:'⏳ لسه ما اتدفعش',submitted:'📤 بانتظار موافقة الإدارة',paid:'✅ مدفوع',rejected:'❌ مرفوض - حاول تاني'};
+  const statusColor={unpaid:'#f4a523',submitted:'#3b82f6',paid:'#27ae60',rejected:'#c0392b'};
+  el.innerHTML=mine.map(d=>`
+    <div class="sitem">
+      <div class="sitem-info">
+        <div class="sitem-title">${d.month} · ${d.amount} ج.م</div>
+        <div class="sitem-sub" style="color:${statusColor[d.status]}">${statusLabel[d.status]}</div>
+      </div>
+      ${(d.status==='unpaid'||d.status==='rejected')?`<button class="mimg-btn" onclick="submitDuePayment('${d.id}')">📤 أبلغ إني دفعت</button>`:''}
+    </div>`).join('');
+}
+window.submitDuePayment=async function(id){
+  if(!confirm('تأكيد إنك دفعت الاشتراك ده؟ هيتبعت للإدارة للموافقة'))return;
+  await updateDoc(doc(db,'dues',id),{status:'submitted',submittedAt:serverTimestamp()});
+  toast('تم إرسال بلاغ الدفع، في انتظار موافقة الإدارة ✅','ok');
+};
 function renderPubMems(){
   const el=document.getElementById('pubMemsList');
   if(!members.length){el.innerHTML='<div class="page"><div class="empty"><span>👥</span>لا يوجد أعضاء بعد</div></div>';return;}
@@ -1917,12 +2135,30 @@ function calcPoints(m){
 }
 // عدد النجوم الإضافية اللي بتتضاف تلقائيًا كل 10 درجات يدوية - حتى لو عدّى السقف الأساسي (5)
 function bonusStarsOf(m){return Math.floor((m.manualDegrees||0)/10);}
+// نفس الفكرة لكن خاص بتقييم القيادة (عريف/مساعد عريف) - منفصل عن تقييم العضو العام
+function leaderBonusStarsOf(m){return Math.floor((m.leaderDegrees||0)/10);}
+function leaderScore(m){return (m.leaderRating||0)*10+(m.leaderDegrees||0);}
 // نص عرض التقييم الكامل: نجوم يدوية (⭐ حتى 5) + نجوم إضافية تلقائية (🌟 بدون سقف)
 function starsDisplay(m){
   const r=m.rating||0, b=bonusStarsOf(m);
   if(!r&&!b)return '—';
   return '⭐'.repeat(r)+(b?'🌟'.repeat(b):'');
 }
+// درجات القيادة (عريف/مساعد عريف) - إضافة/خصم منفصلة تمامًا عن درجات العضو العادي
+window.addLeaderDegrees=async function(id,sign){
+  const inp=document.getElementById('ldeg'+id);
+  const reasonInp=document.getElementById('ldegR'+id);
+  const raw=parseInt(inp.value,10);
+  if(!raw){toast('اكتب عدد الدرجات (رقم موجب) ⚠️','err');return;}
+  const val=Math.abs(raw)*(sign||1);
+  const reason=(reasonInp?.value||'').trim();
+  const m=members.find(x=>x.id===id);if(!m)return;
+  const newTotal=(m.leaderDegrees||0)+val;
+  const log=[...(m.leaderDegreesLog||[]),{delta:val,reason,date:new Date().toLocaleDateString('ar-EG-u-nu-latn')}].slice(-20);
+  await updateDoc(doc(db,'members',id),{leaderDegrees:newTotal,leaderDegreesLog:log});
+  inp.value='';if(reasonInp)reasonInp.value='';
+  toast(val>0?`تمت إضافة ${val} درجة قيادية ✅`:`تم خصم ${Math.abs(val)} درجة قيادية ⚠️`,'ok');
+};
 // ===== UPCOMING EVENTS =====
 let upcomingEventsData=[];
 function checkUpcomingEvents(){
@@ -2040,6 +2276,64 @@ function renderRank(){
     <div style="font-weight:800;color:var(--text);font-size:0.9rem;margin:16px 0 8px">👧 ترتيب البنات (منفصل حسب الرتبة الكشفية)</div>
     ${females.length?buildByRank(females,femaleOrder):'<div class="empty"><span>👧</span>لا يوجد بنات بعد</div>'}
   `;
+}
+// ===== لوحة الأبطال - أوتوماتيك بالكامل، بتتحدث من غير أي تدخل يدوي =====
+function renderHallOfFame(){
+  const el=document.getElementById('hallOfFame');
+  if(!el)return;
+  if(!members.length){el.innerHTML='<div class="empty"><span>🏆</span>لسه مفيش بيانات كفاية</div>';return;}
+  const card=(icon,title,m,scoreTxt,extra)=>{
+    if(!m)return `<div class="hof-card"><div class="hof-icon">${icon}</div><div class="hof-title">${title}</div><div class="hof-empty">لا يوجد بعد</div></div>`;
+    const av=m.gender==='male'?'⛺':'🏕️';
+    return `<div class="hof-card">
+      <div class="hof-icon">${icon}</div>
+      <div class="hof-title">${title}</div>
+      <div class="hof-avatar">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:av}</div>
+      <div class="hof-name">${esc(m.name)}</div>
+      <div class="hof-score">${scoreTxt}</div>
+      ${extra||''}
+    </div>`;
+  };
+  // أفضل عضو / عضوة (حسب النقاط العامة calcPoints)
+  const males=members.filter(m=>m.gender==='male');
+  const females=members.filter(m=>m.gender!=='male');
+  const bestMale=males.length?males.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
+  const bestFemale=females.length?females.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
+  // أفضل عريف / مساعد عريف (حسب تقييم القيادة المنفصل leaderScore)
+  const aarifs=members.filter(m=>['عريف اول','عريف'].includes(m.position));
+  const assistants=members.filter(m=>m.position==='مساعد عريف');
+  const bestAarif=aarifs.length?aarifs.reduce((a,b)=>leaderScore(b)>leaderScore(a)?b:a):null;
+  const bestAssistant=assistants.length?assistants.reduce((a,b)=>leaderScore(b)>leaderScore(a)?b:a):null;
+  // أفضل طليعة (حسب تقييم الطليعة المنفصل)
+  const patrols=getDistinctPatrols();
+  const bestPatrolName=patrols.length?patrols.reduce((a,b)=>patrolScore(b)>patrolScore(a)?b:a):null;
+  el.innerHTML=`<div class="hof-grid">
+    ${bestPatrolName?`<div class="hof-card">
+      <div class="hof-icon">🏕️</div>
+      <div class="hof-title">أفضل طليعة</div>
+      <div class="hof-avatar">${patrolRatings[bestPatrolName]?.imgUrl?`<img src="${esc(patrolRatings[bestPatrolName].imgUrl)}" loading="lazy"/>`:'🏕️'}</div>
+      <div class="hof-name">طليعة ${esc(bestPatrolName)}</div>
+      <div class="hof-score">${patrolStarsDisplay(bestPatrolName)}</div>
+    </div>`:card('🏕️','أفضل طليعة',null)}
+    ${card('🎖️','أفضل عريف',bestAarif,bestAarif?('⭐'.repeat(bestAarif.leaderRating||0)+'🌟'.repeat(leaderBonusStarsOf(bestAarif))||'—'):'')}
+    ${card('🎖️','أفضل مساعد عريف',bestAssistant,bestAssistant?('⭐'.repeat(bestAssistant.leaderRating||0)+'🌟'.repeat(leaderBonusStarsOf(bestAssistant))||'—'):'')}
+    ${card('👦','أفضل عضو',bestMale,bestMale?starsDisplay(bestMale):'')}
+    ${card('👧','أفضل عضوة',bestFemale,bestFemale?starsDisplay(bestFemale):'')}
+  </div>
+  <div style="font-weight:800;color:var(--text);font-size:0.86rem;margin:18px 0 4px">🏅 أبطال المراحل الكشفية</div>
+  <p style="font-size:0.68rem;color:var(--muted);margin-bottom:10px">شرط الدخول للوحة: 3 نجوم فأكثر و100 درجة فأكثر</p>
+  <div class="hof-grid">
+    ${[...RANKS_M].reverse().filter(r=>r!=='خريج').map(rank=>{
+      const group=members.filter(m=>m.gender==='male'&&m.role===rank&&(m.rating||0)>=3&&(m.manualDegrees||0)>=100);
+      const best=group.length?group.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
+      return card('🎖️',`أفضل ${esc(rank)}`,best,best?starsDisplay(best):'');
+    }).join('')}
+    ${[...RANKS_F].reverse().filter(r=>r!=='خريجة').map(rank=>{
+      const group=members.filter(m=>m.gender!=='male'&&m.role===rank&&(m.rating||0)>=3&&(m.manualDegrees||0)>=100);
+      const best=group.length?group.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
+      return card('🎖️',`أفضل ${esc(rank)}`,best,best?starsDisplay(best):'');
+    }).join('')}
+  </div>`;
 }
 window.savProf=async function(id){
   const g=s=>document.getElementById(s+id)?.value||'';
@@ -2192,7 +2486,22 @@ function renderAdmMems(){
     const stars=isPatrol?'':[1,2,3,4,5].map(i=>`<button class="star" onclick="setRat('${m.id}',${i})">${i<=r?'⭐':'☆'}</button>`).join('');
     const isLeaderPos=PATROL_LEADER_POSITIONS.includes(m.position);
     const lr=m.leaderRating||0;
-    const leaderStars=(!isLeaderPos)?'':`<div style="margin-top:4px"><span style="font-size:0.68rem;color:var(--muted);margin-left:4px">تقييم كـ${esc(m.position)}:</span>${isPatrol?('⭐'.repeat(lr)||'—'):[1,2,3,4,5].map(i=>`<button class="star" onclick="setLeaderRating('${m.id}',${i})">${i<=lr?'⭐':'☆'}</button>`).join('')}</div>`;
+    const lb=leaderBonusStarsOf(m);
+    const leaderStars=(!isLeaderPos)?'':`
+      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)">
+        <span style="font-size:0.68rem;color:var(--muted);margin-left:4px">تقييم كـ${esc(m.position)} (منفصل عن تقييمه كعضو):</span>
+        <div>${isPatrol?('⭐'.repeat(lr)+(lb?'🌟'.repeat(lb):'')||'—'):[1,2,3,4,5].map(i=>`<button class="star" onclick="setLeaderRating('${m.id}',${i})">${i<=lr?'⭐':'☆'}</button>`).join('')}</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:6px">🎯 درجات القيادة: <b style="color:var(--blue3)">${m.leaderDegrees||0}</b>${lb?` · +${lb} 🌟`:''}</div>
+        ${isPatrol?'':`
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <input type="number" id="ldeg${m.id}" min="1" placeholder="عدد الدرجات" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg);color:var(--text)"/>
+          <button class="mimg-btn" onclick="addLeaderDegrees('${m.id}',1)">➕</button>
+          <button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="addLeaderDegrees('${m.id}',-1)">➖</button>
+        </div>
+        <input type="text" id="ldegR${m.id}" placeholder="السبب (اختياري)" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;font-size:0.78rem;background:var(--bg);color:var(--text)"/>
+        `}
+        ${(m.leaderDegreesLog&&m.leaderDegreesLog.length)?`<div style="margin-top:8px;font-size:0.68rem;color:var(--muted)">${[...m.leaderDegreesLog].reverse().slice(0,5).map(l=>`${l.delta>0?'+':''}${l.delta}${l.reason?' – '+esc(l.reason):''} <span style="opacity:.6">(${l.date})</span>`).join('<br>')}</div>`:''}
+      </div>`;
     const bdgs=(m.badges||[]).map((b,i)=>`<span class="tag-b">🏅${esc(b)}${isPatrol?'':'<i class="xt" onclick="rmBadge(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد شارات</span>';
     const crss=(m.courses||[]).map((c,i)=>`<span class="tag-c">📚${esc(c)}${isPatrol?'':'<i class="xt" onclick="rmCourse(\''+m.id+'\','+i+')">✕</i>'}</span>`).join('')||'<span style="color:var(--muted);font-size:0.74rem">لا توجد دورات</span>';
     const av=m.gender==='male'?'⛺':'🏕️';
@@ -2371,8 +2680,65 @@ window.delInbox=async function(id){await deleteDoc(doc(db,'inbox',id));};
 let events=[];
 onSnapshot(query(EVC,orderBy('createdAt','desc')),snap=>{
   events=snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderAlbum();renderEventsAdm();
+  renderAlbum();renderEventsAdm();renderCalendar();
 });
+// ===== تقويم موحد شهري - يجمع كل الفعاليات والإعلانات المؤرخة =====
+let calDate=new Date();
+window.calShift=function(dir){
+  calDate.setMonth(calDate.getMonth()+dir);
+  renderCalendar();
+};
+function renderCalendar(){
+  const grid=document.getElementById('calGrid');
+  const label=document.getElementById('calMonthLabel');
+  if(!grid||!label)return;
+  const y=calDate.getFullYear(), mo=calDate.getMonth();
+  label.textContent=calDate.toLocaleDateString('ar-EG',{month:'long',year:'numeric'});
+  const firstDay=new Date(y,mo,1);
+  const startOffset=firstDay.getDay(); // 0=Sunday
+  const daysInMonth=new Date(y,mo+1,0).getDate();
+  // اجمع الفعاليات والإعلانات المؤرخة في نفس الشهر
+  const dayMap={}; // day -> [{title,type}]
+  events.forEach(ev=>{
+    if(!ev.date)return;
+    const d=new Date(ev.date);
+    if(d.getFullYear()===y&&d.getMonth()===mo){
+      (dayMap[d.getDate()]=dayMap[d.getDate()]||[]).push({title:ev.name,type:'event'});
+    }
+  });
+  anns.forEach(a=>{
+    if(!a.date)return;
+    const d=new Date(a.date);
+    if(d.getFullYear()===y&&d.getMonth()===mo){
+      (dayMap[d.getDate()]=dayMap[d.getDate()]||[]).push({title:a.title,type:'ann'});
+    }
+  });
+  const todayStr=new Date().toDateString();
+  let cells='';
+  ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'].forEach(dname=>{
+    cells+=`<div class="cal-head">${dname}</div>`;
+  });
+  for(let i=0;i<startOffset;i++) cells+='<div class="cal-cell empty-cell"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const isToday=new Date(y,mo,d).toDateString()===todayStr;
+    const has=dayMap[d];
+    cells+=`<div class="cal-cell${isToday?' cal-today':''}${has?' cal-has':''}" onclick="showCalDay(${y},${mo},${d})">
+      <div class="cal-daynum">${d}</div>
+      ${has?`<div class="cal-dot"></div>`:''}
+    </div>`;
+  }
+  grid.innerHTML=cells;
+  document.getElementById('calDayDetail').innerHTML='';
+  window._calDayMap=dayMap;
+}
+window.showCalDay=function(y,mo,d){
+  const items=(window._calDayMap||{})[d]||[];
+  const el=document.getElementById('calDayDetail');
+  const dateLabel=new Date(y,mo,d).toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long'});
+  if(!items.length){el.innerHTML=`<div class="empty"><span>📅</span>${dateLabel} - لا يوجد فعاليات</div>`;return;}
+  el.innerHTML=`<div style="font-weight:800;color:var(--text);margin-bottom:8px">${dateLabel}</div>` +
+    items.map(it=>`<div class="sitem"><div class="sitem-info"><div class="sitem-title">${it.type==='event'?'🎪':'📢'} ${esc(it.title||'')}</div></div></div>`).join('');
+};
 function renderAlbum(){
   const el=document.getElementById('albumView');if(!el)return;
   if(!events.length){el.innerHTML='<div class="empty"><span>📸</span>لا توجد صور بعد</div>';return;}
@@ -2836,7 +3202,7 @@ function loginSuccess(){
   }
 
   if(currentAdmin.role==='patrol'){
-    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','manann','patrolrate'];
+    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','manann','patrolrate','dues'];
     hideTabs.forEach(t=>{
       const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
       if(btn) btn.style.display='none';
@@ -2992,8 +3358,29 @@ window.myaccLogin=function(){
   else{avImg.style.display='none';avPh.style.display='flex';}
   document.getElementById('myaccLoginCard').style.display='none';
   document.getElementById('myaccProfileCard').style.display='block';
+  checkMyaccAchievements(found);
+  renderMyaccDues();
   toast('مرحباً '+found.name+' 👋','ok');
 };
+// إشعار تحفيزي للعضو نفسه لو درجاته أو نجومه زادت من آخر مرة دخل فيها
+async function checkMyaccAchievements(found){
+  const banner=document.getElementById('myaccAchieveBanner');
+  if(banner){banner.style.display='none';banner.textContent='';}
+  const lastR=found.lastSeenRating||0, lastD=found.lastSeenDegrees||0;
+  const curR=found.rating||0, curD=found.manualDegrees||0;
+  const lastBonus=Math.floor(lastD/10), curBonus=Math.floor(curD/10);
+  const parts=[];
+  if(curBonus>lastBonus) parts.push(`🎉 مبروك! خدت ${curBonus-lastBonus} نجمة إضافية تلقائية جديدة 🌟`);
+  else if(curR>lastR) parts.push(`🌟 مبروك! تقييمك ارتفع لـ ${curR} نجوم`);
+  if(curD>lastD) parts.push(`➕ درجاتك زادت! دلوقتي عندك ${curD} درجة`);
+  if(parts.length && banner){
+    banner.textContent=parts.join(' · ');
+    banner.style.display='block';
+  }
+  if(curR!==lastR||curD!==lastD){
+    await updateDoc(doc(db,'members',found.id),{lastSeenRating:curR,lastSeenDegrees:curD});
+  }
+}
 window.myaccImgPreview=function(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
@@ -3280,6 +3667,97 @@ window.exportAttendance=function(){
   a.download=`سجل_الحضور_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.csv`;
   a.click();
   toast('تم تصدير سجل الحضور ✅','ok');
+};
+// ===== تقرير شهري لكل طليعة (درجات + حضور + شارات) - قابل للطباعة أو التصدير =====
+function fillReportPatrolSelect(){
+  const sel=document.getElementById('reportPatrol');
+  if(!sel)return;
+  const cur=sel.value;
+  const patrols=getDistinctPatrols();
+  sel.innerHTML=patrols.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')||'<option value="">لا توجد طلائع</option>';
+  if(patrols.includes(cur))sel.value=cur;
+}
+function buildPatrolReportData(){
+  const patrol=document.getElementById('reportPatrol')?.value;
+  const month=document.getElementById('reportMonth')?.value; // format YYYY-MM
+  if(!patrol){toast('اختر طليعة أولاً ⚠️','err');return null;}
+  const patMembers=members.filter(m=>(m.patrol||'').trim()===patrol.trim());
+  const monthLabel=month?new Date(month+'-01').toLocaleDateString('ar-EG',{month:'long',year:'numeric'}):'كل الفترات';
+  const rows=patMembers.map(m=>{
+    const log=(m.attendanceLog||[]).filter(l=>{
+      if(!month)return true;
+      // date format dd/mm/yyyy (localized ar-EG-u-nu-latn) - try parse
+      const parts=(l.date||'').split(/[\/\-]/);
+      if(parts.length<3)return true;
+      const mm=parts[1].padStart(2,'0'), yy=parts[2];
+      return `${yy}-${mm}`===month;
+    });
+    const att=log.filter(l=>l.present).length;
+    const abs=log.filter(l=>!l.present).length;
+    return {name:m.name,role:m.role||'',position:m.position||'',degrees:m.manualDegrees||0,stars:starsDisplay(m),att,abs,badges:(m.badges||[]).length};
+  });
+  const pr=patrolRatings[patrol]||{rating:0,degrees:0};
+  return {patrol,monthLabel,rows,patrolStars:patrolStarsDisplay(patrol),patrolDegrees:pr.degrees||0};
+}
+window.printPatrolReport=function(){
+  const data=buildPatrolReportData();if(!data)return;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تقرير طليعة ${data.patrol}</title>
+  <style>
+    body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#1a2942}
+    h1{font-size:20px;border-bottom:3px solid #1a2942;padding-bottom:10px}
+    .meta{font-size:13px;color:#555;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border:1px solid #ccc;padding:8px;text-align:center}
+    th{background:#1a2942;color:#fff}
+    tr:nth-child(even){background:#f5f7fa}
+    .summary{margin-top:16px;font-weight:bold}
+    @media print{body{padding:0}}
+  </style></head><body>
+    <h1>🏕️ تقرير طليعة ${data.patrol}</h1>
+    <div class="meta">الفترة: ${data.monthLabel} · تقييم الطليعة: ${data.patrolStars} · درجات الطليعة: ${data.patrolDegrees}</div>
+    <table>
+      <tr><th>الاسم</th><th>الرتبة</th><th>الصفة</th><th>التقييم</th><th>الدرجات</th><th>حضور</th><th>غياب</th><th>الشارات</th></tr>
+      ${data.rows.map(r=>`<tr><td>${r.name}</td><td>${r.role}</td><td>${r.position}</td><td>${r.stars}</td><td>${r.degrees}</td><td>${r.att}</td><td>${r.abs}</td><td>${r.badges}</td></tr>`).join('')}
+    </table>
+    <div class="summary">إجمالي الأعضاء: ${data.rows.length}</div>
+    <script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script>
+  </body></html>`);
+  w.document.close();
+};
+window.exportPatrolReportCSV=function(){
+  const data=buildPatrolReportData();if(!data)return;
+  const rows=[['الاسم','الرتبة','الصفة','التقييم','الدرجات','حضور','غياب','الشارات']];
+  data.rows.forEach(r=>rows.push([r.name,r.role,r.position,r.stars,r.degrees,r.att,r.abs,r.badges]));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const bom='\uFEFF';
+  const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`تقرير_طليعة_${data.patrol}_${data.monthLabel}.csv`;
+  a.click();
+  toast('تم تصدير التقرير ✅','ok');
+};
+// ===== نسخة احتياطية يدوية كاملة لكل بيانات Firestore =====
+window.backupAllData=async function(){
+  toast('جاري تجهيز النسخة الاحتياطية...','ok');
+  try{
+    const collections=['members','announcements','events','leaders','honor','patrolRatings','admins','tasks'];
+    const backup={exportedAt:new Date().toISOString()};
+    for(const cName of collections){
+      const snap=await getDocs(collection(db,cName));
+      backup[cName]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    }
+    const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`نسخة_احتياطية_أسد_البحار_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.json`;
+    a.click();
+    toast('تم تنزيل النسخة الاحتياطية ✅','ok');
+  }catch(e){
+    console.error(e);
+    toast('حصل خطأ أثناء عمل النسخة الاحتياطية ❌','err');
+  }
 };
 // ===== END STATS =====
 // ===== BULK WHATSAPP RECIPIENT SELECTION =====
