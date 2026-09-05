@@ -36,6 +36,38 @@
   --shadow:0 2px 12px rgba(26,58,107,0.1);
   --shadow2:0 4px 20px rgba(26,58,107,0.15);
 }
+/* ===== ثيمات المناسبات - بتغيّر شكل الموقع بالكامل حسب المناسبة المختارة ===== */
+html[data-occasion="ramadan"]{
+  --navy:#2d1b4e; --navy2:#4a2d7a; --blue:#6b4fa0; --blue2:#8a6bc0;
+  --blue-light:#f0eaf8; --blue-lighter:#f7f2fc; --gold:#d4af37; --gold-light:#f0d060; --gold-bright:#ffe08a;
+  --bg:#f7f4fb; --bg2:#efe8f7;
+}
+html[data-occasion="eid"]{
+  --navy:#0a6b4a; --navy2:#0a8a5f; --blue:#12a06e; --blue2:#2ec98f;
+  --blue-light:#e6f8f0; --blue-lighter:#f0fbf6; --gold:#d4af37; --gold-light:#f0d060; --gold-bright:#ffe08a;
+  --bg:#f2fbf6; --bg2:#e6f6ee;
+}
+html[data-occasion="mawlid"]{
+  --navy:#0f5c3d; --navy2:#147a4f; --blue:#1e9b63; --blue2:#3ab87e;
+  --blue-light:#e8f7ef; --blue-lighter:#f2fbf5; --gold:#c8900a; --gold-light:#f0b429; --gold-bright:#ffd166;
+  --bg:#f3faf5; --bg2:#e8f4ec;
+}
+html[data-occasion="national"]{
+  --navy:#8a1a1a; --navy2:#b02020; --blue:#1a1a1a; --blue2:#333333;
+  --blue-light:#fdecec; --blue-lighter:#fdf5f5; --gold:#c9a227; --gold-light:#e0be3d; --gold-bright:#f5d76e;
+  --bg:#fdf7f7; --bg2:#f8ecec;
+}
+html[data-occasion="newyear"]{
+  --navy:#1a1a3d; --navy2:#2a2a5d; --blue:#3a3a8a; --blue2:#5a5ab0;
+  --blue-light:#eeeef8; --blue-lighter:#f5f5fb; --gold:#ffd700; --gold-light:#ffe14d; --gold-bright:#fff08a;
+  --bg:#f5f5fb; --bg2:#ececf7;
+}
+html[data-occasion="scouting"]{
+  --navy:#4a3a1a; --navy2:#6b5a2a; --blue:#8a6b2a; --blue2:#a8853f;
+  --blue-light:#f8f2e6; --blue-lighter:#fbf7ef; --gold:#2e7d32; --gold-light:#43a047; --gold-bright:#66bb6a;
+  --bg:#faf6ee; --bg2:#f2ead9;
+}
+
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
 body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
@@ -90,6 +122,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .hof-name{font-weight:700;font-size:0.82rem;color:var(--text)}
 .hof-score{font-size:0.9rem;margin-top:4px}
 .hof-empty{font-size:0.72rem;color:var(--muted);padding:10px 0}
+.occasion-banner{display:none;text-align:center;padding:12px 10px;font-weight:800;font-size:0.86rem;color:#fff;background:linear-gradient(90deg,var(--navy),var(--navy2));position:relative;overflow:hidden}
+.occasion-banner.show{display:block}
+.occasion-banner .ob-icons{font-size:1rem;letter-spacing:6px;opacity:0.85;margin-bottom:2px}
+.occasion-banner .ob-text{font-size:0.86rem}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-head{font-size:0.68rem;font-weight:800;color:var(--muted);text-align:center;padding:4px 0}
 .cal-cell{aspect-ratio:1;border-radius:8px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--border);position:relative}
@@ -435,6 +471,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 </head>
 <body>
 
+<!-- Occasion Banner (يظهر تلقائيًا حسب المناسبة المختارة من الإدارة) -->
+<div class="occasion-banner" id="occasionBanner"></div>
+
 <!-- Update Bar -->
 <div class="update-bar" id="updateBar">
   <span>🔄</span>
@@ -467,6 +506,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 
     <!-- Hamburger menu dropdown panel -->
     <div id="hamMenu" class="nh-dropdown" style="display:none">
+      <button class="nh-dropdown-item" id="enablePushBtn" onclick="enablePushNotifications();toggleHamMenu()">🔔 تفعيل إشعارات الإعلانات والفعاليات</button>
       <button class="nh-dropdown-item" onclick="openAboutModal();toggleHamMenu()">ℹ️ عن المجموعة</button>
       <button class="nh-dropdown-item" onclick="openRightsModal();toggleHamMenu()">📜 حقوق الملكية</button>
       <button class="nh-dropdown-item" onclick="toggleHamMenu();goTab('admin')">🔐 دخول الإدارة</button>
@@ -953,6 +993,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <button class="atab" onclick="goAdm('track')">👥 أعضاء</button>
               <button class="atab" onclick="goAdm('patrolrate')">🏕️ الطلائع</button>
               <button class="atab" onclick="goAdm('dues')">💰 الاشتراكات</button>
+              <button class="atab" onclick="goAdm('treasury')">💵 الصندوق</button>
               <button class="atab" onclick="goAdm('reqs')" id="reqsTab">📋 طلبات<div class="nbadge" id="reqsBadge" style="position:absolute;top:5px;right:3px;width:7px;height:7px;background:var(--danger);border-radius:50%;display:none;box-shadow:0 0 5px var(--danger)"></div></button>
               <button class="atab" onclick="goAdm('inbox')">📬 رسائل</button>
               <button class="atab" onclick="goAdm('chat')">💬 شات</button>
@@ -1086,12 +1127,41 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <div class="pf"><label>الحالة</label><select id="duesFilterStatus" onchange="renderDuesAdm()">
                   <option value="">الكل</option>
                   <option value="unpaid">لسه ما اتدفعش</option>
+                  <option value="partial">مدفوع جزئيًا</option>
                   <option value="submitted">بانتظار الموافقة</option>
-                  <option value="paid">مدفوع ✅</option>
+                  <option value="paid">مدفوع بالكامل ✅</option>
                   <option value="rejected">مرفوض</option>
                 </select></div>
               </div>
               <div id="duesList"></div>
+            </div>
+
+            <!-- TREASURY (الصندوق - صادر ووارد + تبرعات) -->
+            <div id="adm-treasury" class="asec">
+              <div style="font-size:0.84rem;font-weight:700;color:var(--navy);margin-bottom:10px">💵 الصندوق - الصادر والوارد</div>
+              <div id="treasuryBalance"></div>
+              <div class="card" style="margin:14px 0">
+                <div class="card-head">➕ إضافة حركة جديدة</div>
+                <div class="pgrid">
+                  <div class="pf"><label>النوع</label><select id="transType">
+                    <option value="income">⬆️ وارد (دخل)</option>
+                    <option value="expense">⬇️ صادر (مصروف)</option>
+                  </select></div>
+                  <div class="pf"><label>التصنيف</label><select id="transCategory">
+                    <option value="تبرعات">تبرعات</option>
+                    <option value="اشتراكات">اشتراكات</option>
+                    <option value="مستلزمات">مستلزمات</option>
+                    <option value="فعاليات">فعاليات</option>
+                    <option value="مواصلات">مواصلات</option>
+                    <option value="أخرى">أخرى</option>
+                  </select></div>
+                  <div class="pf"><label>المبلغ (جنيه)</label><input type="number" id="transAmount" placeholder="مثال: 200"/></div>
+                  <div class="pf"><label>التاريخ</label><input type="date" id="transDate" value="${new Date().toISOString().slice(0,10)}"/></div>
+                  <div class="pf full"><label>الوصف</label><input type="text" id="transDesc" placeholder="مثال: تبرع من ولي أمر / شراء أدوات مخيم"/></div>
+                </div>
+                <button class="sav-prof" onclick="addTransaction()">💾 تسجيل الحركة</button>
+              </div>
+              <div id="treasuryList"></div>
             </div>
 
             <!-- INBOX ADMIN -->
@@ -1210,6 +1280,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                     </select>
                   </div>
                   <div class="pf full" id="patrolNameWrap" style="display:none"><label>اسم الطليعة</label><input id="newAdminPatrol" type="text" placeholder="اسم الطليعة المسؤول عنها"/></div>
+                  <div class="pf full" style="display:flex;align-items:center;gap:8px;background:rgba(39,174,96,0.08);padding:10px;border-radius:10px">
+                    <input type="checkbox" id="newAdminFinance" style="width:18px;height:18px"/>
+                    <label for="newAdminFinance" style="margin:0;font-size:0.78rem">💰 تعيين كأمين صندوق (صلاحية الوصول للاشتراكات والصندوق المالي)</label>
+                  </div>
                 </div>
                 <button class="sav-prof" onclick="addAdmin()">➕ إضافة مستخدم</button>
               </div>
@@ -1219,6 +1293,27 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                   <div class="pf full"><label>رابط الفيديو من يوتيوب</label><input id="ytUrlIn" type="text" placeholder="https://youtube.com/shorts/xxxxx أو https://youtube.com/watch?v=xxxxx"/></div>
                 </div>
                 <button class="sav-prof" onclick="saveFeaturedVideo()">💾 حفظ الفيديو المميز</button>
+              </div>
+              <div class="card" style="margin-bottom:14px">
+                <div class="card-head">🎨 مظهر المناسبات</div>
+                <p style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">يغيّر شكل الموقع بالكامل (الألوان والبانر) لكل الزوار تلقائيًا. اختار "نوع" المناسبة عشان الألوان المناسبة، واكتب اسمها بالظبط زي ما عاوز يظهر</p>
+                <div class="pgrid">
+                  <div class="pf full"><label>نوع المناسبة (بيحدد الألوان والشكل)</label>
+                    <select id="occasionSelect" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg)">
+                      <option value="normal">🦁 المظهر العادي (بدون مناسبة)</option>
+                      <option value="ramadan">🌙 دينية - رمضان</option>
+                      <option value="eid">🎉 دينية - عيد (فطر/أضحى)</option>
+                      <option value="mawlid">☪️ دينية - مولد/مناسبة إسلامية</option>
+                      <option value="national">🇪🇬 وطنية (أعياد قومية/ثورات/انتصارات)</option>
+                      <option value="scouting">🏕️ كشفية (أيام عالمية كشفية)</option>
+                      <option value="newyear">🎆 احتفالية (رأس السنة وغيرها)</option>
+                    </select>
+                  </div>
+                  <div class="pf full"><label>اسم المناسبة (زي ما هيظهر بالظبط)</label>
+                    <input type="text" id="occasionText" placeholder="مثال: ذكرى ثورة 25 يناير / اليوم العالمي للمنديل الكشفي"/>
+                  </div>
+                </div>
+                <button class="sav-prof" onclick="saveOccasionTheme()">💾 تفعيل المظهر لكل الزوار</button>
               </div>
               <div class="stgs">
                 <div class="stg-row"><div class="stg-ico">📲</div><div class="stg-info"><div class="stg-lbl">تثبيت التطبيق</div><div class="stg-desc">أضفه لشاشة الهوم</div></div><button class="stg-btn" onclick="doInstall()">تثبيت</button></div>
@@ -1300,6 +1395,7 @@ window.addEventListener('error', function(e){
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
 const fb = initializeApp({
   apiKey:"AIzaSyAWit2aS6i4X_VEI_TrAI2fUHWBeIjjLhI",
@@ -1322,7 +1418,58 @@ const REQ=collection(db,'requests');
 const RATE=collection(db,'ratings');
 const PRC=collection(db,'patrolRatings');
 const DUES=collection(db,'dues');
+const TRANS=collection(db,'transactions');
+const PUSHTOK=collection(db,'pushTokens');
 const VISIT=collection(db,'visitors');
+// ===== إشعارات Push (Firebase Cloud Messaging) =====
+// 🔴 مهم: لازم تحط هنا الـ VAPID key بتاعك من Firebase Console → ⚙️ Project Settings → Cloud Messaging → Web configuration → Generate key pair
+const VAPID_KEY='BKuVeTyDfxB1PfvCaowEsGQqI-d5uMnGGqtzMZ_8KJ7569KwCT-y-baWBmIWoqdl4BWoUIkjr7VVOZCek3ZgRNQ';
+window.enablePushNotifications=async function(){
+  try{
+    if(!('serviceWorker' in navigator)){toast('المتصفح ده مش بيدعم الإشعارات ⚠️','err');return;}
+    const supported=await isSupported().catch(()=>false);
+    if(!supported){toast('الجهاز/المتصفح ده مش بيدعم إشعارات الويب ⚠️','err');return;}
+    if(VAPID_KEY==='PUT_YOUR_VAPID_KEY_HERE'){toast('لسه محتاج تحط الـ VAPID key بتاعك في الكود أولاً ⚠️','err');return;}
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){toast('محتاجين إذن الإشعارات عشان يشتغل النظام ⚠️','err');return;}
+    const reg=await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const messaging=getMessaging(fb);
+    const token=await getToken(messaging,{vapidKey:VAPID_KEY,serviceWorkerRegistration:reg});
+    if(!token){toast('مقدرناش نسجل الجهاز، حاول تاني ⚠️','err');return;}
+    await setDoc(doc(db,'pushTokens',token),{
+      token,
+      memberId:myaccCurrentId||null,
+      patrol:(members.find(m=>m.id===myaccCurrentId)||{}).patrol||null,
+      createdAt:serverTimestamp(),
+      userAgent:navigator.userAgent
+    },{merge:true});
+    localStorage.setItem('pushEnabled','1');
+    toast('تم تفعيل الإشعارات بنجاح 🔔✅','ok');
+    const btn=document.getElementById('enablePushBtn');
+    if(btn){btn.textContent='🔔 الإشعارات مفعّلة';btn.disabled=true;}
+  }catch(e){
+    console.error('Push registration error:',e);
+    toast('حصل خطأ في تفعيل الإشعارات، تأكد إنك حطيت الـ VAPID key الصح ⚠️','err');
+  }
+};
+// استقبال إشعار والتطبيق مفتوح (foreground) - يظهر Toast بدل إشعار النظام
+(async()=>{
+  try{
+    if(await isSupported().catch(()=>false)){
+      const messaging=getMessaging(fb);
+      onMessage(messaging,(payload)=>{
+        const title=payload.notification?.title||'إشعار جديد';
+        const body=payload.notification?.body||'';
+        toast(`🔔 ${title}${body?' - '+body:''}`,'ok');
+      });
+    }
+  }catch(e){/* ignore if messaging unsupported */}
+})();
+// تحديث شكل الزرار لو الإشعارات كانت مفعّلة من قبل على الجهاز ده
+if(localStorage.getItem('pushEnabled')==='1'){
+  const btn=document.getElementById('enablePushBtn');
+  if(btn){btn.textContent='🔔 الإشعارات مفعّلة';}
+}
 
 const CLOUD='dmzyqkiay', PRESET='asad_albahr';
 // حساب Cloudinary منفصل خاص بصور البروفايل فقط (صور الأعضاء/حسابي الشخصية) — عدّل القيم دي لحساب Cloudinary تاني خاص بيك لو عايز تفصلهم فعليًا
@@ -1413,11 +1560,12 @@ window.goAdm=function(t){
   document.querySelectorAll('.asec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.atab').forEach(b=>b.classList.remove('on'));
   document.getElementById('adm-'+t).classList.add('on');
-  const tabs=['ann','manann','leaders','track','patrolrate','dues','reqs','inbox','chat','album','honor','tasks','stats','settings'];
+  const tabs=['ann','manann','leaders','track','patrolrate','dues','treasury','reqs','inbox','chat','album','honor','tasks','stats','settings'];
   if(t==='reqs') renderAdmReqs();
   if(t==='chat') renderAdmChat();
   if(t==='patrolrate') renderPatrolRatingsAdm();
   if(t==='dues') renderDuesAdm();
+  if(t==='treasury') renderTreasuryAdm();
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll('.atab')[idx].classList.add('on');
   if(t==='manann') renderSavedAnns();
@@ -1960,6 +2108,11 @@ onSnapshot(DUES,snap=>{
   dues=snap.docs.map(d=>({id:d.id,...d.data()}));
   renderDuesAdm();renderMyaccDues();
 });
+let transactions=[];
+onSnapshot(TRANS,snap=>{
+  transactions=snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderTreasuryAdm();
+});
 window.generateMonthlyDues=async function(){
   const amount=parseFloat(document.getElementById('duesDefaultAmount').value);
   const month=document.getElementById('duesGenMonth').value;
@@ -1969,63 +2122,201 @@ window.generateMonthlyDues=async function(){
   const toCreate=members.filter(m=>!existing.has(m.id));
   if(!toCreate.length){toast('كل الأعضاء عندهم اشتراك مسجل للشهر ده بالفعل ✅','ok');return;}
   for(const m of toCreate){
-    await addDoc(DUES,{memberId:m.id,memberName:m.name,patrol:m.patrol||'',month,amount,status:'unpaid',createdAt:serverTimestamp()});
+    await addDoc(DUES,{memberId:m.id,memberName:m.name,patrol:m.patrol||'',month,amount,paidAmount:0,status:'unpaid',createdAt:serverTimestamp()});
   }
   toast(`تم توليد ${toCreate.length} اشتراك لشهر ${month} ✅`,'ok');
 };
+// تحديث المبلغ المدفوع فعليًا (يدعم الدفع الجزئي) - والمتبقي بيتحسب أوتوماتيك
+window.updateDuePayment=async function(id){
+  const inp=document.getElementById('duePay'+id);
+  const newPaid=parseFloat(inp.value);
+  if(isNaN(newPaid)||newPaid<0){toast('أدخل مبلغ صحيح ⚠️','err');return;}
+  const due=dues.find(d=>d.id===id);if(!due)return;
+  const prevPaid=due.paidAmount||0;
+  const diff=newPaid-prevPaid;
+  const newStatus=newPaid<=0?'unpaid':(newPaid>=due.amount?'paid':'partial');
+  await updateDoc(doc(db,'dues',id),{paidAmount:newPaid,status:newStatus,...(newStatus==='paid'?{approvedAt:serverTimestamp()}:{})});
+  if(diff!==0){
+    await addDoc(TRANS,{type:'income',category:'اشتراكات',amount:diff,description:`${diff>0?'دفعة':'تعديل'} اشتراك ${due.memberName} - ${due.month}`,date:new Date().toISOString().slice(0,10),autoFromDue:true,createdAt:serverTimestamp()});
+  }
+  toast('تم تحديث المبلغ المدفوع ✅','ok');
+};
 window.setDueStatus=async function(id,status){
-  await updateDoc(doc(db,'dues',id),{status,...(status==='paid'?{approvedAt:serverTimestamp()}:{})});
-  toast(status==='paid'?'تم تأكيد الدفع ✅':status==='rejected'?'تم رفض الطلب ⚠️':'تم التحديث','ok');
+  const due=dues.find(d=>d.id===id);if(!due)return;
+  const upd={status};
+  if(status==='paid'){
+    const diff=(due.amount||0)-(due.paidAmount||0);
+    upd.paidAmount=due.amount;
+    upd.approvedAt=serverTimestamp();
+    if(diff!==0){
+      await addDoc(TRANS,{type:'income',category:'اشتراكات',amount:diff,description:`دفعة اشتراك ${due.memberName} - ${due.month}`,date:new Date().toISOString().slice(0,10),autoFromDue:true,createdAt:serverTimestamp()});
+    }
+  }
+  if(status==='unpaid'){upd.paidAmount=0;}
+  await updateDoc(doc(db,'dues',id),upd);
+  toast(status==='paid'?'تم تأكيد الدفع بالكامل ✅':status==='rejected'?'تم رفض الطلب ⚠️':'تم التحديث','ok');
 };
 window.deleteDue=async function(id){
   if(!confirm('حذف سجل الاشتراك ده؟'))return;
   await deleteDoc(doc(db,'dues',id));
 };
+// ===== الصندوق - صادر ووارد + تبرعات =====
+window.addTransaction=async function(){
+  const type=document.getElementById('transType').value;
+  const category=document.getElementById('transCategory').value;
+  const amountRaw=parseFloat(document.getElementById('transAmount').value);
+  const date=document.getElementById('transDate').value;
+  const description=document.getElementById('transDesc').value.trim();
+  if(!amountRaw||amountRaw<=0){toast('أدخل مبلغ صحيح ⚠️','err');return;}
+  if(!date){toast('اختر التاريخ ⚠️','err');return;}
+  await addDoc(TRANS,{type,category,amount:amountRaw,description,date,addedBy:currentAdmin?.name||'',createdAt:serverTimestamp()});
+  toast('تم تسجيل الحركة ✅','ok');
+  document.getElementById('transAmount').value='';
+  document.getElementById('transDesc').value='';
+};
+window.deleteTransaction=async function(id){
+  if(!confirm('حذف الحركة دي؟ هيتغير رصيد الصندوق'))return;
+  await deleteDoc(doc(db,'transactions',id));
+};
+function renderTreasuryAdm(){
+  const balEl=document.getElementById('treasuryBalance');
+  const listEl=document.getElementById('treasuryList');
+  if(!balEl||!listEl)return;
+  const totalIncome=transactions.filter(t=>t.type==='income').reduce((s,t)=>s+(t.amount||0),0);
+  const totalExpense=transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+(t.amount||0),0);
+  const balance=totalIncome-totalExpense;
+  balEl.innerHTML=`
+    <div class="card" style="background:linear-gradient(160deg,rgba(59,130,246,0.08),var(--bg2))">
+      <div style="text-align:center;margin-bottom:10px">
+        <div style="font-size:0.76rem;color:var(--muted)">الرصيد الحالي</div>
+        <div style="font-size:1.8rem;font-weight:900;color:${balance>=0?'#27ae60':'#c0392b'}">${balance} ج.م</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+        <div style="background:rgba(39,174,96,0.12);border-radius:10px;padding:8px;text-align:center">
+          <div style="font-weight:800;color:#27ae60">⬆️ ${totalIncome} ج.م</div>
+          <div style="font-size:0.7rem;color:var(--muted)">إجمالي الوارد</div>
+        </div>
+        <div style="background:rgba(192,57,43,0.1);border-radius:10px;padding:8px;text-align:center">
+          <div style="font-weight:800;color:#c0392b">⬇️ ${totalExpense} ج.م</div>
+          <div style="font-size:0.7rem;color:var(--muted)">إجمالي الصادر</div>
+        </div>
+      </div>
+    </div>`;
+  if(!transactions.length){listEl.innerHTML='<div class="empty"><span>💵</span>لا توجد حركات مسجلة بعد</div>';return;}
+  const sorted=[...transactions].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  listEl.innerHTML=sorted.map(t=>`
+    <div class="sitem">
+      <div class="sitem-info">
+        <div class="sitem-title">${t.type==='income'?'⬆️':'⬇️'} ${esc(t.category||'')} ${t.description?'- '+esc(t.description):''}</div>
+        <div class="sitem-sub" style="color:${t.type==='income'?'#27ae60':'#c0392b'}">${t.type==='income'?'+':'-'}${t.amount} ج.م · ${t.date||''}</div>
+      </div>
+      <button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="deleteTransaction('${t.id}')">🗑️</button>
+    </div>`).join('');
+}
 function renderDuesAdm(){
   const el=document.getElementById('duesList');
   if(!el)return;
   const month=document.getElementById('duesFilterMonth')?.value;
   const status=document.getElementById('duesFilterStatus')?.value;
+  // === ملخص محاسبي للشهر المختار (كل الحالات، بغض النظر عن فلتر الحالة) ===
+  const monthDues=month?dues.filter(d=>d.month===month):dues;
+  const totalExpected=monthDues.reduce((s,d)=>s+(d.amount||0),0);
+  const totalCollected=monthDues.reduce((s,d)=>s+(d.paidAmount||0),0);
+  const totalPending=totalExpected-totalCollected-monthDues.filter(d=>d.status==='submitted').reduce((s,d)=>s+((d.amount||0)-(d.paidAmount||0)),0);
+  const totalSubmitted=monthDues.filter(d=>d.status==='submitted').reduce((s,d)=>s+((d.amount||0)-(d.paidAmount||0)),0);
+  const countPaid=monthDues.filter(d=>d.status==='paid').length;
+  const countPartial=monthDues.filter(d=>d.status==='partial').length;
+  const countUnpaid=monthDues.filter(d=>d.status==='unpaid'||d.status==='rejected').length;
+  const countSubmitted=monthDues.filter(d=>d.status==='submitted').length;
+  // تفصيل حسب الطليعة
+  const byPatrol={};
+  monthDues.forEach(d=>{
+    const p=d.patrol||'بدون طليعة';
+    if(!byPatrol[p])byPatrol[p]={expected:0,collected:0};
+    byPatrol[p].expected+=(d.amount||0);
+    byPatrol[p].collected+=(d.paidAmount||0);
+  });
+  const summaryHtml=`
+    <div class="card" style="margin-bottom:12px;background:linear-gradient(160deg,rgba(39,174,96,0.08),var(--bg2))">
+      <div style="font-weight:800;color:var(--text);font-size:0.84rem;margin-bottom:10px">📊 ملخص الحسابات ${month?'- '+month:'- كل الفترات'}</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:0.76rem">
+        <div style="background:rgba(39,174,96,0.12);border-radius:10px;padding:8px;text-align:center">
+          <div style="font-weight:900;font-size:1.1rem;color:#27ae60">${totalCollected} ج.م</div>
+          <div style="color:var(--muted)">تم تحصيله ✅ (${countPaid} كامل${countPartial?' + '+countPartial+' جزئي':''})</div>
+        </div>
+        <div style="background:rgba(244,165,35,0.12);border-radius:10px;padding:8px;text-align:center">
+          <div style="font-weight:900;font-size:1.1rem;color:#f4a523">${totalPending} ج.م</div>
+          <div style="color:var(--muted)">متبقي ⏳ (${countUnpaid})</div>
+        </div>
+        <div style="background:rgba(59,130,246,0.12);border-radius:10px;padding:8px;text-align:center">
+          <div style="font-weight:900;font-size:1.1rem;color:#3b82f6">${totalSubmitted} ج.م</div>
+          <div style="color:var(--muted)">بانتظار الموافقة 📤 (${countSubmitted})</div>
+        </div>
+        <div style="background:rgba(26,41,66,0.08);border-radius:10px;padding:8px;text-align:center">
+          <div style="font-weight:900;font-size:1.1rem;color:var(--blue3)">${totalExpected} ج.م</div>
+          <div style="color:var(--muted)">الإجمالي المستحق</div>
+        </div>
+      </div>
+      ${Object.keys(byPatrol).length?`<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+        <div style="font-weight:700;font-size:0.76rem;color:var(--muted);margin-bottom:6px">حسب الطليعة:</div>
+        ${Object.entries(byPatrol).map(([p,v])=>`<div style="display:flex;justify-content:space-between;font-size:0.74rem;padding:3px 0"><span>🏕️ ${esc(p)}</span><span>${v.collected} / ${v.expected} ج.م</span></div>`).join('')}
+      </div>`:''}
+    </div>`;
   let list=[...dues];
   if(month) list=list.filter(d=>d.month===month);
   if(status) list=list.filter(d=>d.status===status);
-  if(!list.length){el.innerHTML='<div class="empty"><span>💰</span>لا توجد سجلات مطابقة</div>';return;}
-  const statusLabel={unpaid:'⏳ لسه ما اتدفعش',submitted:'📤 بانتظار الموافقة',paid:'✅ مدفوع',rejected:'❌ مرفوض'};
-  const statusColor={unpaid:'#f4a523',submitted:'#3b82f6',paid:'#27ae60',rejected:'#c0392b'};
-  el.innerHTML=list.sort((a,b)=>(a.status==='submitted'?-1:1)).map(d=>`
-    <div class="sitem">
+  if(!list.length){el.innerHTML=summaryHtml+'<div class="empty"><span>💰</span>لا توجد سجلات مطابقة لهذا الفلتر</div>';return;}
+  const statusLabel={unpaid:'⏳ لسه ما اتدفعش',partial:'🟡 مدفوع جزئيًا',submitted:'📤 بانتظار الموافقة',paid:'✅ مدفوع بالكامل',rejected:'❌ مرفوض'};
+  const statusColor={unpaid:'#f4a523',partial:'#e67e22',submitted:'#3b82f6',paid:'#27ae60',rejected:'#c0392b'};
+  el.innerHTML=summaryHtml+list.sort((a,b)=>(a.status==='submitted'?-1:1)).map(d=>{
+    const paid=d.paidAmount||0, remaining=(d.amount||0)-paid;
+    return `
+    <div class="sitem" style="flex-direction:column;align-items:stretch">
       <div class="sitem-info">
         <div class="sitem-title">${esc(d.memberName)} ${d.patrol?'· 🏕️'+esc(d.patrol):''}</div>
-        <div class="sitem-sub" style="color:${statusColor[d.status]||'var(--muted)'}">${statusLabel[d.status]||d.status} · ${d.amount} ج.م · ${d.month}</div>
+        <div class="sitem-sub" style="color:${statusColor[d.status]||'var(--muted)'}">${statusLabel[d.status]||d.status} · ${d.month}</div>
+        <div class="sitem-sub">المطلوب: ${d.amount} ج.م · المدفوع: ${paid} ج.م · المتبقي: <b style="color:${remaining>0?'#c0392b':'#27ae60'}">${remaining}</b> ج.م</div>
+        ${d.status==='submitted'&&d.submittedAmount?`<div class="sitem-sub" style="color:#3b82f6">📤 العضو أبلغ إنه دفع: ${d.submittedAmount} ج.م</div>`:''}
       </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap">
-        ${d.status==='submitted'?`<button class="mimg-btn" onclick="setDueStatus('${d.id}','paid')">✅ موافقة</button><button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="setDueStatus('${d.id}','rejected')">❌ رفض</button>`:''}
-        ${d.status==='unpaid'||d.status==='rejected'?`<button class="mimg-btn" onclick="setDueStatus('${d.id}','paid')">✅ تحديد كمدفوع</button>`:''}
-        ${d.status==='paid'?`<button class="mimg-btn" onclick="setDueStatus('${d.id}','unpaid')">↩ إلغاء الدفع</button>`:''}
-        <button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="deleteDue('${d.id}')">🗑️</button>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <input type="number" id="duePay${d.id}" placeholder="المبلغ المدفوع فعليًا" value="${d.status==='submitted'&&d.submittedAmount?(paid+d.submittedAmount):paid}" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg);color:var(--text)"/>
+        <button class="mimg-btn" onclick="updateDuePayment('${d.id}')">💾 تحديث</button>
       </div>
-    </div>`).join('');
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+        ${d.status==='submitted'?`<button class="mimg-btn" onclick="setDueStatus('${d.id}','paid')">✅ موافقة (دفع كامل)</button><button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="setDueStatus('${d.id}','rejected')">❌ رفض</button>`:''}
+        <button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="deleteDue('${d.id}')">🗑️ حذف السجل</button>
+      </div>
+    </div>`;
+  }).join('');
 }
+window.renderDuesAdm=renderDuesAdm;
 // عرض اشتراكات العضو نفسه في "حسابي" + إمكانية الإبلاغ بالدفع
 function renderMyaccDues(){
   const el=document.getElementById('myaccDuesList');
   if(!el||!myaccCurrentId)return;
   const mine=dues.filter(d=>d.memberId===myaccCurrentId).sort((a,b)=>b.month.localeCompare(a.month));
   if(!mine.length){el.innerHTML='<div class="empty"><span>💰</span>لا توجد اشتراكات مسجلة</div>';return;}
-  const statusLabel={unpaid:'⏳ لسه ما اتدفعش',submitted:'📤 بانتظار موافقة الإدارة',paid:'✅ مدفوع',rejected:'❌ مرفوض - حاول تاني'};
-  const statusColor={unpaid:'#f4a523',submitted:'#3b82f6',paid:'#27ae60',rejected:'#c0392b'};
-  el.innerHTML=mine.map(d=>`
+  const statusLabel={unpaid:'⏳ لسه ما اتدفعش',partial:'🟡 مدفوع جزئيًا',submitted:'📤 بانتظار موافقة الإدارة',paid:'✅ مدفوع بالكامل',rejected:'❌ مرفوض - حاول تاني'};
+  const statusColor={unpaid:'#f4a523',partial:'#e67e22',submitted:'#3b82f6',paid:'#27ae60',rejected:'#c0392b'};
+  el.innerHTML=mine.map(d=>{
+    const paid=d.paidAmount||0, remaining=(d.amount||0)-paid;
+    return `
     <div class="sitem">
       <div class="sitem-info">
-        <div class="sitem-title">${d.month} · ${d.amount} ج.م</div>
+        <div class="sitem-title">${d.month} · المطلوب ${d.amount} ج.م</div>
         <div class="sitem-sub" style="color:${statusColor[d.status]}">${statusLabel[d.status]}</div>
+        ${paid>0?`<div class="sitem-sub">مدفوع: ${paid} ج.م · المتبقي: ${remaining} ج.م</div>`:''}
       </div>
-      ${(d.status==='unpaid'||d.status==='rejected')?`<button class="mimg-btn" onclick="submitDuePayment('${d.id}')">📤 أبلغ إني دفعت</button>`:''}
-    </div>`).join('');
+      ${(d.status==='unpaid'||d.status==='partial'||d.status==='rejected')?`<button class="mimg-btn" onclick="submitDuePayment('${d.id}',${remaining})">📤 أبلغ إني دفعت</button>`:''}
+    </div>`;
+  }).join('');
 }
-window.submitDuePayment=async function(id){
-  if(!confirm('تأكيد إنك دفعت الاشتراك ده؟ هيتبعت للإدارة للموافقة'))return;
-  await updateDoc(doc(db,'dues',id),{status:'submitted',submittedAt:serverTimestamp()});
+window.submitDuePayment=async function(id,remaining){
+  const amountStr=prompt(`بلغت إنك دفعت كام؟ (المتبقي عليك: ${remaining} ج.م)`,remaining);
+  if(amountStr===null)return;
+  const amount=parseFloat(amountStr);
+  if(isNaN(amount)||amount<=0){toast('أدخل مبلغ صحيح ⚠️','err');return;}
+  await updateDoc(doc(db,'dues',id),{status:'submitted',submittedAmount:amount,submittedAt:serverTimestamp()});
   toast('تم إرسال بلاغ الدفع، في انتظار موافقة الإدارة ✅','ok');
 };
 function renderPubMems(){
@@ -3162,7 +3453,7 @@ window.doLogin=async function(){
   if(!user||!pass){toast('أدخل اسم المستخدم وكلمة المرور ⚠️','err');return;}
   // Check super admin first (no Firebase needed)
   if(user==='شادي' && pass==='741852'){
-    currentAdmin={id:'super',name:'شادي',role:'super',patrol:null};
+    currentAdmin={id:'super',name:'شادي',role:'super',patrol:null,canManageFinance:true};
     loginSuccess();return;
   }
   // Check Firebase admins
@@ -3175,7 +3466,8 @@ window.doLogin=async function(){
         id:found.id,
         name:found.username||user,
         role:found.role||'admin',
-        patrol:found.patrol||null
+        patrol:found.patrol||null,
+        canManageFinance:!!found.canManageFinance
       };
       loginSuccess();
     }else{
@@ -3202,12 +3494,20 @@ function loginSuccess(){
   }
 
   if(currentAdmin.role==='patrol'){
-    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','manann','patrolrate','dues'];
+    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','manann','patrolrate'];
     hideTabs.forEach(t=>{
       const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
       if(btn) btn.style.display='none';
     });
     goAdm('track');
+  }
+
+  // صلاحية الصندوق (الاشتراكات + الصندوق المالي) - محصورة بالسوبر أو اللي معاه صلاحية أمين الصندوق فقط
+  if(!currentAdmin.canManageFinance){
+    ['dues','treasury'].forEach(t=>{
+      const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
+      if(btn) btn.style.display='none';
+    });
   }
 
   toast(`مرحباً ${currentAdmin.name}! ✅`,'ok');
@@ -3246,11 +3546,12 @@ async function renderAdminsList(){
   const list=snap.docs.map(d=>({id:d.id,...d.data()}));
   if(!list.length){el.innerHTML='<div style="color:var(--muted);font-size:0.8rem;margin-bottom:8px">لا يوجد مستخدمون مضافون بعد</div>';return;}
   el.innerHTML=list.map(a=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg2);border-radius:10px;margin-bottom:6px">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg2);border-radius:10px;margin-bottom:6px;flex-wrap:wrap">
       <div style="flex:1">
         <div style="font-weight:700;font-size:0.82rem">${esc(a.username)}</div>
-        <div style="font-size:0.7rem;color:var(--muted)">${a.role==='admin'?'🛡️ قائد':'📋 عريف'}${a.patrol?' · '+a.patrol:''}</div>
+        <div style="font-size:0.7rem;color:var(--muted)">${a.role==='admin'?'🛡️ قائد':'📋 عريف'}${a.patrol?' · '+a.patrol:''}${a.canManageFinance?' · 💰 أمين صندوق':''}</div>
       </div>
+      <button onclick="toggleAdminFinance('${a.id}',${!a.canManageFinance})" style="background:${a.canManageFinance?'rgba(39,174,96,.15)':'rgba(26,41,66,.08)'};border:1px solid ${a.canManageFinance?'rgba(39,174,96,.3)':'var(--border)'};border-radius:8px;padding:4px 10px;color:${a.canManageFinance?'#27ae60':'var(--muted)'};font-family:Cairo,sans-serif;font-size:0.7rem;cursor:pointer">${a.canManageFinance?'💰 إلغاء الصندوق':'💰 تعيين أمين صندوق'}</button>
       <button onclick="deleteAdmin('${a.id}')" style="background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:4px 10px;color:#c0392b;font-family:Cairo,sans-serif;font-size:0.72rem;cursor:pointer">🗑️ حذف</button>
     </div>`).join('');
 }
@@ -3260,15 +3561,22 @@ window.addAdmin=async function(){
   const password=document.getElementById('newAdminPass').value.trim();
   const role=document.getElementById('newAdminRole').value;
   const patrol=document.getElementById('newAdminPatrol').value.trim();
+  const canManageFinance=document.getElementById('newAdminFinance').checked;
   if(!username||!password){toast('أدخل الاسم وكلمة المرور ⚠️','err');return;}
   if(role==='patrol'&&!patrol){toast('أدخل اسم الطليعة ⚠️','err');return;}
-  await addDoc(ADMINS_COL,{username,password,role,patrol:patrol||null,createdAt:serverTimestamp()});
+  await addDoc(ADMINS_COL,{username,password,role,patrol:patrol||null,canManageFinance,createdAt:serverTimestamp()});
   toast(`تم إضافة ${username} ✅`,'ok');
   document.getElementById('newAdminUser').value='';
   document.getElementById('newAdminPass').value='';
   document.getElementById('newAdminPatrol').value='';
+  document.getElementById('newAdminFinance').checked=false;
   renderAdminsList();
   logActivity(`أضاف مستخدم: ${username}`);
+};
+window.toggleAdminFinance=async function(id,val){
+  await updateDoc(doc(db,'admins',id),{canManageFinance:val});
+  toast(val?'تم تعيينه أمين صندوق ✅':'تم إلغاء صلاحية الصندوق','ok');
+  renderAdminsList();
 };
 
 window.deleteAdmin=async function(id){
@@ -3311,6 +3619,50 @@ onSnapshot(doc(db,'meta','featuredVideo'),snap=>{
   }else{
     renderFeaturedVideo({url:'https://youtube.com/shorts/xc-voeH7MCc',videoId:'xc-voeH7MCc'});
   }
+});
+
+// ===== مظهر المناسبات (ديني/وطني/كشفي/احتفالي) - يتغير لكل الزوار تلقائيًا، مع اسم مناسبة حر يكتبه الأدمن =====
+const OCCASION_META={
+  ramadan:{icons:'🌙 ✨ 🌙',fallback:'رمضان كريم'},
+  eid:{icons:'🎉 🌙 🎉',fallback:'عيد سعيد'},
+  mawlid:{icons:'☪️ 🕌 ☪️',fallback:'مناسبة إسلامية سعيدة'},
+  national:{icons:'🇪🇬 ⭐ 🇪🇬',fallback:'مناسبة وطنية سعيدة'},
+  scouting:{icons:'🏕️ ⚜️ 🏕️',fallback:'مناسبة كشفية سعيدة'},
+  newyear:{icons:'🎆 🎊 🎆',fallback:'كل عام وأنتم بخير'}
+};
+function applyOccasionTheme(occasion,text){
+  const val=occasion&&occasion!=='normal'?occasion:null;
+  if(val){
+    document.documentElement.setAttribute('data-occasion',val);
+  }else{
+    document.documentElement.removeAttribute('data-occasion');
+  }
+  const banner=document.getElementById('occasionBanner');
+  if(banner){
+    if(val&&OCCASION_META[val]){
+      const meta=OCCASION_META[val];
+      const label=(text&&text.trim())?text.trim():meta.fallback;
+      banner.innerHTML=`<div class="ob-icons">${meta.icons}</div><div class="ob-text">${esc(label)}</div>`;
+      banner.classList.add('show');
+    }else{
+      banner.classList.remove('show');
+      banner.innerHTML='';
+    }
+  }
+  const sel=document.getElementById('occasionSelect');
+  if(sel) sel.value=val||'normal';
+  const txtInp=document.getElementById('occasionText');
+  if(txtInp && document.activeElement!==txtInp) txtInp.value=text||'';
+}
+window.saveOccasionTheme=async function(){
+  const val=document.getElementById('occasionSelect').value;
+  const text=document.getElementById('occasionText').value.trim();
+  await setDoc(doc(db,'meta','theme'),{occasion:val,text,updatedAt:serverTimestamp()});
+  toast('تم تفعيل المظهر الجديد لكل الزوار ✅','ok');
+};
+onSnapshot(doc(db,'meta','theme'),snap=>{
+  const d=snap.exists()?snap.data():{occasion:'normal',text:''};
+  applyOccasionTheme(d.occasion,d.text);
 });
 
 window.requestJoinGroup=function(){
