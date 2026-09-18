@@ -1051,7 +1051,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 
             <!-- MEMBERS TRACKER -->
             <div id="adm-track" class="asec">
-              <div class="tadd">
+              <div class="tadd" id="addMemberForm">
                 <input type="text" id="mName" placeholder="اسم العضو الكامل"/>
                 <select id="mGender"><option value="male">👦 ولد</option><option value="female">👧 بنت</option></select>
                 <button class="add-btn" onclick="addMember()">+ إضافة</button>
@@ -2118,8 +2118,10 @@ window.generateMonthlyDues=async function(){
   const month=document.getElementById('duesGenMonth').value;
   if(!amount||amount<=0){toast('أدخل قيمة اشتراك صحيحة ⚠️','err');return;}
   if(!month){toast('اختر الشهر ⚠️','err');return;}
+  const isPatrolUser=currentAdmin&&currentAdmin.role==='patrol'&&currentAdmin.patrol;
+  const scopedMembers=isPatrolUser?members.filter(m=>(m.patrol||'').trim()===(currentAdmin.patrol||'').trim()):members;
   const existing=new Set(dues.filter(d=>d.month===month).map(d=>d.memberId));
-  const toCreate=members.filter(m=>!existing.has(m.id));
+  const toCreate=scopedMembers.filter(m=>!existing.has(m.id));
   if(!toCreate.length){toast('كل الأعضاء عندهم اشتراك مسجل للشهر ده بالفعل ✅','ok');return;}
   for(const m of toCreate){
     await addDoc(DUES,{memberId:m.id,memberName:m.name,patrol:m.patrol||'',month,amount,paidAmount:0,status:'unpaid',createdAt:serverTimestamp()});
@@ -2218,8 +2220,11 @@ function renderDuesAdm(){
   if(!el)return;
   const month=document.getElementById('duesFilterMonth')?.value;
   const status=document.getElementById('duesFilterStatus')?.value;
+  // أمين صندوق من نوع "عريف طليعة" يشوف بس اشتراكات طليعته
+  const isPatrolUser=currentAdmin&&currentAdmin.role==='patrol'&&currentAdmin.patrol;
+  const scopedDues=isPatrolUser?dues.filter(d=>(d.patrol||'').trim()===(currentAdmin.patrol||'').trim()):dues;
   // === ملخص محاسبي للشهر المختار (كل الحالات، بغض النظر عن فلتر الحالة) ===
-  const monthDues=month?dues.filter(d=>d.month===month):dues;
+  const monthDues=month?scopedDues.filter(d=>d.month===month):scopedDues;
   const totalExpected=monthDues.reduce((s,d)=>s+(d.amount||0),0);
   const totalCollected=monthDues.reduce((s,d)=>s+(d.paidAmount||0),0);
   const totalPending=totalExpected-totalCollected-monthDues.filter(d=>d.status==='submitted').reduce((s,d)=>s+((d.amount||0)-(d.paidAmount||0)),0);
@@ -2262,7 +2267,7 @@ function renderDuesAdm(){
         ${Object.entries(byPatrol).map(([p,v])=>`<div style="display:flex;justify-content:space-between;font-size:0.74rem;padding:3px 0"><span>🏕️ ${esc(p)}</span><span>${v.collected} / ${v.expected} ج.م</span></div>`).join('')}
       </div>`:''}
     </div>`;
-  let list=[...dues];
+  let list=[...scopedDues];
   if(month) list=list.filter(d=>d.month===month);
   if(status) list=list.filter(d=>d.status===status);
   if(!list.length){el.innerHTML=summaryHtml+'<div class="empty"><span>💰</span>لا توجد سجلات مطابقة لهذا الفلتر</div>';return;}
@@ -2365,6 +2370,7 @@ function renderPubMems(){
   '</div>';
 }
 window.addMember=async function(){
+  if(currentAdmin&&currentAdmin.role==='patrol'){toast('غير مسموح لك بإضافة أعضاء ⚠️','err');return;}
   const name=document.getElementById('mName').value.trim();
   if(!name){toast('أدخل الاسم ⚠️','err');return;}
   await addDoc(MC,{name,gender:document.getElementById('mGender').value,sent:false,imgUrl:'',phone:'',whatsapp:'',nationalId:'',age:'',dob:'',grade:'',group:'',patrol:'',role:'',badges:[],courses:[],rating:0,notes:'',createdAt:serverTimestamp()});
@@ -3499,6 +3505,8 @@ function loginSuccess(){
       const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
       if(btn) btn.style.display='none';
     });
+    const addForm=document.getElementById('addMemberForm');
+    if(addForm) addForm.style.display='none';
     goAdm('track');
   }
 
