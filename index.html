@@ -122,6 +122,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .hof-name{font-weight:700;font-size:0.82rem;color:var(--text)}
 .hof-score{font-size:0.9rem;margin-top:4px}
 .hof-empty{font-size:0.72rem;color:var(--muted);padding:10px 0}
+.perm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.perm-item{display:flex;align-items:center;gap:6px;background:var(--bg2);border-radius:8px;padding:7px 8px;font-size:0.72rem}
+.perm-item input{width:15px;height:15px;flex-shrink:0}
 .occasion-banner{display:none;text-align:center;padding:12px 10px;font-weight:800;font-size:0.86rem;color:#fff;background:linear-gradient(90deg,var(--navy),var(--navy2));position:relative;overflow:hidden}
 .occasion-banner.show{display:block}
 .occasion-banner .ob-icons{font-size:1rem;letter-spacing:6px;opacity:0.85;margin-bottom:2px}
@@ -1273,19 +1276,17 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <div class="pgrid">
                   <div class="pf full"><label>اسم المستخدم الجديد</label><input id="newAdminUser" type="text" placeholder="مثال: قائد أحمد"/></div>
                   <div class="pf full"><label>كلمة المرور</label><input id="newAdminPass" type="text" placeholder="كلمة مرور قوية"/></div>
-                  <div class="pf full"><label>الدور</label>
+                  <div class="pf full"><label>الدور الأساسي</label>
                     <select id="newAdminRole" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg)">
-                      <option value="admin">🛡️ قائد (صلاحيات كاملة)</option>
-                      <option value="patrol">📋 عريف طليعة (صلاحيات محدودة)</option>
+                      <option value="admin">🛡️ قائد</option>
+                      <option value="patrol">📋 عريف طليعة (محصور بطليعته فقط)</option>
                     </select>
                   </div>
                   <div class="pf full" id="patrolNameWrap" style="display:none"><label>اسم الطليعة</label><input id="newAdminPatrol" type="text" placeholder="اسم الطليعة المسؤول عنها"/></div>
-                  <div class="pf full" style="display:flex;align-items:center;gap:8px;background:rgba(39,174,96,0.08);padding:10px;border-radius:10px">
-                    <input type="checkbox" id="newAdminFinance" style="width:18px;height:18px"/>
-                    <label for="newAdminFinance" style="margin:0;font-size:0.78rem">💰 تعيين كأمين صندوق (صلاحية الوصول للاشتراكات والصندوق المالي)</label>
-                  </div>
                 </div>
-                <button class="sav-prof" onclick="addAdmin()">➕ إضافة مستخدم</button>
+                <div style="margin:10px 0;font-size:0.78rem;font-weight:700;color:var(--navy)">🔑 صلاحيات مفصلة (اختار بالظبط اللي يقدر يوصله)</div>
+                <div id="newAdminPermsGrid" class="perm-grid"></div>
+                <button class="sav-prof" onclick="addAdmin()" style="margin-top:10px">➕ إضافة مستخدم</button>
               </div>
               <div class="card" style="margin-bottom:14px">
                 <div class="card-head">▶️ الفيديو المميز (يوتيوب)</div>
@@ -2618,15 +2619,15 @@ function renderHallOfFame(){
     ${card('👧','أفضل عضوة',bestFemale,bestFemale?starsDisplay(bestFemale):'')}
   </div>
   <div style="font-weight:800;color:var(--text);font-size:0.86rem;margin:18px 0 4px">🏅 أبطال المراحل الكشفية</div>
-  <p style="font-size:0.68rem;color:var(--muted);margin-bottom:10px">شرط الدخول للوحة: 3 نجوم فأكثر و100 درجة فأكثر</p>
+  <p style="font-size:0.68rem;color:var(--muted);margin-bottom:10px">شرط الدخول للوحة: 3 نجوم فأكثر (يدوية + تلقائية من الدرجات) و100 درجة فأكثر</p>
   <div class="hof-grid">
     ${[...RANKS_M].reverse().filter(r=>r!=='خريج').map(rank=>{
-      const group=members.filter(m=>m.gender==='male'&&m.role===rank&&(m.rating||0)>=3&&(m.manualDegrees||0)>=100);
+      const group=members.filter(m=>m.gender==='male'&&m.role===rank&&((m.rating||0)+bonusStarsOf(m))>=3&&(m.manualDegrees||0)>=100);
       const best=group.length?group.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
       return card('🎖️',`أفضل ${esc(rank)}`,best,best?starsDisplay(best):'');
     }).join('')}
     ${[...RANKS_F].reverse().filter(r=>r!=='خريجة').map(rank=>{
-      const group=members.filter(m=>m.gender!=='male'&&m.role===rank&&(m.rating||0)>=3&&(m.manualDegrees||0)>=100);
+      const group=members.filter(m=>m.gender!=='male'&&m.role===rank&&((m.rating||0)+bonusStarsOf(m))>=3&&(m.manualDegrees||0)>=100);
       const best=group.length?group.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
       return card('🎖️',`أفضل ${esc(rank)}`,best,best?starsDisplay(best):'');
     }).join('')}
@@ -3448,10 +3449,58 @@ let currentAdmin=null;
 let loggedIn=false;
 
 // Show/hide patrol name field based on role
+// ===== نظام الصلاحيات المفصلة - كل تاب إدارة ليه صلاحية منفصلة تُمنح لأي مستخدم بالظبط =====
+const TAB_PERMS=[
+  {key:'manann',label:'📋 إعلانات'},
+  {key:'leaders',label:'👨‍✈️ قادة'},
+  {key:'track',label:'👥 أعضاء'},
+  {key:'patrolrate',label:'🏕️ الطلائع'},
+  {key:'dues',label:'💰 الاشتراكات'},
+  {key:'treasury',label:'💵 الصندوق'},
+  {key:'reqs',label:'📋 طلبات'},
+  {key:'inbox',label:'📬 رسائل'},
+  {key:'chat',label:'💬 شات'},
+  {key:'album',label:'📸 ألبوم'},
+  {key:'honor',label:'🏆 الشرف'},
+  {key:'tasks',label:'📋 المهام'},
+  {key:'stats',label:'📊 إحصائيات'},
+  {key:'settings',label:'⚙️ إعدادات'}
+];
+// الصلاحيات الافتراضية حسب الدور - تُستخدم كنقطة بداية، وتُستخدم أيضًا كـ fallback للحسابات القديمة اللي معهاش permissions محفوظة
+function defaultPermsForRole(role,legacyFinance){
+  const perms={};
+  TAB_PERMS.forEach(t=>{perms[t.key]=(role==='admin');});
+  if(role==='patrol'){
+    // يطابق السلوك القديم قبل نظام الصلاحيات المفصلة: أعضاء طليعته + شات + مهام، وصندوق لو كان أمين صندوق
+    perms.track=true;
+    perms.chat=true;
+    perms.tasks=true;
+    perms.dues=!!legacyFinance;
+    perms.treasury=!!legacyFinance;
+  }
+  return perms;
+}
+function renderPermsGrid(containerId,checkedPerms){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=TAB_PERMS.map(t=>`
+    <label class="perm-item">
+      <input type="checkbox" data-permkey="${t.key}" ${checkedPerms[t.key]?'checked':''}/>
+      <span>${t.label}</span>
+    </label>`).join('');
+}
+function readPermsGrid(containerId){
+  const el=document.getElementById(containerId);
+  const perms={};
+  el?.querySelectorAll('input[data-permkey]').forEach(inp=>{perms[inp.dataset.permkey]=inp.checked;});
+  return perms;
+}
 document.getElementById('newAdminRole')?.addEventListener('change',function(){
   const wrap=document.getElementById('patrolNameWrap');
   if(wrap) wrap.style.display=this.value==='patrol'?'block':'none';
+  renderPermsGrid('newAdminPermsGrid',defaultPermsForRole(this.value));
 });
+renderPermsGrid('newAdminPermsGrid',defaultPermsForRole('admin'));
 
 window.doLogin=async function(){
   const user=document.getElementById('adminUser').value.trim();
@@ -3473,7 +3522,8 @@ window.doLogin=async function(){
         name:found.username||user,
         role:found.role||'admin',
         patrol:found.patrol||null,
-        canManageFinance:!!found.canManageFinance
+        canManageFinance:!!found.canManageFinance,
+        permissions:found.permissions||null
       };
       loginSuccess();
     }else{
@@ -3497,25 +3547,23 @@ function loginSuccess(){
     document.getElementById('superAdminCard').style.display='block';
     document.getElementById('clearAllRow').style.display='flex';
     renderAdminsList();
-  }
-
-  if(currentAdmin.role==='patrol'){
-    const hideTabs=['leaders','reqs','inbox','album','honor','stats','settings','manann','patrolrate'];
-    hideTabs.forEach(t=>{
-      const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
-      if(btn) btn.style.display='none';
+  }else{
+    // نظام الصلاحيات المفصلة: لو عنده permissions محفوظة نستخدمها بالظبط،
+    // ولو حساب قديم من غير permissions نرجع للسلوك الافتراضي القديم حسب الدور (توافق تلقائي رجعي)
+    const perms=currentAdmin.permissions||defaultPermsForRole(currentAdmin.role,currentAdmin.canManageFinance);
+    TAB_PERMS.forEach(t=>{
+      if(!perms[t.key]){
+        const btn=document.querySelector(`.atab[onclick="goAdm('${t.key}')"]`);
+        if(btn) btn.style.display='none';
+      }
     });
-    const addForm=document.getElementById('addMemberForm');
-    if(addForm) addForm.style.display='none';
-    goAdm('track');
-  }
-
-  // صلاحية الصندوق (الاشتراكات + الصندوق المالي) - محصورة بالسوبر أو اللي معاه صلاحية أمين الصندوق فقط
-  if(!currentAdmin.canManageFinance){
-    ['dues','treasury'].forEach(t=>{
-      const btn=document.querySelector(`.atab[onclick="goAdm('${t}')"]`);
-      if(btn) btn.style.display='none';
-    });
+    if(currentAdmin.role==='patrol'){
+      const addForm=document.getElementById('addMemberForm');
+      if(addForm) addForm.style.display='none';
+    }
+    // أول تاب متاح له نفتحه تلقائيًا
+    const firstAllowed=TAB_PERMS.find(t=>perms[t.key]);
+    goAdm(firstAllowed?firstAllowed.key:'track');
   }
 
   toast(`مرحباً ${currentAdmin.name}! ✅`,'ok');
@@ -3552,15 +3600,22 @@ async function renderAdminsList(){
   const el=document.getElementById('adminsList');if(!el)return;
   const snap=await getDocs(ADMINS_COL);
   const list=snap.docs.map(d=>({id:d.id,...d.data()}));
+  window._adminsCache=list;
   if(!list.length){el.innerHTML='<div style="color:var(--muted);font-size:0.8rem;margin-bottom:8px">لا يوجد مستخدمون مضافون بعد</div>';return;}
   el.innerHTML=list.map(a=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg2);border-radius:10px;margin-bottom:6px;flex-wrap:wrap">
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:0.82rem">${esc(a.username)}</div>
-        <div style="font-size:0.7rem;color:var(--muted)">${a.role==='admin'?'🛡️ قائد':'📋 عريف'}${a.patrol?' · '+a.patrol:''}${a.canManageFinance?' · 💰 أمين صندوق':''}</div>
+    <div style="padding:8px;background:var(--bg2);border-radius:10px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:0.82rem">${esc(a.username)}</div>
+          <div style="font-size:0.7rem;color:var(--muted)">${a.role==='admin'?'🛡️ قائد':'📋 عريف'}${a.patrol?' · '+a.patrol:''}${a.canManageFinance?' · 💰 أمين صندوق':''}</div>
+        </div>
+        <button onclick="toggleAdminPermsPanel('${a.id}')" style="background:rgba(26,41,66,.08);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--navy);font-family:Cairo,sans-serif;font-size:0.7rem;cursor:pointer">🔑 الصلاحيات</button>
+        <button onclick="deleteAdmin('${a.id}')" style="background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:4px 10px;color:#c0392b;font-family:Cairo,sans-serif;font-size:0.72rem;cursor:pointer">🗑️ حذف</button>
       </div>
-      <button onclick="toggleAdminFinance('${a.id}',${!a.canManageFinance})" style="background:${a.canManageFinance?'rgba(39,174,96,.15)':'rgba(26,41,66,.08)'};border:1px solid ${a.canManageFinance?'rgba(39,174,96,.3)':'var(--border)'};border-radius:8px;padding:4px 10px;color:${a.canManageFinance?'#27ae60':'var(--muted)'};font-family:Cairo,sans-serif;font-size:0.7rem;cursor:pointer">${a.canManageFinance?'💰 إلغاء الصندوق':'💰 تعيين أمين صندوق'}</button>
-      <button onclick="deleteAdmin('${a.id}')" style="background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:4px 10px;color:#c0392b;font-family:Cairo,sans-serif;font-size:0.72rem;cursor:pointer">🗑️ حذف</button>
+      <div id="permsPanel_${a.id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+        <div id="permsGrid_${a.id}" class="perm-grid"></div>
+        <button class="mimg-btn" style="margin-top:8px" onclick="saveAdminPerms('${a.id}')">💾 حفظ الصلاحيات</button>
+      </div>
     </div>`).join('');
 }
 
@@ -3569,17 +3624,37 @@ window.addAdmin=async function(){
   const password=document.getElementById('newAdminPass').value.trim();
   const role=document.getElementById('newAdminRole').value;
   const patrol=document.getElementById('newAdminPatrol').value.trim();
-  const canManageFinance=document.getElementById('newAdminFinance').checked;
+  const permissions=readPermsGrid('newAdminPermsGrid');
+  const canManageFinance=!!(permissions.dues||permissions.treasury);
   if(!username||!password){toast('أدخل الاسم وكلمة المرور ⚠️','err');return;}
   if(role==='patrol'&&!patrol){toast('أدخل اسم الطليعة ⚠️','err');return;}
-  await addDoc(ADMINS_COL,{username,password,role,patrol:patrol||null,canManageFinance,createdAt:serverTimestamp()});
+  await addDoc(ADMINS_COL,{username,password,role,patrol:patrol||null,permissions,canManageFinance,createdAt:serverTimestamp()});
   toast(`تم إضافة ${username} ✅`,'ok');
   document.getElementById('newAdminUser').value='';
   document.getElementById('newAdminPass').value='';
   document.getElementById('newAdminPatrol').value='';
-  document.getElementById('newAdminFinance').checked=false;
+  renderPermsGrid('newAdminPermsGrid',defaultPermsForRole(role));
   renderAdminsList();
   logActivity(`أضاف مستخدم: ${username}`);
+};
+window.toggleAdminPermsPanel=function(id){
+  const panel=document.getElementById('permsPanel_'+id);
+  if(!panel)return;
+  const opening=panel.style.display==='none';
+  panel.style.display=opening?'block':'none';
+  if(opening && !panel.dataset.loaded){
+    const admin=window._adminsCache?.find(a=>a.id===id);
+    const perms=admin?.permissions||defaultPermsForRole(admin?.role||'admin',admin?.canManageFinance);
+    renderPermsGrid('permsGrid_'+id,perms);
+    panel.dataset.loaded='1';
+  }
+};
+window.saveAdminPerms=async function(id){
+  const perms=readPermsGrid('permsGrid_'+id);
+  const canManageFinance=!!(perms.dues||perms.treasury);
+  await updateDoc(doc(db,'admins',id),{permissions:perms,canManageFinance});
+  toast('تم تحديث صلاحيات المستخدم ✅','ok');
+  renderAdminsList();
 };
 window.toggleAdminFinance=async function(id,val){
   await updateDoc(doc(db,'admins',id),{canManageFinance:val});
