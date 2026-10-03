@@ -2576,60 +2576,77 @@ function renderRank(){
   `;
 }
 // ===== لوحة الأبطال - أوتوماتيك بالكامل، بتتحدث من غير أي تدخل يدوي =====
+// بيرجع كل الأعضاء المتصدرين فعليًا (ممكن يكونوا أكتر من واحد لو متعادلين بالظبط في النقاط)
+function topTied(list,scoreFn){
+  if(!list.length)return [];
+  let max=-Infinity;
+  list.forEach(m=>{const s=scoreFn(m);if(s>max)max=s;});
+  return list.filter(m=>scoreFn(m)===max);
+}
 function renderHallOfFame(){
   const el=document.getElementById('hallOfFame');
   if(!el)return;
   if(!members.length){el.innerHTML='<div class="empty"><span>🏆</span>لسه مفيش بيانات كفاية</div>';return;}
-  const card=(icon,title,m,scoreTxt,extra)=>{
-    if(!m)return `<div class="hof-card"><div class="hof-icon">${icon}</div><div class="hof-title">${title}</div><div class="hof-empty">لا يوجد بعد</div></div>`;
-    const av=m.gender==='male'?'⛺':'🏕️';
+  // بطاقة بتعرض فايز واحد أو أكتر (عند التعادل) مع بعض في نفس الكارت
+  const card=(icon,title,winners,scoreTxtFn)=>{
+    if(!winners||!winners.length)return `<div class="hof-card"><div class="hof-icon">${icon}</div><div class="hof-title">${title}</div><div class="hof-empty">لا يوجد بعد</div></div>`;
     return `<div class="hof-card">
       <div class="hof-icon">${icon}</div>
       <div class="hof-title">${title}</div>
-      <div class="hof-avatar">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:av}</div>
-      <div class="hof-name">${esc(m.name)}</div>
-      <div class="hof-score">${scoreTxt}</div>
-      ${extra||''}
+      ${winners.map(m=>{
+        const av=m.gender==='male'?'⛺':'🏕️';
+        return `<div style="margin-top:6px">
+          <div class="hof-avatar" style="width:42px;height:42px;font-size:1.3rem">${m.imgUrl?`<img src="${esc(m.imgUrl)}" loading="lazy"/>`:av}</div>
+          <div class="hof-name" style="font-size:0.76rem">${esc(m.name)}</div>
+          <div class="hof-score" style="font-size:0.82rem">${scoreTxtFn(m)}</div>
+        </div>`;
+      }).join('')}
     </div>`;
   };
-  // أفضل عضو / عضوة (حسب النقاط العامة calcPoints)
+  // أفضل عضو / عضوة (حسب النقاط العامة calcPoints) - بيدعم التعادل
   const males=members.filter(m=>m.gender==='male');
   const females=members.filter(m=>m.gender!=='male');
-  const bestMale=males.length?males.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
-  const bestFemale=females.length?females.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
-  // أفضل عريف / مساعد عريف (حسب تقييم القيادة المنفصل leaderScore)
+  const bestMales=topTied(males,calcPoints);
+  const bestFemales=topTied(females,calcPoints);
+  // أفضل عريف / مساعد عريف (حسب تقييم القيادة المنفصل leaderScore) - بيدعم التعادل
   const aarifs=members.filter(m=>['عريف اول','عريف'].includes(m.position));
   const assistants=members.filter(m=>m.position==='مساعد عريف');
-  const bestAarif=aarifs.length?aarifs.reduce((a,b)=>leaderScore(b)>leaderScore(a)?b:a):null;
-  const bestAssistant=assistants.length?assistants.reduce((a,b)=>leaderScore(b)>leaderScore(a)?b:a):null;
-  // أفضل طليعة (حسب تقييم الطليعة المنفصل)
+  const bestAarifs=topTied(aarifs,leaderScore);
+  const bestAssistants=topTied(assistants,leaderScore);
+  // أفضل طليعة (حسب تقييم الطليعة المنفصل) - بيدعم التعادل
   const patrols=getDistinctPatrols();
-  const bestPatrolName=patrols.length?patrols.reduce((a,b)=>patrolScore(b)>patrolScore(a)?b:a):null;
-  el.innerHTML=`<div class="hof-grid">
-    ${bestPatrolName?`<div class="hof-card">
+  const bestPatrolNames=topTied(patrols,patrolScore);
+  const patrolCard=(names)=>{
+    if(!names.length)return `<div class="hof-card"><div class="hof-icon">🏕️</div><div class="hof-title">أفضل طليعة</div><div class="hof-empty">لا يوجد بعد</div></div>`;
+    return `<div class="hof-card">
       <div class="hof-icon">🏕️</div>
       <div class="hof-title">أفضل طليعة</div>
-      <div class="hof-avatar">${patrolRatings[bestPatrolName]?.imgUrl?`<img src="${esc(patrolRatings[bestPatrolName].imgUrl)}" loading="lazy"/>`:'🏕️'}</div>
-      <div class="hof-name">طليعة ${esc(bestPatrolName)}</div>
-      <div class="hof-score">${patrolStarsDisplay(bestPatrolName)}</div>
-    </div>`:card('🏕️','أفضل طليعة',null)}
-    ${card('🎖️','أفضل عريف',bestAarif,bestAarif?('⭐'.repeat(bestAarif.leaderRating||0)+'🌟'.repeat(leaderBonusStarsOf(bestAarif))||'—'):'')}
-    ${card('🎖️','أفضل مساعد عريف',bestAssistant,bestAssistant?('⭐'.repeat(bestAssistant.leaderRating||0)+'🌟'.repeat(leaderBonusStarsOf(bestAssistant))||'—'):'')}
-    ${card('👦','أفضل عضو',bestMale,bestMale?starsDisplay(bestMale):'')}
-    ${card('👧','أفضل عضوة',bestFemale,bestFemale?starsDisplay(bestFemale):'')}
+      ${names.map(name=>`<div style="margin-top:6px">
+        <div class="hof-avatar" style="width:42px;height:42px;font-size:1.3rem">${patrolRatings[name]?.imgUrl?`<img src="${esc(patrolRatings[name].imgUrl)}" loading="lazy"/>`:'🏕️'}</div>
+        <div class="hof-name" style="font-size:0.76rem">طليعة ${esc(name)}</div>
+        <div class="hof-score" style="font-size:0.82rem">${patrolStarsDisplay(name)}</div>
+      </div>`).join('')}
+    </div>`;
+  };
+  el.innerHTML=`<div class="hof-grid">
+    ${patrolCard(bestPatrolNames)}
+    ${card('🎖️','أفضل عريف',bestAarifs,m=>'⭐'.repeat(m.leaderRating||0)+'🌟'.repeat(leaderBonusStarsOf(m))||'—')}
+    ${card('🎖️','أفضل مساعد عريف',bestAssistants,m=>'⭐'.repeat(m.leaderRating||0)+'🌟'.repeat(leaderBonusStarsOf(m))||'—')}
+    ${card('👦','أفضل عضو',bestMales,starsDisplay)}
+    ${card('👧','أفضل عضوة',bestFemales,starsDisplay)}
   </div>
   <div style="font-weight:800;color:var(--text);font-size:0.86rem;margin:18px 0 4px">🏅 أبطال المراحل الكشفية</div>
-  <p style="font-size:0.68rem;color:var(--muted);margin-bottom:10px">شرط الدخول للوحة: 3 نجوم فأكثر (يدوية + تلقائية من الدرجات) و100 درجة فأكثر</p>
+  <p style="font-size:0.68rem;color:var(--muted);margin-bottom:10px">شرط الدخول للوحة: 3 نجوم فأكثر (يدوية + تلقائية من الدرجات) و100 درجة فأكثر. عند التعادل بيظهروا كلهم مع بعض</p>
   <div class="hof-grid">
     ${[...RANKS_M].reverse().filter(r=>r!=='خريج').map(rank=>{
       const group=members.filter(m=>m.gender==='male'&&m.role===rank&&((m.rating||0)+bonusStarsOf(m))>=3&&(m.manualDegrees||0)>=100);
-      const best=group.length?group.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
-      return card('🎖️',`أفضل ${esc(rank)}`,best,best?starsDisplay(best):'');
+      const winners=topTied(group,calcPoints);
+      return card('🎖️',`أفضل ${esc(rank)}`,winners,starsDisplay);
     }).join('')}
     ${[...RANKS_F].reverse().filter(r=>r!=='خريجة').map(rank=>{
       const group=members.filter(m=>m.gender!=='male'&&m.role===rank&&((m.rating||0)+bonusStarsOf(m))>=3&&(m.manualDegrees||0)>=100);
-      const best=group.length?group.reduce((a,b)=>calcPoints(b)>calcPoints(a)?b:a):null;
-      return card('🎖️',`أفضل ${esc(rank)}`,best,best?starsDisplay(best):'');
+      const winners=topTied(group,calcPoints);
+      return card('🎖️',`أفضل ${esc(rank)}`,winners,starsDisplay);
     }).join('')}
   </div>`;
 }
