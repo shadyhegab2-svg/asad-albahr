@@ -141,6 +141,12 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .media-embed iframe{width:100%;border:none;border-radius:10px}
 .media-yt iframe{aspect-ratio:16/9;height:auto}
 .media-ig iframe{aspect-ratio:9/16;height:auto;max-width:340px;margin:0 auto;display:block}
+.social-card{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border-radius:14px;text-decoration:none;color:#fff;margin-bottom:8px;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:transform 0.15s}
+.social-card:active{transform:scale(0.97)}
+.social-card-icon{font-size:1.8rem;flex-shrink:0;width:48px;height:48px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.social-card-text{display:flex;flex-direction:column;gap:2px}
+.social-card-title{font-weight:800;font-size:0.84rem}
+.social-card-cta{font-size:0.72rem;opacity:0.9}
 .ann-body{font-size:0.84rem;line-height:1.9;color:var(--text2);white-space:pre-line;max-height:85px;overflow:hidden;transition:max-height 0.4s}
 .ann-body.exp{max-height:4000px}
 .ann-more{font-size:0.72rem;color:var(--blue2);cursor:pointer;border:none;background:none;font-family:'Cairo',sans-serif;padding:4px 0;margin-top:4px;font-weight:700}
@@ -1670,6 +1676,16 @@ function detectMediaType(url){
   return 'link';
 }
 // يرجع HTML مناسب لعرض الرابط حسب نوعه
+// كارت رابط واضح لمنصات زي انستجرام/تيك توك/فيسبوك - بدل محاولة تضمين (embed) مش بتشتغل غالبًا
+function socialCardHtml(safeUrl,icon,platformName,gradientColors){
+  return `<a href="${safeUrl}" target="_blank" class="social-card" style="background:linear-gradient(135deg,${gradientColors})">
+    <span class="social-card-icon">${icon}</span>
+    <span class="social-card-text">
+      <span class="social-card-title">محتوى من ${platformName}</span>
+      <span class="social-card-cta">اضغط هنا للمشاهدة على ${platformName} 🔗</span>
+    </span>
+  </a>`;
+}
 function mediaEmbedHtml(url){
   const type=detectMediaType(url);
   if(!type)return '';
@@ -1680,13 +1696,13 @@ function mediaEmbedHtml(url){
     return `<div class="media-embed media-yt"><iframe src="https://www.youtube.com/embed/${vid}" frameborder="0" allowfullscreen loading="lazy"></iframe></div>`;
   }
   if(type==='instagram'){
-    return `<div class="media-embed media-ig"><iframe src="${safe}embed" frameborder="0" scrolling="no" allowtransparency="true" loading="lazy"></iframe></div>`;
+    return socialCardHtml(safe,'📷','انستجرام','#e1306c,#fd1d1d,#fcaf45');
   }
   if(type==='tiktok'){
-    return `<div class="media-embed media-tt"><a href="${safe}" target="_blank" class="lbtn">🎵 مشاهدة على تيك توك</a></div>`;
+    return socialCardHtml(safe,'🎵','تيك توك','#000000,#25f4ee,#fe2c55');
   }
   if(type==='facebook'){
-    return `<div class="media-embed media-fb"><a href="${safe}" target="_blank" class="lbtn">📘 مشاهدة على فيسبوك</a></div>`;
+    return socialCardHtml(safe,'📘','فيسبوك','#1877f2,#3b5bdb');
   }
   if(type==='image'){
     return `<img class="ann-img" src="${safe}" loading="lazy" onclick="openLightbox('${safe}')"/>`;
