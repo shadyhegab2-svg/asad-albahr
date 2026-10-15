@@ -147,6 +147,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .social-card-text{display:flex;flex-direction:column;gap:2px}
 .social-card-title{font-weight:800;font-size:0.84rem}
 .social-card-cta{font-size:0.72rem;opacity:0.9}
+.thumb-card{display:block;width:100%;text-decoration:none;margin-bottom:8px;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.12)}
+.thumb-card-img{width:100%;aspect-ratio:9/16;max-height:420px;object-fit:cover;display:block;background:#111}
+.thumb-card-caption{padding:10px;text-align:center;font-weight:700;font-size:0.8rem;background:var(--bg2);color:var(--navy)}
 .ann-body{font-size:0.84rem;line-height:1.9;color:var(--text2);white-space:pre-line;max-height:85px;overflow:hidden;transition:max-height 0.4s}
 .ann-body.exp{max-height:4000px}
 .ann-more{font-size:0.72rem;color:var(--blue2);cursor:pointer;border:none;background:none;font-family:'Cairo',sans-serif;padding:4px 0;margin-top:4px;font-weight:700}
@@ -1676,7 +1679,7 @@ function detectMediaType(url){
   return 'link';
 }
 // يرجع HTML مناسب لعرض الرابط حسب نوعه
-// كارت رابط واضح لمنصات زي انستجرام/تيك توك/فيسبوك - بدل محاولة تضمين (embed) مش بتشتغل غالبًا
+// كارت رابط واضح لمنصات زي انستجرام/فيسبوك - بدل محاولة تضمين (embed) مش بتشتغل غالبًا
 function socialCardHtml(safeUrl,icon,platformName,gradientColors){
   return `<a href="${safeUrl}" target="_blank" class="social-card" style="background:linear-gradient(135deg,${gradientColors})">
     <span class="social-card-icon">${icon}</span>
@@ -1685,6 +1688,29 @@ function socialCardHtml(safeUrl,icon,platformName,gradientColors){
       <span class="social-card-cta">اضغط هنا للمشاهدة على ${platformName} 🔗</span>
     </span>
   </a>`;
+}
+// كارت صورة مصغرة حقيقية (زي يوتيوب) + نص "اضغط على الرابط" تحت الصورة من غير أيقونة تغطيها - للتيك توك (بيجيب الصورة تلقائي مجانًا)
+let _mediaCardSeq=0;
+function tiktokThumbCardHtml(safeUrl){
+  const id='ttThumb'+(_mediaCardSeq++);
+  // نجيب الصورة المصغرة الحقيقية بعد ما الكارت يتحط في الصفحة
+  setTimeout(()=>fetchTiktokThumb(safeUrl,id),0);
+  return `<a href="${safeUrl}" target="_blank" class="thumb-card" id="${id}">
+    <div class="thumb-card-img" style="background:linear-gradient(135deg,#000000,#25f4ee,#fe2c55);display:flex;align-items:center;justify-content:center"><span style="font-size:2rem">🎵</span></div>
+    <div class="thumb-card-caption">👆 اضغط على الرابط للمشاهدة على تيك توك</div>
+  </a>`;
+}
+async function fetchTiktokThumb(url,elId){
+  try{
+    const r=await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
+    if(!r.ok)return;
+    const d=await r.json();
+    if(!d.thumbnail_url)return;
+    const el=document.getElementById(elId);
+    if(!el)return;
+    const imgDiv=el.querySelector('.thumb-card-img');
+    if(imgDiv) imgDiv.outerHTML=`<img class="thumb-card-img" src="${esc(d.thumbnail_url)}" loading="lazy"/>`;
+  }catch(e){/* لو فشل الجلب، تفضل الصورة الافتراضية الملونة */}
 }
 function mediaEmbedHtml(url){
   const type=detectMediaType(url);
@@ -1699,7 +1725,7 @@ function mediaEmbedHtml(url){
     return socialCardHtml(safe,'📷','انستجرام','#e1306c,#fd1d1d,#fcaf45');
   }
   if(type==='tiktok'){
-    return socialCardHtml(safe,'🎵','تيك توك','#000000,#25f4ee,#fe2c55');
+    return tiktokThumbCardHtml(safe);
   }
   if(type==='facebook'){
     return socialCardHtml(safe,'📘','فيسبوك','#1877f2,#3b5bdb');
@@ -2540,7 +2566,7 @@ window.sendEventReminder=function(){
   if(!upcomingEventsData.length)return;
   const ev=upcomingEventsData[0];
   const phones=members.map(m=>m.whatsapp||m.phone).filter(Boolean).map(p=>p.replace(/^0/,'20'));
-  const msg=encodeURIComponent(`📅 تذكير بفعالية غداً!\n\n🦁 ${ev.name}\n📆 ${new Date(ev.date).toLocaleDateString('ar-EG')}\n\nمجموعة أسد البحار للكشافة البحرية ⚓`);
+  const msg=encodeURIComponent(`📅 تذكير بفعالية غداً!\n\n🦁 ${ev.name}\n📆 ${new Date(ev.date).toLocaleDateString('ar-EG')}\n\nمجموعة أسد البحار للكشافة البحرية ⚓\n\n—\n${BC_ADMIN_NOTICE}`);
   if(phones.length){
     navigator.clipboard.writeText(phones.join(String.fromCharCode(10))).catch(()=>{});
   }
@@ -2580,7 +2606,7 @@ function checkBirthdays(){
 window.sendBdayWA=function(name,phone){
   if(!phone){toast('لا يوجد رقم واتساب لهذا الشخص','err');return;}
   const num=phone.replace(/^0/,'20');
-  const msg=encodeURIComponent(`🎂 كل عام وأنت بخير يا ${name}!\nمن مجموعة أسد البحار للكشافة البحرية 🦁⚓`);
+  const msg=encodeURIComponent(`🎂 كل عام وأنت بخير يا ${name}!\nمن مجموعة أسد البحار للكشافة البحرية 🦁⚓\n\n—\n${BC_ADMIN_NOTICE}`);
   window.open(`https://wa.me/${num}?text=${msg}`,'_blank');
 };
 function renderRank(){
@@ -3377,7 +3403,10 @@ window.approveReq=async function(id){
 مجموعة أسد البحار ترحب بك بين أفراده 🤝
 نتمنى لك رحلة مليئة بالنجاح والتعلم والمغامرات الممتعة
 ودوام التوفيق والتألق معنا دائمًا 💙⚓
-أهلا بك عضوا في أسرة أسد البحار 🦁🌊`);
+أهلا بك عضوا في أسرة أسد البحار 🦁🌊
+
+—
+${BC_ADMIN_NOTICE}`);
     window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
   }
   toast('✅ تم القبول وإضافته للأعضاء','ok');
@@ -4089,7 +4118,7 @@ window.broadcastTaskWA=function(){
   if(!phones.length){toast('لا توجد أرقام مسجلة ⚠️','err');return;}
   const dueText=due?`\n📅 تاريخ الاستحقاق: ${new Date(due).toLocaleDateString('ar-EG')}`:'';
   const descText=desc?`\n📝 ${desc}`:'';
-  const msg=encodeURIComponent(`📋 مهمة جديدة!\n\n✅ ${title}${descText}${dueText}\n\nمجموعة أسد البحار 🦁⚓`);
+  const msg=encodeURIComponent(`📋 مهمة جديدة!\n\n✅ ${title}${descText}${dueText}\n\nمجموعة أسد البحار 🦁⚓\n\n—\n${BC_ADMIN_NOTICE}`);
   navigator.clipboard.writeText(phones.join(String.fromCharCode(10))).catch(()=>{});
   window.open(`https://wa.me/${phones[0]}?text=${msg}`,'_blank');
   toast('تم نسخ الأرقام — أرسل للقائمة ✅','ok');
