@@ -2573,6 +2573,19 @@ window.sendEventReminder=function(){
   window.open(`https://wa.me/${phones[0]||''}?text=${msg}`,'_blank');
   toast('تم نسخ الأرقام — افتح واتساب وأرسل للقائمة ✅','ok');
 };
+// قراءة تاريخ الميلاد بأي صيغة شائعة (DD/MM/YYYY أو YYYY-MM-DD، وبأرقام عربية أو إنجليزية)
+function parseDob(dob){
+  if(!dob)return null;
+  const toEn=s=>String(s).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+  const parts=toEn(dob).trim().split(/[\/\-\.\s]+/).map(x=>parseInt(x,10));
+  if(parts.length<3||parts.some(isNaN))return null;
+  let d,m,y;
+  if(parts[0]>31){y=parts[0];m=parts[1];d=parts[2];}
+  else{d=parts[0];m=parts[1];y=parts[2];}
+  if(m<1||m>12||d<1||d>31)return null;
+  return {d,m,y};
+}
+window._todayBdays=[];
 function checkBirthdays(){
   const banner=document.getElementById('bdayBanner');
   const list=document.getElementById('bdayList');
@@ -2580,35 +2593,47 @@ function checkBirthdays(){
   const now=new Date();
   const todayDay=now.getDate();
   const todayMonth=now.getMonth()+1;
-  // Check members + leaders for today's birthday
-  const allPeople=[...members,...leaders];
+  const allPeople=[...members.map(m=>({...m,_isLeader:false})),...leaders.map(l=>({...l,_isLeader:true}))];
   const todayBdays=allPeople.filter(p=>{
-    if(!p.dob)return false;
-    // Support formats: DD/MM/YYYY or YYYY-MM-DD
-    let day,month;
-    if(p.dob.includes('/')){
-      const parts=p.dob.split('/');
-      day=parseInt(parts[0]);month=parseInt(parts[1]);
-    }else if(p.dob.includes('-')){
-      const parts=p.dob.split('-');
-      day=parseInt(parts[2]);month=parseInt(parts[1]);
-    }else return false;
-    return day===todayDay && month===todayMonth;
+    const dob=parseDob(p.dob);
+    return dob&&dob.d===todayDay&&dob.m===todayMonth;
   });
+  window._todayBdays=todayBdays;
   if(!todayBdays.length){banner.style.display='none';return;}
   banner.style.display='block';
-  list.innerHTML=todayBdays.map(p=>{
-    const isAdmin=document.getElementById('sec-admin')&&document.getElementById('admPanel')&&document.getElementById('admPanel').style.display!=='none';
-    const waBtn=`<button onclick="sendBdayWA('${esc(p.name)}','${esc(p.whatsapp||p.phone||'')}')" style="background:rgba(255,255,255,.25);border:none;border-radius:20px;padding:4px 12px;color:#fff;font-family:Cairo,sans-serif;font-size:0.75rem;font-weight:700;cursor:pointer;margin-right:8px">📲 تهنئة واتساب</button>`;
-    return `<div style="margin-bottom:6px">🎉 <b>${esc(p.name)}</b> — كل عام وأنت بخير يا كشاف! ${waBtn}</div>`;
+  list.innerHTML=todayBdays.map((p,i)=>{
+    const female=p.gender==='female';
+    // اللقب: رتبة العضو الكشفية (شبل/كشاف/مرشدة...) أو دور القائد
+    const title=p.role&&p.role.trim()?p.role.trim():(p._isLeader?(female?'قائدة':'قائد'):(female?'مرشدة':'كشاف'));
+    const dob=parseDob(p.dob);
+    const age=dob&&dob.y>1950&&dob.y<=now.getFullYear()?now.getFullYear()-dob.y:null;
+    const fallbackAv=p._isLeader?'👨‍✈️':(female?'🏕️':'⛺');
+    const av=p.imgUrl
+      ?`<img src="${esc(p.imgUrl)}" alt="" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
+      :fallbackAv;
+    const waBtn=`<button onclick="sendBdayWAIdx(${i})" style="background:rgba(255,255,255,.25);border:none;border-radius:20px;padding:5px 12px;color:#fff;font-family:Cairo,sans-serif;font-size:0.72rem;font-weight:700;cursor:pointer;margin-top:6px">📲 تهنئة واتساب</button>`;
+    return `<div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.16);border-radius:14px;padding:10px;margin-bottom:8px">
+      <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:3px solid #fff;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.2)">${av}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:800;font-size:0.92rem">🎉 ${esc(p.name)}</div>
+        <div style="font-size:0.76rem;opacity:.95">كل عام وأنت بخير يا ${esc(title)}${age?` — بلغ ${age} سنة 🎈`:''}</div>
+        ${waBtn}
+      </div>
+    </div>`;
   }).join('');
 }
-window.sendBdayWA=function(name,phone){
+function _sendBdayWhatsapp(name,phone){
   if(!phone){toast('لا يوجد رقم واتساب لهذا الشخص','err');return;}
-  const num=phone.replace(/^0/,'20');
+  const num=String(phone).replace(/[^0-9]/g,'').replace(/^0/,'20');
   const msg=encodeURIComponent(`🎂 كل عام وأنت بخير يا ${name}!\nمن مجموعة أسد البحار للكشافة البحرية 🦁⚓\n\n—\n${BC_ADMIN_NOTICE}`);
   window.open(`https://wa.me/${num}?text=${msg}`,'_blank');
+}
+window.sendBdayWAIdx=function(i){
+  const p=(window._todayBdays||[])[i];
+  if(!p)return;
+  _sendBdayWhatsapp(p.name,p.whatsapp||p.phone||'');
 };
+window.sendBdayWA=function(name,phone){_sendBdayWhatsapp(name,phone);};
 function renderRank(){
   const el=document.getElementById('rankList');
   if(!el)return;
@@ -3655,6 +3680,7 @@ window.doLogin=async function(){
 
 function loginSuccess(){
   loggedIn=true;
+  checkBirthdays();
   document.getElementById('lockCard').style.display='none';
   document.getElementById('adminPanel').classList.add('on');
   document.getElementById('adm-title').textContent=`🛡️ ${currentAdmin.name}`;
@@ -3689,6 +3715,7 @@ function loginSuccess(){
 
 window.doLogout=function(){
   loggedIn=false;currentAdmin=null;
+  checkBirthdays();
   document.getElementById('lockCard').style.display='';
   document.getElementById('adminPanel').classList.remove('on');
   document.getElementById('passIn').value='';
