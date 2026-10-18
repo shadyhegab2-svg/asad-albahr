@@ -1050,6 +1050,13 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <div class="ff"><label>أو الصق رابط صورة (فيسبوك/موقع رفع...) - صور فقط</label><input type="text" id="lImgLink" placeholder="https://..."/></div>
               <div class="ff"><label>الاسم الكامل *</label><input type="text" id="lName" placeholder="اسم القائد"/></div>
               <div class="ff"><label>الدور / المنصب</label><input type="text" id="lRole" placeholder="قائد المجموعة..."/></div>
+              <div class="ff"><label>تاريخ الميلاد (اختياري - عشان تظهر تهنئته يوم ميلاده)</label>
+                <div style="display:flex;gap:6px">
+                  <input id="lDobD" type="tel" placeholder="يوم" maxlength="2" style="flex:1;text-align:center"/>
+                  <input id="lDobM" type="tel" placeholder="شهر" maxlength="2" style="flex:1;text-align:center"/>
+                  <input id="lDobY" type="tel" placeholder="سنة" maxlength="4" style="flex:2;text-align:center"/>
+                </div>
+              </div>
               <div class="fr2">
                 <div class="ff"><label>واتساب (مع كود الدولة)</label><input type="tel" id="lWa" placeholder="201xxxxxxxxx"/></div>
                 <div class="ff"><label>رقم الموبايل</label><input type="tel" id="lPh" placeholder="01xxxxxxxxx"/></div>
@@ -2030,6 +2037,13 @@ function renderLeadersAdm(){
       <button class="del-btn" onclick="delLeader('${l.id}')">🗑️</button>
     </div>`).join('');
 }
+function getLeaderDob(){
+  const toEn=s=>String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).trim();
+  const d=toEn(document.getElementById('lDobD').value);
+  const m=toEn(document.getElementById('lDobM').value);
+  const y=toEn(document.getElementById('lDobY').value);
+  return (d&&m&&y)?`${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`:'';
+}
 window.saveLeader=async function(){
   const name=document.getElementById('lName').value.trim();
   if(!name){toast('أدخل الاسم ⚠️','err');return;}
@@ -2052,7 +2066,7 @@ window.saveLeader=async function(){
     imgUrl=linkVal;
   }
   if(window._editLeaderId){
-    const upd={name,role:document.getElementById('lRole').value.trim(),whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim()};
+    const upd={name,dob:getLeaderDob(),role:document.getElementById('lRole').value.trim(),whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim()};
     if(imgUrl) upd.imgUrl=imgUrl;
     await updateDoc(doc(db,'leaders',window._editLeaderId),upd);
     window._editLeaderId=null;
@@ -2060,10 +2074,10 @@ window.saveLeader=async function(){
     if(btn){btn.textContent='💾 حفظ القائد';btn.style.background='';}
     toast('تم تحديث القائد ✅','ok');
   } else {
-    await addDoc(LC,{name,role:document.getElementById('lRole').value.trim(),imgUrl,whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim(),createdAt:serverTimestamp()});
+    await addDoc(LC,{name,dob:getLeaderDob(),role:document.getElementById('lRole').value.trim(),imgUrl,whatsapp:document.getElementById('lWa').value.trim(),phone:document.getElementById('lPh').value.trim(),facebook:document.getElementById('lFb').value.trim(),createdAt:serverTimestamp()});
     toast('تم حفظ القائد ✅','ok');
   }
-  ['lName','lRole','lWa','lPh','lFb','lImgLink'].forEach(id=>document.getElementById(id).value='');
+  ['lName','lRole','lWa','lPh','lFb','lImgLink','lDobD','lDobM','lDobY'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('lImgPrev').innerHTML='👨‍✈️';
   document.getElementById('lImgFile').value='';
   document.getElementById('lUpTxt').textContent='';
@@ -2076,6 +2090,10 @@ window.editLeader=function(id){
   document.getElementById('lWa').value=l.whatsapp||'';
   document.getElementById('lPh').value=l.phone||'';
   document.getElementById('lFb').value=l.facebook||'';
+  const ldob=parseDob(l.dob);
+  document.getElementById('lDobD').value=ldob?ldob.d:'';
+  document.getElementById('lDobM').value=ldob?ldob.m:'';
+  document.getElementById('lDobY').value=ldob?ldob.y:'';
   if(l.imgUrl){const p=document.getElementById('lImgPrev');if(p)p.innerHTML=`<img src="${l.imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;}
   window._editLeaderId=id;
   // scroll to form
