@@ -125,6 +125,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .perm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 .perm-item{display:flex;align-items:center;gap:6px;background:var(--bg2);border-radius:8px;padding:7px 8px;font-size:0.72rem}
 .perm-item input{width:15px;height:15px;flex-shrink:0}
+.acc-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:0.8rem}
+.acc-row b{color:var(--muted);font-weight:600;flex-shrink:0}
+.acc-row span{text-align:left;word-break:break-word;color:var(--text)}
 .occasion-banner{display:none;text-align:center;padding:12px 10px;font-weight:800;font-size:0.86rem;color:#fff;background:linear-gradient(90deg,var(--navy),var(--navy2));position:relative;overflow:hidden}
 .occasion-banner.show{display:block}
 .occasion-banner .ob-icons{font-size:1rem;letter-spacing:6px;opacity:0.85;margin-bottom:2px}
@@ -485,6 +488,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <!-- Occasion Banner (يظهر تلقائيًا حسب المناسبة المختارة من الإدارة) -->
 <div class="occasion-banner" id="occasionBanner"></div>
+<datalist id="groupOptions"><option value="مجموعة أسد البحار"></option><option value="نادي العريش الرياضي"></option></datalist>
 
 <!-- Update Bar -->
 <div class="update-bar" id="updateBar">
@@ -907,22 +911,27 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="page">
         <div class="nh-acc-card" id="myaccLoginCard">
           <h3>👤 حسابي</h3>
-          <p style="text-align:center;color:#6b7d99;font-size:0.82rem;margin-bottom:16px">أدخل رقم موبايلك المسجل في المجموعة لعرض وتعديل بياناتك</p>
-          <input type="tel" id="myaccPhoneIn" class="nh-acc-input" placeholder="رقم الموبايل" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
-          <input type="tel" id="myaccNidIn" class="nh-acc-input" placeholder="آخر 4 أرقام من الرقم القومي" maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
-          <button class="nh-acc-btn" onclick="myaccLogin()">دخول</button>
+          <p style="text-align:center;color:#6b7d99;font-size:0.82rem;margin-bottom:16px">ادخل آخر 4 أرقام من رقمك القومي والباسورد. أول مرة؟ استخدم كود الدخول اللي بعتته لك الإدارة على واتساب</p>
+          <input type="tel" id="myaccNidIn" class="nh-acc-input" placeholder="آخر 4 أرقام من الرقم القومي" maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9٠-٩]/g,'')"/>
+          <input type="password" id="myaccPassIn" class="nh-acc-input" placeholder="الباسورد أو كود الدخول" autocomplete="current-password"/>
+          <div id="myaccPhoneRow" style="display:none">
+            <input type="tel" id="myaccPhoneIn" class="nh-acc-input" placeholder="رقم موبايلك (مطلوب لتأكيد هويتك)" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9٠-٩]/g,'')"/>
+          </div>
+          <button class="nh-acc-btn" id="myaccLoginBtn" onclick="myaccLogin()">دخول</button>
+          <p style="text-align:center;color:var(--muted);font-size:0.72rem;margin-top:10px">نسيت الباسورد؟ كلم الإدارة وهتبعتلك كود جديد</p>
+        </div>
+        <div class="nh-acc-card" id="myaccSetPwCard" style="display:none">
+          <h3>🔐 اختار باسورد خاص بيك</h3>
+          <p style="text-align:center;color:#6b7d99;font-size:0.82rem;margin-bottom:16px">الباسورد ده هتدخل بيه المرات الجاية (6 حروف أو أرقام على الأقل). الكود اللي دخلت بيه هيتلغي</p>
+          <input type="password" id="myaccNewPw" class="nh-acc-input" placeholder="الباسورد الجديد" autocomplete="new-password"/>
+          <input type="password" id="myaccNewPw2" class="nh-acc-input" placeholder="أعد كتابة الباسورد" autocomplete="new-password"/>
+          <button class="nh-acc-btn" onclick="myaccSetPassword()">💾 حفظ والدخول</button>
         </div>
         <div class="nh-acc-card" id="myaccProfileCard" style="display:none">
           <div id="myaccAchieveBanner" style="display:none;background:linear-gradient(135deg,#ff9f43,#feca57);color:#fff;font-weight:800;font-size:0.84rem;text-align:center;padding:12px;border-radius:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(254,202,87,.4)"></div>
-          <div class="nh-acc-avatar-edit" onclick="document.getElementById('myaccImgFile').click()">
+          <div class="nh-acc-avatar-edit" style="cursor:default">
             <img id="myaccAvatarPrev" src="" style="display:none"/>
             <div id="myaccAvatarPlaceholder" style="width:100%;height:100%;border-radius:50%;background:#dde8f5;display:flex;align-items:center;justify-content:center;font-size:36px">👤</div>
-            <div class="nh-edit-badge">✏️</div>
-          </div>
-          <input type="file" id="myaccImgFile" accept="image/*" style="display:none" onchange="myaccImgPreview(this)"/>
-          <div class="ff" style="display:flex;gap:6px;align-items:flex-end;margin:8px 0 4px">
-            <div style="flex:1"><label style="font-size:0.68rem;color:var(--muted)">أو الصق رابط صورة (فيسبوك/موقع رفع...) - صور فقط</label><input type="text" id="myaccImgLink" placeholder="https://..."/></div>
-            <button class="nh-acc-btn" id="myaccImgLinkBtn" style="white-space:nowrap;padding:9px 14px" onclick="myaccSetImgLink()">🔗 حفظ</button>
           </div>
           <div class="nh-acc-stats" id="myaccStats" style="display:flex;gap:8px;margin-bottom:16px">
             <div style="flex:1;background:rgba(0,200,100,0.1);border:1px solid rgba(0,200,100,0.25);border-radius:12px;padding:12px;text-align:center">
@@ -943,34 +952,20 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <div style="font-weight:800;color:var(--text);font-size:0.84rem;margin-bottom:8px">💰 الاشتراكات</div>
             <div id="myaccDuesList"></div>
           </div>
-          <div class="nh-acc-field">
-            <label>الاسم</label>
-            <input type="text" id="myaccName"/>
+          <div style="font-weight:800;color:var(--text);font-size:0.84rem;margin:6px 0 4px">📋 بياناتي (للعرض فقط)</div>
+          <div id="myaccInfoGrid" style="margin-bottom:18px"></div>
+          <div style="font-weight:800;color:var(--text);font-size:0.84rem;margin-bottom:6px">✏️ بيانات تقدر تعدلها بنفسك</div>
+          <div class="nh-acc-field"><label>البريد الإلكتروني</label><input type="email" id="myaccEmail" placeholder="name@example.com"/></div>
+          <div class="nh-acc-field"><label>رابط الفيسبوك</label><input type="text" id="myaccFb" placeholder="facebook.com/username"/></div>
+          <button class="nh-acc-btn" onclick="myaccSaveContacts()" style="margin-bottom:18px">💾 حفظ الإيميل والفيسبوك</button>
+          <div style="font-weight:800;color:var(--text);font-size:0.84rem;margin-bottom:4px">📝 طلب تعديل (بموافقة الإدارة)</div>
+          <p style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">الاسم والموبايل بيتعدلوا بعد ما الإدارة توافق على طلبك</p>
+          <div class="nh-acc-field"><label>الحقل المطلوب تعديله</label>
+            <select id="myaccEditField" class="nh-acc-input"><option value="name">الاسم</option><option value="phone">رقم الموبايل</option><option value="whatsapp">رقم الواتساب</option></select>
           </div>
-          <div class="nh-acc-field">
-            <label>رقم الموبايل</label>
-            <input type="tel" id="myaccPhone" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
-          </div>
-          <div class="nh-acc-field">
-            <label>رقم الواتساب</label>
-            <input type="tel" id="myaccWhatsapp" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
-          </div>
-          <div class="nh-acc-field">
-            <label>الرتبة الكشفية 🔒</label>
-            <input type="text" id="myaccRole" disabled/>
-            <div class="nh-acc-locked">🔒 لا يمكن تعديل هذا الحقل - من اختصاص الإدارة</div>
-          </div>
-          <div class="nh-acc-field">
-            <label>الصفة في الطليعة 🔒</label>
-            <input type="text" id="myaccPosition" disabled/>
-            <div class="nh-acc-locked">🔒 لا يمكن تعديل هذا الحقل - من اختصاص الإدارة</div>
-          </div>
-          <div class="nh-acc-field">
-            <label>التقييم / الامتيازات 🔒</label>
-            <input type="text" id="myaccRating" disabled/>
-            <div class="nh-acc-locked">🔒 لا يمكن تعديل هذا الحقل - من اختصاص الإدارة</div>
-          </div>
-          <button class="nh-acc-btn" onclick="myaccSave()" style="margin-bottom:10px">💾 حفظ التعديلات</button>
+          <div class="nh-acc-field"><label>القيمة الجديدة</label><input type="text" id="myaccEditValue"/></div>
+          <button class="nh-acc-btn" onclick="myaccRequestEdit()" style="margin-bottom:10px">📤 إرسال الطلب للإدارة</button>
+          <div id="myaccEditsList" style="margin-bottom:16px"></div>
           <button class="nh-acc-btn" onclick="myaccLogout()" style="background:#fdf0ef;color:#c0392b">🚪 خروج</button>
         </div>
       </div>
@@ -1220,6 +1215,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 
             <!-- REQUESTS ADMIN -->
             <div id="adm-reqs" class="asec">
+              <div class="card" style="margin-bottom:14px">
+                <div class="card-head">📝 طلبات تعديل بيانات الأعضاء</div>
+                <div id="profileEditsList"></div>
+              </div>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
                 <div style="font-size:0.84rem;font-weight:700;color:var(--text)">📋 طلبات الانضمام</div>
                 <div id="reqsCount" style="font-size:0.72rem;color:var(--muted)"></div>
@@ -1286,6 +1285,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
               <!-- إدارة الأدمنز - يظهر للسوبر أدمن فقط -->
               <div class="card" id="superAdminCard" style="display:none;margin-bottom:14px">
                 <div class="card-head">👥 إدارة المستخدمين</div>
+                <button class="mimg-btn" style="margin-bottom:10px" onclick="resetSuperPassword()">🔑 تغيير باسورد الأدمن الكبير (الرابط على إيميلك)</button>
                 <div id="adminsList" style="margin-bottom:12px"></div>
                 <div class="pgrid">
                   <div class="pf full"><label>اسم المستخدم الجديد</label><input id="newAdminUser" type="text" placeholder="مثال: قائد أحمد"/></div>
@@ -1400,16 +1400,7 @@ window.goAdm=window.goAdm||function(t){
   if(idx>=0 && document.querySelectorAll('.atab')[idx]) document.querySelectorAll('.atab')[idx].classList.add('on');
 };
 window.doLogin=window.doLogin||function(){
-  const inp=document.getElementById('passIn');
-  if(!inp)return;
-  const pass=localStorage.getItem('adm_pass')||'asad2025';
-  if(inp.value===pass){
-    document.getElementById('lockCard').style.display='none';
-    document.getElementById('adminPanel').classList.add('on');
-  }else{
-    inp.style.border='2px solid red';
-    setTimeout(()=>inp.style.border='',600);
-  }
+  alert('تعذر تحميل نظام الدخول، تأكد من الاتصال بالإنترنت وأعد تحميل الصفحة');
 };
 // Global error catcher - shows JS errors visibly for debugging
 window.addEventListener('error', function(e){
@@ -1421,17 +1412,44 @@ window.addEventListener('error', function(e){
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, setDoc, getDoc, where, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
-const fb = initializeApp({
+const FB_CONFIG={
   apiKey:"AIzaSyAWit2aS6i4X_VEI_TrAI2fUHWBeIjjLhI",
   authDomain:"asad-elbhar.firebaseapp.com",
   projectId:"asad-elbhar",
   storageBucket:"asad-elbhar.firebasestorage.app",
   messagingSenderId:"470148084407",
   appId:"1:470148084407:web:c8590337e6747a277ed332"
-});
+};
+const fb = initializeApp(FB_CONFIG);
+const auth = getAuth(fb);
+// حساب الأدمن الكبير في Firebase Authentication (الباسورد بتاعه عند جوجل مش في الكود)
+const SUPER_EMAIL='shadyhegab2@gmail.com';
+const SUPER_USERNAME='شادي';
+// تطبيق ثانوي بنستخدمه بس لإنشاء حسابات للقادة والعرفاء من غير ما نطلّع الأدمن الكبير من حسابه
+let _secAuth=null;
+function getSecondaryAuth(){
+  if(!_secAuth){_secAuth=getAuth(initializeApp(FB_CONFIG,'secondary'));}
+  return _secAuth;
+}
+async function createAdminAuthAccount(password){
+  const rand=Math.random().toString(36).slice(2,10);
+  const email=`a${Date.now().toString(36)}${rand}@asad-admin.app`;
+  const sa=getSecondaryAuth();
+  const cred=await createUserWithEmailAndPassword(sa,email,password);
+  const uid=cred.user.uid;
+  await signOut(sa);
+  return {email,uid};
+}
+function authErrMsg(e){
+  const code=(e&&e.code)||'';
+  if(code==='auth/too-many-requests')return 'محاولات كتير غلط، جرّب بعد شوية ⏳';
+  if(code==='auth/network-request-failed')return 'مشكلة في الاتصال بالإنترنت ⚠️';
+  return 'اسم المستخدم أو كلمة المرور خطأ ❌';
+}
 const db=getFirestore(fb);
 const AC=collection(db,'announcements');
 const MC=collection(db,'members');
@@ -1447,6 +1465,7 @@ const PRC=collection(db,'patrolRatings');
 const DUES=collection(db,'dues');
 const TRANS=collection(db,'transactions');
 const PUSHTOK=collection(db,'pushTokens');
+const PROFEDITS=collection(db,'profileEdits');
 const VISIT=collection(db,'visitors');
 // ===== إشعارات Push (Firebase Cloud Messaging) =====
 // 🔴 مهم: لازم تحط هنا الـ VAPID key بتاعك من Firebase Console → ⚙️ Project Settings → Cloud Messaging → Web configuration → Generate key pair
@@ -1538,7 +1557,6 @@ window.shareContent=shareContent;
 
 function fmtDate(ts){try{const d=ts?.toDate?ts.toDate():ts?new Date(ts):null;return d?d.toLocaleDateString('ar-EG'):'';}catch(e){return '';}}
 function fdate(d){if(!d)return '';try{return new Date(d).toLocaleDateString('ar-EG',{year:'numeric',month:'long',day:'numeric'});}catch{return d;}}
-function getPass(){return localStorage.getItem('adm_pass')||'asad2025';}
 
 let toastT;
 window.toast=function(m,type=''){
@@ -2532,6 +2550,28 @@ function calcPoints(m){
 }
 // عدد النجوم الإضافية اللي بتتضاف تلقائيًا كل 10 درجات يدوية - حتى لو عدّى السقف الأساسي (5)
 function bonusStarsOf(m){return Math.floor((m.manualDegrees||0)/10);}
+// عمر العضو بالسنين: من تاريخ الميلاد لو متسجل، وإلا من خانة العمر
+function memberAgeYears(m){
+  const dob=parseDob(m.dob);
+  const now=new Date();
+  if(dob&&dob.y>1950&&dob.y<=now.getFullYear()){
+    let a=now.getFullYear()-dob.y;
+    if((now.getMonth()+1)<dob.m||((now.getMonth()+1)===dob.m&&now.getDate()<dob.d))a--;
+    return a;
+  }
+  const n=parseInt(String(m.age||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)),10);
+  return isNaN(n)?null:n;
+}
+// الأشبال والزهرات: بيتفصلوا أولاد/بنات من سن 12 سنة أو من المرحلة الإعدادية، وقبل كده بيتقيّموا مع بعض
+function isSeparatedCub(m){
+  const age=memberAgeYears(m);
+  if(age!==null&&age>=12)return true;
+  return ['إعدادي','ثانوي','جامعي','خريج'].includes((m.grade||'').trim());
+}
+// فئات الأولاد والبنات فيها مدمجين: كل البراعم + الأشبال/الزهرات اللي أصغر من 12 وقبل الإعدادي
+function isMixedStage(m){
+  return m.role==='برعم'||((m.role==='شبل'||m.role==='زهرة')&&!isSeparatedCub(m));
+}
 // نفس الفكرة لكن خاص بتقييم القيادة (عريف/مساعد عريف) - منفصل عن تقييم العضو العام
 function leaderBonusStarsOf(m){return Math.floor((m.leaderDegrees||0)/10);}
 function leaderScore(m){return (m.leaderRating||0)*10+(m.leaderDegrees||0);}
@@ -2690,13 +2730,22 @@ function renderRank(){
     }
     return html;
   };
-  const males=members.filter(m=>m.gender==='male');
-  const females=members.filter(m=>m.gender!=='male');
+  const separated=members.filter(m=>!isMixedStage(m));
+  const males=separated.filter(m=>m.gender==='male');
+  const females=separated.filter(m=>m.gender!=='male');
+  const mixed=members.filter(isMixedStage);
+  const buds=mixed.filter(m=>m.role==='برعم');
+  const youngCubs=mixed.filter(m=>m.role!=='برعم');
+  const mixedHeader=t=>`<div style="font-weight:800;color:var(--blue3);font-size:0.8rem;margin:14px 0 8px;padding-bottom:4px;border-bottom:1.5px solid var(--border)">🎖️ ${t}</div>`;
   el.innerHTML=`
     <div style="font-weight:800;color:var(--text);font-size:0.9rem;margin-bottom:8px">👦 ترتيب الأولاد (منفصل حسب الرتبة الكشفية)</div>
     ${males.length?buildByRank(males,maleOrder):'<div class="empty"><span>👦</span>لا يوجد أولاد بعد</div>'}
     <div style="font-weight:800;color:var(--text);font-size:0.9rem;margin:16px 0 8px">👧 ترتيب البنات (منفصل حسب الرتبة الكشفية)</div>
     ${females.length?buildByRank(females,femaleOrder):'<div class="empty"><span>👧</span>لا يوجد بنات بعد</div>'}
+    ${mixed.length?`<div style="font-weight:800;color:var(--text);font-size:0.9rem;margin:16px 0 4px">👦👧 فئات مدمجة (أولاد وبنات معًا)</div>
+      <p style="font-size:0.68rem;color:var(--muted);margin-bottom:6px">البراعم، والأشبال والزهرات الأصغر من 12 سنة (أو قبل المرحلة الإعدادية) بيتقيّموا مع بعض</p>
+      ${youngCubs.length?mixedHeader('أشبال وزهرات (تحت 12 سنة)')+buildList(youngCubs):''}
+      ${buds.length?mixedHeader('براعم (أولاد وبنات)')+buildList(buds):''}`:''}
   `;
 }
 // ===== لوحة الأبطال - أوتوماتيك بالكامل، بتتحدث من غير أي تدخل يدوي =====
@@ -2760,18 +2809,23 @@ function renderHallOfFame(){
     ${card('👧','أفضل عضوة',bestFemales,starsDisplay)}
   </div>
   <div style="font-weight:800;color:var(--text);font-size:0.86rem;margin:18px 0 4px">🏅 أبطال المراحل الكشفية</div>
-  <p style="font-size:0.68rem;color:var(--muted);margin-bottom:10px">شرط الدخول للوحة: 3 نجوم فأكثر (يدوية + تلقائية من الدرجات) و100 نقطة فأكثر في الترتيب العام. عند التعادل بيظهروا كلهم مع بعض</p>
+  <p style="font-size:0.68rem;color:var(--muted);margin-bottom:10px">شرط الدخول للوحة: 3 نجوم فأكثر (يدوية + تلقائية من الدرجات) و100 نقطة فأكثر في الترتيب العام. عند التعادل بيظهروا كلهم مع بعض. البراعم مدمجين (أولاد وبنات)، والأشبال والزهرات مدمجين تحت 12 سنة (أو قبل الإعدادي)</p>
   <div class="hof-grid">
-    ${[...RANKS_M].reverse().filter(r=>r!=='خريج').map(rank=>{
-      const group=members.filter(m=>m.gender==='male'&&m.role===rank&&((m.rating||0)+bonusStarsOf(m))>=3&&calcPoints(m)>=100);
-      const winners=topTied(group,calcPoints);
-      return card('🎖️',`أفضل ${esc(rank)}`,winners,starsDisplay);
-    }).join('')}
-    ${[...RANKS_F].reverse().filter(r=>r!=='خريجة').map(rank=>{
-      const group=members.filter(m=>m.gender!=='male'&&m.role===rank&&((m.rating||0)+bonusStarsOf(m))>=3&&calcPoints(m)>=100);
-      const winners=topTied(group,calcPoints);
-      return card('🎖️',`أفضل ${esc(rank)}`,winners,starsDisplay);
-    }).join('')}
+    ${(()=>{
+      const eligible=m=>((m.rating||0)+bonusStarsOf(m))>=3&&calcPoints(m)>=100;
+      const groups=[];
+      [...RANKS_M].reverse().filter(r=>r!=='خريج'&&r!=='برعم').forEach(rank=>{
+        const cub=rank==='شبل';
+        groups.push({title:cub?`أفضل ${rank} (12 سنة فأكثر)`:`أفضل ${rank}`,test:m=>m.gender==='male'&&m.role===rank&&(!cub||isSeparatedCub(m))});
+      });
+      [...RANKS_F].reverse().filter(r=>r!=='خريجة'&&r!=='برعم').forEach(rank=>{
+        const cub=rank==='زهرة';
+        groups.push({title:cub?`أفضل ${rank} (12 سنة فأكثر)`:`أفضل ${rank}`,test:m=>m.gender!=='male'&&m.role===rank&&(!cub||isSeparatedCub(m))});
+      });
+      groups.push({title:'أفضل شبل / زهرة (تحت 12 سنة)',test:m=>(m.role==='شبل'||m.role==='زهرة')&&!isSeparatedCub(m)});
+      groups.push({title:'أفضل برعم (أولاد وبنات)',test:m=>m.role==='برعم'});
+      return groups.map(g=>card('🎖️',esc(g.title),topTied(members.filter(m=>g.test(m)&&eligible(m)),calcPoints),starsDisplay)).join('');
+    })()}
   </div>`;
 }
 window.savProf=async function(id){
@@ -2974,6 +3028,11 @@ function renderAdmMems(){
           <div style="flex:1"><label style="font-size:0.68rem;color:var(--muted)">أو الصق رابط صورة (فيسبوك/موقع رفع...) - صور فقط</label><input type="text" id="mfl${m.id}" placeholder="https://..."/></div>
           <button class="mimg-btn" id="mfl-btn${m.id}" style="white-space:nowrap" onclick="setMemberImgLink('${m.id}')">🔗 حفظ</button>
         </div>
+        <div style="margin:8px 0 10px;padding:10px;background:rgba(59,130,246,0.08);border-radius:10px">
+          <div style="font-weight:800;font-size:0.76rem;margin-bottom:4px">🔑 دخول العضو لحسابه</div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px">${m.acctState==='active'?'✅ عنده باسورد وبيدخل':(m.acctState==='code'?'📨 اتبعتله كود ولسه ما دخلش':'⏳ لسه ما اتفعلش')}</div>
+          <button class="mimg-btn" onclick="genMemberCode('${m.id}')">🔑 توليد كود دخول وإرساله واتساب</button>
+        </div>
         <div class="pgrid">
           <div class="pf full"><label>✏️ اسم العضو</label><input id="nm${m.id}" type="text" value="${esc(m.name||'')}" placeholder="الاسم الكامل"/></div>
           <div class="pf"><label>رقم الموبايل</label><input id="ph${m.id}" type="tel" value="${esc(m.phone||'')}" placeholder="01xxxxxxxxx"/>
@@ -2995,7 +3054,7 @@ function renderAdmMems(){
           <div class="pf"><label>المرحلة الدراسية</label><select id="gr${m.id}">${['<option value="">اختر...</option>',...GRADES.map(g=>`<option ${m.grade===g?'selected':''}>${g}</option>`)].join('')}</select></div>
           <div class="pf"><label>الرتبة الكشفية</label><select id="rol${m.id}">${['<option value="">اختر...</option>',...ranksList.map(r=>`<option ${m.role===r?'selected':''}>${r}</option>`)].join('')}</select></div>
           <div class="pf"><label>الصفة في الطليعة</label><select id="pos${m.id}">${['<option value="">بدون</option>',...PATROL_POSITIONS.map(p=>`<option ${m.position===p?'selected':''}>${p}</option>`)].join('')}</select></div>
-          <div class="pf"><label>اسم المجموعة</label><input id="grp${m.id}" type="text" value="${esc(m.group||'')}" placeholder="اسم المجموعة"/></div>
+          <div class="pf"><label>اسم المجموعة</label><input id="grp${m.id}" type="text" list="groupOptions" value="${esc(m.group||'')}" placeholder="اسم المجموعة"/></div>
           <div class="pf"><label>اسم الطليعة</label><input id="pat${m.id}" type="text" value="${esc(m.patrol||'')}" placeholder="اسم الطليعة"/></div>
           <div class="pf full"><label>ملاحظات</label><textarea id="not${m.id}" rows="2" placeholder="ملاحظات...">${esc(m.notes||'')}</textarea></div>
         </div>
@@ -3663,33 +3722,45 @@ renderPermsGrid('newAdminPermsGrid',defaultPermsForRole('admin'));
 
 window.doLogin=async function(){
   const user=document.getElementById('adminUser').value.trim();
-  const pass=document.getElementById('passIn').value.trim();
+  const pass=document.getElementById('passIn').value;
   if(!user||!pass){toast('أدخل اسم المستخدم وكلمة المرور ⚠️','err');return;}
-  // Check super admin first (no Firebase needed)
-  if(user==='شادي' && pass==='741852'){
-    currentAdmin={id:'super',name:'شادي',role:'super',patrol:null,canManageFinance:true};
-    loginSuccess();return;
-  }
-  // Check Firebase admins
+  const failUi=msg=>{
+    document.getElementById('passIn').classList.add('err');
+    setTimeout(()=>document.getElementById('passIn').classList.remove('err'),600);
+    toast(msg,'err');
+  };
   try{
+    // الأدمن الكبير: دخول عن طريق Firebase Authentication (مفيش باسورد في الكود)
+    if(user===SUPER_USERNAME){
+      let cred;
+      try{cred=await signInWithEmailAndPassword(auth,SUPER_EMAIL,pass);}
+      catch(e){failUi(authErrMsg(e));return;}
+      if((cred.user.email||'').toLowerCase()!==SUPER_EMAIL){await signOut(auth);failUi('غير مصرح ❌');return;}
+      currentAdmin={id:'super',name:SUPER_USERNAME,role:'super',patrol:null,canManageFinance:true};
+      loginSuccess();return;
+    }
     const snap=await getDocs(ADMINS_COL);
     const list=snap.docs.map(d=>({id:d.id,...d.data()}));
-    const found=list.find(a=>(a.username||'').trim()===user && (a.password||'').trim()===pass);
-    if(found){
-      currentAdmin={
-        id:found.id,
-        name:found.username||user,
-        role:found.role||'admin',
-        patrol:found.patrol||null,
-        canManageFinance:!!found.canManageFinance,
-        permissions:found.permissions||null
-      };
-      loginSuccess();
+    const cand=list.find(a=>(a.username||'').trim()===user);
+    if(!cand){failUi('اسم المستخدم أو كلمة المرور خطأ ❌');return;}
+    if(cand.authEmail){
+      // حساب آمن: التحقق من الباسورد عند Firebase Authentication
+      try{await signInWithEmailAndPassword(auth,cand.authEmail,pass);}
+      catch(e){failUi(authErrMsg(e));return;}
     }else{
-      document.getElementById('passIn').classList.add('err');
-      setTimeout(()=>document.getElementById('passIn').classList.remove('err'),600);
-      toast('اسم المستخدم أو كلمة المرور خطأ ❌','err');
+      // حساب قديم (باسورد متخزن كنص) - لازم يتعمله "ترقية" من إدارة المستخدمين
+      if((cand.password||'').trim()!==pass.trim()){failUi('اسم المستخدم أو كلمة المرور خطأ ❌');return;}
     }
+    currentAdmin={
+      id:cand.id,
+      name:cand.username||user,
+      role:cand.role||'admin',
+      patrol:cand.patrol||null,
+      canManageFinance:!!cand.canManageFinance,
+      permissions:cand.permissions||null,
+      legacy:!cand.authEmail
+    };
+    loginSuccess();
   }catch(e){
     console.error('Login error:',e);
     toast('تعذر الاتصال بقاعدة البيانات — أعد المحاولة بعد ثوانٍ ⚠️','err');
@@ -3699,6 +3770,7 @@ window.doLogin=async function(){
 function loginSuccess(){
   loggedIn=true;
   checkBirthdays();
+  startProfileEditsListener();
   document.getElementById('lockCard').style.display='none';
   document.getElementById('adminPanel').classList.add('on');
   document.getElementById('adm-title').textContent=`🛡️ ${currentAdmin.name}`;
@@ -3732,6 +3804,8 @@ function loginSuccess(){
 }
 
 window.doLogout=function(){
+  signOut(auth).catch(()=>{});
+  stopProfileEditsListener();
   loggedIn=false;currentAdmin=null;
   checkBirthdays();
   document.getElementById('lockCard').style.display='';
@@ -3769,7 +3843,9 @@ async function renderAdminsList(){
         <div style="flex:1">
           <div style="font-weight:700;font-size:0.82rem">${esc(a.username)}</div>
           <div style="font-size:0.7rem;color:var(--muted)">${a.role==='admin'?'🛡️ قائد':'📋 عريف'}${a.patrol?' · '+a.patrol:''}${a.canManageFinance?' · 💰 أمين صندوق':''}</div>
+          ${a.authEmail?'':'<div style="font-size:0.68rem;color:#c0392b;margin-top:2px">⚠️ حساب قديم: الباسورد متخزن مكشوف، رقّيه</div>'}
         </div>
+        ${a.authEmail?'':`<button onclick="upgradeAdmin('${a.id}')" style="background:rgba(244,165,35,.18);border:1px solid rgba(244,165,35,.4);border-radius:8px;padding:4px 10px;color:#9a6a00;font-family:Cairo,sans-serif;font-size:0.7rem;cursor:pointer">🔒 ترقية</button>`}
         <button onclick="toggleAdminPermsPanel('${a.id}')" style="background:rgba(26,41,66,.08);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--navy);font-family:Cairo,sans-serif;font-size:0.7rem;cursor:pointer">🔑 الصلاحيات</button>
         <button onclick="deleteAdmin('${a.id}')" style="background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:4px 10px;color:#c0392b;font-family:Cairo,sans-serif;font-size:0.72rem;cursor:pointer">🗑️ حذف</button>
       </div>
@@ -3782,21 +3858,56 @@ async function renderAdminsList(){
 
 window.addAdmin=async function(){
   const username=document.getElementById('newAdminUser').value.trim();
-  const password=document.getElementById('newAdminPass').value.trim();
+  const password=document.getElementById('newAdminPass').value;
   const role=document.getElementById('newAdminRole').value;
   const patrol=document.getElementById('newAdminPatrol').value.trim();
   const permissions=readPermsGrid('newAdminPermsGrid');
   const canManageFinance=!!(permissions.dues||permissions.treasury);
   if(!username||!password){toast('أدخل الاسم وكلمة المرور ⚠️','err');return;}
+  if(password.length<6){toast('كلمة المرور لازم 6 حروف أو أرقام على الأقل ⚠️','err');return;}
+  if(username===SUPER_USERNAME){toast('الاسم ده محجوز ⚠️','err');return;}
   if(role==='patrol'&&!patrol){toast('أدخل اسم الطليعة ⚠️','err');return;}
-  await addDoc(ADMINS_COL,{username,password,role,patrol:patrol||null,permissions,canManageFinance,createdAt:serverTimestamp()});
-  toast(`تم إضافة ${username} ✅`,'ok');
-  document.getElementById('newAdminUser').value='';
-  document.getElementById('newAdminPass').value='';
-  document.getElementById('newAdminPatrol').value='';
-  renderPermsGrid('newAdminPermsGrid',defaultPermsForRole(role));
-  renderAdminsList();
-  logActivity(`أضاف مستخدم: ${username}`);
+  const existing=await getDocs(ADMINS_COL);
+  if(existing.docs.some(d=>(d.data().username||'').trim()===username)){toast('فيه مستخدم بنفس الاسم ⚠️','err');return;}
+  try{
+    const {email,uid}=await createAdminAuthAccount(password);
+    await addDoc(ADMINS_COL,{username,authEmail:email,authUid:uid,role,patrol:patrol||null,permissions,canManageFinance,createdAt:serverTimestamp()});
+    toast(`تم إضافة ${username} ✅`,'ok');
+    document.getElementById('newAdminUser').value='';
+    document.getElementById('newAdminPass').value='';
+    document.getElementById('newAdminPatrol').value='';
+    renderPermsGrid('newAdminPermsGrid',defaultPermsForRole(role));
+    renderAdminsList();
+    logActivity(`أضاف مستخدم: ${username}`);
+  }catch(e){
+    console.error(e);
+    toast('حصل خطأ في إنشاء الحساب ❌','err');
+  }
+};
+// ترقية حساب قديم (باسورد متخزن كنص) لحساب آمن في Firebase Authentication
+window.upgradeAdmin=async function(id){
+  const a=(window._adminsCache||[]).find(x=>x.id===id);
+  if(!a||a.authEmail)return;
+  let pw=prompt(`اكتب باسورد جديد لـ ${a.username} (6 حروف أو أرقام على الأقل).\nسيبه فاضي لو عايز تستخدم باسورده الحالي (بشرط يكون 6 أو أكتر):`,'');
+  if(pw===null)return;
+  if(!pw)pw=(a.password||'').trim();
+  if(pw.length<6){toast('الباسورد لازم 6 حروف أو أرقام على الأقل ⚠️','err');return;}
+  try{
+    const {email,uid}=await createAdminAuthAccount(pw);
+    await updateDoc(doc(db,'admins',id),{authEmail:email,authUid:uid,password:deleteField()});
+    toast(`تمت ترقية ${a.username} ✅ والباسورد القديم اتمسح`,'ok');
+    renderAdminsList();
+  }catch(e){
+    console.error(e);
+    toast('حصل خطأ في الترقية ❌','err');
+  }
+};
+// تغيير باسورد الأدمن الكبير: رابط بيوصل على إيميله
+window.resetSuperPassword=async function(){
+  if(!currentAdmin||currentAdmin.role!=='super')return;
+  if(!confirm('هنبعت رابط تغيير الباسورد على إيميلك المسجل. تكمل؟'))return;
+  try{await sendPasswordResetEmail(auth,SUPER_EMAIL);toast('اتبعت الرابط على إيميلك ✅','ok');}
+  catch(e){toast('حصل خطأ في الإرسال ❌','err');}
 };
 window.toggleAdminPermsPanel=function(id){
   const panel=document.getElementById('permsPanel_'+id);
@@ -3979,46 +4090,256 @@ window.requestJoinGroup=function(){
 };
 
 // ===== MY ACCOUNT (member self-service) =====
-let myaccCurrentId=null;
-let myaccNewImgUrl=null;
-window.myaccLogin=function(){
-  const phoneIn=document.getElementById('myaccPhoneIn').value.trim();
-  const nidIn=document.getElementById('myaccNidIn').value.trim();
-  if(!phoneIn){toast('أدخل رقم الموبايل ⚠️','err');return;}
-  if(!nidIn||nidIn.length!==4){toast('أدخل آخر 4 أرقام من الرقم القومي ⚠️','err');return;}
-  const found=members.find(m=>{
-    const phoneMatch=(m.phone===phoneIn)||(m.whatsapp===phoneIn);
-    const nid=(m.nationalId||'').trim();
-    const nidMatch=nid.length>=4 && nid.slice(-4)===nidIn;
-    return phoneMatch && nidMatch;
+// ===== الإدارة: توليد كود دخول للعضو وإرساله واتساب =====
+window.genMemberCode=async function(id){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  const nid=toEnDigits(m.nationalId).trim();
+  if(nid.length<4){toast('سجّل الرقم القومي للعضو الأول ⚠️','err');return;}
+  if(!(m.whatsapp||m.phone)){toast('سجّل رقم موبايل أو واتساب للعضو الأول ⚠️','err');return;}
+  if(m.acctState==='active'&&!confirm('العضو عنده باسورد شغال. توليد كود جديد هيلغي الباسورد القديم. تكمل؟'))return;
+  try{
+    const code=genAccessCode();
+    const salt=newSalt();
+    const codeHash=await hashSecret(code,salt);
+    await setDoc(doc(db,'memberAccounts',id),{codeHash,codeSalt:salt,codeExp:Date.now()+7*24*60*60*1000,pwHash:null,pwSalt:null,updatedAt:serverTimestamp()});
+    await updateDoc(doc(db,'members',id),{acctState:'code'});
+    showCodeModal(m,code,nid.slice(-4));
+  }catch(e){
+    console.error(e);
+    toast('حصل خطأ في توليد الكود ❌','err');
+  }
+};
+function showCodeModal(m,code,last4){
+  const num=String(m.whatsapp||m.phone||'').replace(/[^0-9]/g,'').replace(/^0/,'20');
+  const msg=`السلام عليكم ${m.name} 🌟\nتم تفعيل دخولك لحسابك في تطبيق مجموعة أسد البحار 🦁⚓\n\n🔹 اسم الدخول: ${last4} (آخر 4 أرقام من رقمك القومي)\n🔑 كود الدخول لأول مرة: ${code}\n\nالكود صالح 7 أيام ويُستخدم مرة واحدة، وبعد الدخول بيه هتختار باسورد خاص بيك.\nلا تشارك الكود مع أي شخص.\n\n—\n${BC_ADMIN_NOTICE}`;
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML=`<div style="background:#fff;color:#1a2a3a;border-radius:18px;padding:20px;max-width:340px;width:100%;text-align:center;direction:rtl;font-family:Cairo,sans-serif">
+    <div style="font-weight:800;margin-bottom:6px">🔑 كود دخول ${esc(m.name)}</div>
+    <div style="font-size:0.74rem;color:#6b7d99;margin-bottom:6px">اسم الدخول: ${esc(last4)} · الكود صالح 7 أيام</div>
+    <div style="font-size:2rem;font-weight:900;letter-spacing:6px;margin:8px 0 14px;color:#1a3a6b">${esc(code)}</div>
+    <button data-act="wa" style="width:100%;padding:11px;border:none;border-radius:12px;background:#25d366;color:#fff;font-family:Cairo,sans-serif;font-weight:800;margin-bottom:8px;cursor:pointer">📲 إرسال على واتساب</button>
+    <button data-act="copy" style="width:100%;padding:11px;border:1px solid #d0dae8;border-radius:12px;background:#f0f4f8;font-family:Cairo,sans-serif;font-weight:700;margin-bottom:8px;cursor:pointer">📋 نسخ الكود</button>
+    <button data-act="close" style="width:100%;padding:10px;border:none;background:none;color:#7a8a9a;font-family:Cairo,sans-serif;cursor:pointer">إغلاق</button>
+  </div>`;
+  ov.addEventListener('click',e=>{
+    const act=e.target&&e.target.dataset?e.target.dataset.act:null;
+    if(act==='wa'){window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');}
+    else if(act==='copy'){
+      if(navigator.clipboard)navigator.clipboard.writeText(code).then(()=>toast('تم نسخ الكود ✅','ok')).catch(()=>toast('انسخه يدويًا من الشاشة','err'));
+      else toast('انسخه يدويًا من الشاشة','err');
+    }
+    else if(act==='close'||e.target===ov){ov.remove();}
   });
-  if(!found){toast('تأكد من بياناتك يا كشاف ❌','err');return;}
+  document.body.appendChild(ov);
+}
+// ===== الإدارة: مراجعة طلبات تعديل الاسم/الموبايل =====
+let _profEditsUnsub=null;
+function canSeeReqsTab(){
+  if(!currentAdmin)return false;
+  if(currentAdmin.role==='super')return true;
+  const p=currentAdmin.permissions||defaultPermsForRole(currentAdmin.role,currentAdmin.canManageFinance);
+  return !!p.reqs;
+}
+function startProfileEditsListener(){
+  if(_profEditsUnsub||!canSeeReqsTab())return;
+  _profEditsUnsub=onSnapshot(PROFEDITS,snap=>{
+    window._profEdits=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderProfileEdits();
+  });
+}
+function stopProfileEditsListener(){
+  if(_profEditsUnsub){_profEditsUnsub();_profEditsUnsub=null;}
+  window._profEdits=[];
+}
+function renderProfileEdits(){
+  const el=document.getElementById('profileEditsList');
+  if(!el)return;
+  const pending=(window._profEdits||[]).filter(r=>r.status==='pending').sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+  if(!pending.length){el.innerHTML='<div class="empty"><span>📝</span>لا توجد طلبات تعديل جديدة</div>';return;}
+  el.innerHTML=pending.map(r=>`
+    <div class="sitem" style="flex-direction:column;align-items:stretch">
+      <div class="sitem-info">
+        <div class="sitem-title">${esc(r.memberName)}</div>
+        <div class="sitem-sub">${EDIT_FIELD_LABELS[r.field]||esc(r.field)}: <s>${esc(r.oldValue||'—')}</s> ← <b>${esc(r.newValue)}</b></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="mimg-btn" onclick="reviewProfileEdit('${r.id}',true)">✅ موافقة</button>
+        <button class="mimg-btn" style="background:#fdeaea;color:#c0392b;border-color:#f3c6c6" onclick="reviewProfileEdit('${r.id}',false)">❌ رفض</button>
+      </div>
+    </div>`).join('');
+}
+window.reviewProfileEdit=async function(id,approve){
+  const r=(window._profEdits||[]).find(x=>x.id===id);if(!r)return;
+  try{
+    if(approve&&['name','phone','whatsapp'].includes(r.field)){
+      await updateDoc(doc(db,'members',r.memberId),{[r.field]:r.newValue});
+    }
+    await updateDoc(doc(db,'profileEdits',id),{status:approve?'approved':'rejected',reviewedAt:serverTimestamp(),reviewedBy:(currentAdmin&&currentAdmin.name)||''});
+    toast(approve?'تمت الموافقة وتحديث البيانات ✅':'تم رفض الطلب','ok');
+  }catch(e){
+    console.error(e);
+    toast('حصل خطأ ❌','err');
+  }
+};
+let myaccCurrentId=null;
+// ===== حسابي: دخول بآخر 4 أرقام من الرقم القومي + باسورد (أو كود من الإدارة أول مرة) =====
+const MYACC_LOCK_KEY='myaccFail';
+function toEnDigits(s){return String(s==null?'':s).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));}
+function normPhoneDigits(p){return toEnDigits(p).replace(/[^0-9]/g,'').replace(/^(20|0)/,'');}
+function newSalt(){const a=new Uint8Array(16);crypto.getRandomValues(a);return btoa(String.fromCharCode(...a));}
+function genAccessCode(){const a=new Uint32Array(1);crypto.getRandomValues(a);return String(100000+(a[0]%900000));}
+// تشفير الباسورد/الكود (PBKDF2 مع salt) - مفيش حاجة بتتخزن كنص عادي
+async function hashSecret(secret,saltB64){
+  if(!(window.crypto&&crypto.subtle))throw new Error('no-crypto');
+  const enc=new TextEncoder();
+  const key=await crypto.subtle.importKey('raw',enc.encode(secret),'PBKDF2',false,['deriveBits']);
+  const salt=Uint8Array.from(atob(saltB64),ch=>ch.charCodeAt(0));
+  const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},key,256);
+  return btoa(String.fromCharCode(...new Uint8Array(bits)));
+}
+function getMyaccLock(){try{return JSON.parse(localStorage.getItem(MYACC_LOCK_KEY)||'{}');}catch(e){return {};}}
+function registerMyaccFail(){
+  const l=getMyaccLock();
+  const base=(l.until&&l.until<Date.now())?0:(l.n||0);
+  const n=base+1;
+  const o=n>=5?{n:0,until:Date.now()+15*60*1000}:{n};
+  try{localStorage.setItem(MYACC_LOCK_KEY,JSON.stringify(o));}catch(e){}
+}
+function clearMyaccFail(){try{localStorage.removeItem(MYACC_LOCK_KEY);}catch(e){}}
+
+window.myaccLogin=async function(){
+  const last4=toEnDigits(document.getElementById('myaccNidIn').value).trim();
+  const secret=toEnDigits(document.getElementById('myaccPassIn').value).trim();
+  const phoneRow=document.getElementById('myaccPhoneRow');
+  const phoneIn=normPhoneDigits(document.getElementById('myaccPhoneIn').value);
+  if(last4.length!==4){toast('أدخل آخر 4 أرقام من الرقم القومي ⚠️','err');return;}
+  if(!secret){toast('أدخل الباسورد أو كود الدخول ⚠️','err');return;}
+  const lock=getMyaccLock();
+  if(lock.until&&lock.until>Date.now()){
+    toast(`محاولات كتير غلط، جرّب بعد ${Math.ceil((lock.until-Date.now())/60000)} دقيقة ⏳`,'err');return;
+  }
+  const btn=document.getElementById('myaccLoginBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  try{
+    const cands=members.filter(m=>{const n=toEnDigits(m.nationalId).trim();return n.length>=4&&n.slice(-4)===last4;});
+    let accs=[];
+    for(const m of cands){
+      const snap=await getDoc(doc(db,'memberAccounts',m.id));
+      if(snap.exists())accs.push({m,acc:snap.data()});
+    }
+    // لو أكتر من عضو آخر 4 أرقامهم زي بعض، بنطلب رقم الموبايل عشان نفرّق
+    if(accs.length>1){
+      if(phoneRow.style.display==='none'||!phoneIn){
+        phoneRow.style.display='block';
+        toast('في أكتر من عضو بنفس آخر 4 أرقام، اكتب رقم موبايلك كمان ⚠️','err');
+        return;
+      }
+      accs=accs.filter(({m})=>normPhoneDigits(m.phone)===phoneIn||normPhoneDigits(m.whatsapp)===phoneIn);
+    }
+    let hit=null;
+    for(const {m,acc} of accs){
+      if(acc.pwHash&&acc.pwSalt&&await hashSecret(secret,acc.pwSalt)===acc.pwHash){hit={m,mode:'pw'};break;}
+      if(acc.codeHash&&acc.codeSalt&&acc.codeExp>Date.now()&&await hashSecret(secret,acc.codeSalt)===acc.codeHash){hit={m,mode:'code'};break;}
+    }
+    if(!hit){
+      registerMyaccFail();
+      toast('البيانات غلط أو الكود انتهى. لو أول مرة اطلب كود جديد من الإدارة ❌','err');
+      return;
+    }
+    clearMyaccFail();
+    if(hit.mode==='code'){
+      window._myaccPendingId=hit.m.id;
+      document.getElementById('myaccLoginCard').style.display='none';
+      document.getElementById('myaccSetPwCard').style.display='block';
+      toast('الكود صح ✅ اختار باسورد خاص بيك','ok');
+      return;
+    }
+    myaccShowProfile(hit.m);
+  }catch(e){
+    console.error(e);
+    toast('حصل خطأ، جرّب تاني ❌','err');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='دخول';}
+  }
+};
+window.myaccSetPassword=async function(){
+  const id=window._myaccPendingId;
+  if(!id){toast('ارجع سجل دخول بالكود الأول ⚠️','err');return;}
+  const p1=document.getElementById('myaccNewPw').value;
+  const p2=document.getElementById('myaccNewPw2').value;
+  if(p1.length<6){toast('الباسورد لازم 6 حروف أو أرقام على الأقل ⚠️','err');return;}
+  if(p1!==p2){toast('الباسوردين مش زي بعض ⚠️','err');return;}
+  try{
+    const salt=newSalt();
+    const pwHash=await hashSecret(p1,salt);
+    await setDoc(doc(db,'memberAccounts',id),{pwHash,pwSalt:salt,codeHash:null,codeSalt:null,codeExp:0,updatedAt:serverTimestamp()},{merge:true});
+    await updateDoc(doc(db,'members',id),{acctState:'active'});
+    window._myaccPendingId=null;
+    document.getElementById('myaccNewPw').value='';document.getElementById('myaccNewPw2').value='';
+    document.getElementById('myaccSetPwCard').style.display='none';
+    const m=members.find(x=>x.id===id);
+    if(m)myaccShowProfile(m);
+    toast('تم حفظ الباسورد ✅','ok');
+  }catch(e){
+    console.error(e);
+    toast('حصل خطأ في حفظ الباسورد ❌','err');
+  }
+};
+function acctRow(label,val){return `<div class="acc-row"><b>${label}</b><span>${val===''||val==null?'—':val}</span></div>`;}
+function myaccShowProfile(found){
   myaccCurrentId=found.id;
-  myaccNewImgUrl=null;
-  document.getElementById('myaccName').value=found.name||'';
-  document.getElementById('myaccPhone').value=found.phone||'';
-  document.getElementById('myaccWhatsapp').value=found.whatsapp||'';
-  document.getElementById('myaccRole').value=found.role||'—';
-  document.getElementById('myaccPosition').value=found.position||'—';
-  document.getElementById('myaccRating').value=found.rating?('⭐'.repeat(found.rating)):'—';
+  const now=new Date();
+  const age=memberAgeYears(found);
+  const nid=toEnDigits(found.nationalId).trim();
+  const names=arr=>(arr||[]).map(x=>typeof x==='string'?x:(x&&(x.name||x.title))||'').filter(Boolean).map(esc).join('، ');
+  let rows='';
+  rows+=acctRow('الاسم',esc(found.name));
+  rows+=acctRow('رقم الموبايل',esc(found.phone));
+  rows+=acctRow('رقم الواتساب',esc(found.whatsapp));
+  rows+=acctRow('الرقم القومي',nid.length>=4?'••••••••••'+esc(nid.slice(-4)):'');
+  rows+=acctRow('تاريخ الميلاد',esc(found.dob));
+  rows+=acctRow('العمر',age!==null?age+' سنة':'');
+  rows+=acctRow('المرحلة الدراسية',esc(found.grade));
+  rows+=acctRow('المجموعة',esc(found.group));
+  rows+=acctRow('الطليعة',esc(found.patrol));
+  rows+=acctRow('الرتبة الكشفية',esc(found.role));
+  rows+=acctRow('الصفة في الطليعة',esc(found.position));
+  rows+=acctRow('التقييم (النجوم)',starsDisplay(found));
+  rows+=acctRow('الدرجات',found.manualDegrees||0);
+  if(PATROL_LEADER_POSITIONS.includes(found.position)){
+    rows+=acctRow('تقييم القيادة',('⭐'.repeat(found.leaderRating||0)+'🌟'.repeat(leaderBonusStarsOf(found)))||'—');
+    rows+=acctRow('درجات القيادة',found.leaderDegrees||0);
+  }
+  rows+=acctRow('الشارات ('+((found.badges||[]).length)+')',names(found.badges));
+  rows+=acctRow('الكورسات ('+((found.courses||[]).length)+')',names(found.courses));
+  rows+=acctRow('التميّز',names(found.excellence));
+  document.getElementById('myaccInfoGrid').innerHTML=rows;
+  document.getElementById('myaccEmail').value=found.email||'';
+  document.getElementById('myaccFb').value=found.facebook||'';
   document.getElementById('myaccAttCount').textContent=found.attendance||0;
   document.getElementById('myaccAbsCount').textContent=found.absence||0;
-  const myPoints=calcPoints(found);
-  document.getElementById('myaccPointsVal').textContent=myPoints;
-  const sameGenderMembers=members.filter(m=>m.gender===found.gender);
-  const ranked=sameGenderMembers.map(m=>({id:m.id,points:calcPoints(m)})).sort((a,b)=>b.points-a.points);
+  document.getElementById('myaccPointsVal').textContent=calcPoints(found);
+  // ترتيبه داخل مرحلته (نفس منطق صفحة الترتيب: فئات مدمجة للبراعم والأشبال الصغار)
+  const mixed=isMixedStage(found);
+  const group=members.filter(m=>mixed
+    ?(isMixedStage(m)&&((found.role==='برعم')===(m.role==='برعم')))
+    :(!isMixedStage(m)&&m.gender===found.gender&&m.role===found.role));
+  const ranked=group.map(m=>({id:m.id,points:calcPoints(m)})).sort((a,b)=>b.points-a.points);
   const myRank=ranked.findIndex(m=>m.id===found.id)+1;
-  document.getElementById('myaccRankRow').textContent=myRank>0?`الترتيب: #${myRank} من ${members.length}`:'';
+  document.getElementById('myaccRankRow').textContent=myRank>0?`ترتيبك في مرحلتك: #${myRank} من ${ranked.length}`:'';
   const avImg=document.getElementById('myaccAvatarPrev');
   const avPh=document.getElementById('myaccAvatarPlaceholder');
   if(found.imgUrl){avImg.src=found.imgUrl;avImg.style.display='block';avPh.style.display='none';}
   else{avImg.style.display='none';avPh.style.display='flex';}
   document.getElementById('myaccLoginCard').style.display='none';
+  document.getElementById('myaccSetPwCard').style.display='none';
   document.getElementById('myaccProfileCard').style.display='block';
   checkMyaccAchievements(found);
   renderMyaccDues();
+  renderMyaccEdits();
   toast('مرحباً '+found.name+' 👋','ok');
-};
+}
 // إشعار تحفيزي للعضو نفسه لو درجاته أو نجومه زادت من آخر مرة دخل فيها
 async function checkMyaccAchievements(found){
   const banner=document.getElementById('myaccAchieveBanner');
@@ -4038,68 +4359,67 @@ async function checkMyaccAchievements(found){
     await updateDoc(doc(db,'members',found.id),{lastSeenRating:curR,lastSeenDegrees:curD});
   }
 }
-window.myaccImgPreview=function(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    document.getElementById('myaccAvatarPrev').src=e.target.result;
-    document.getElementById('myaccAvatarPrev').style.display='block';
-    document.getElementById('myaccAvatarPlaceholder').style.display='none';
-  };
-  reader.readAsDataURL(file);
-  myaccNewImgUrl='PENDING';
-  window._myaccFile=file;
-};
-// حفظ صورة الحساب عن طريق لصق رابط صورة جاهز بدل رفع ملف - صور فقط، مش فيديو
-window.myaccSetImgLink=async function(){
-  if(!myaccCurrentId){toast('سجّل دخولك أولاً ⚠️','err');return;}
-  const inp=document.getElementById('myaccImgLink');
-  const url=inp.value.trim();
-  if(!url){toast('الصق رابط الصورة أولاً ⚠️','err');return;}
-  const type=detectMediaType(url);
-  if(type==='video'){toast('الرابط ده فيديو، محتاجين رابط صورة بس ⚠️','err');return;}
-  const btn=document.getElementById('myaccImgLinkBtn');
-  if(btn){btn.disabled=true;btn.textContent='⏳';}
-  const ok=await testImageLoads(url);
-  if(btn){btn.disabled=false;btn.textContent='🔗 حفظ';}
-  if(!ok){
-    toast('الرابط ده مش صورة مباشرة (زي رابط بوست فيسبوك) - افتحي الصورة، دوسي كليك يمين عليها واختاري "نسخ عنوان الصورة" (Copy image address) وحطي الرابط ده ⚠️','err');
-    return;
-  }
-  await updateDoc(doc(db,'members',myaccCurrentId),{imgUrl:url});
-  document.getElementById('myaccAvatarPrev').src=url;
-  document.getElementById('myaccAvatarPrev').style.display='block';
-  document.getElementById('myaccAvatarPlaceholder').style.display='none';
-  inp.value='';
-  myaccNewImgUrl=null;window._myaccFile=null;
-  toast('تم حفظ صورتك ✅','ok');
-};
-window.myaccSave=async function(){
+// الإيميل والفيسبوك: العضو يعدلهم بنفسه مباشرة
+window.myaccSaveContacts=async function(){
   if(!myaccCurrentId)return;
-  const name=document.getElementById('myaccName').value.trim();
-  if(!name){toast('الاسم مطلوب ⚠️','err');return;}
-  const upd={
-    name,
-    phone:document.getElementById('myaccPhone').value.trim(),
-    whatsapp:document.getElementById('myaccWhatsapp').value.trim()
-  };
-  if(myaccNewImgUrl==='PENDING' && window._myaccFile){
-    const newUrl=await uploadProfileImg(window._myaccFile,null);
-    if(newUrl) upd.imgUrl=newUrl;
-  }
+  const email=document.getElementById('myaccEmail').value.trim();
+  const fb=document.getElementById('myaccFb').value.trim();
+  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('الإيميل مش مظبوط ⚠️','err');return;}
+  if(fb&&!/(facebook\.com|fb\.com|fb\.me)/i.test(fb)){toast('لازم يكون رابط صفحة فيسبوك ⚠️','err');return;}
   try{
-    await updateDoc(doc(db,'members',myaccCurrentId),upd);
+    await updateDoc(doc(db,'members',myaccCurrentId),{email,facebook:fb});
     toast('تم حفظ بياناتك ✅','ok');
   }catch(e){
-    toast('حدث خطأ، حاول مرة أخرى ❌','err');
+    toast('حصل خطأ، حاول مرة تانية ❌','err');
   }
 };
+// الاسم والموبايل: طلب تعديل بيوصل للإدارة وتوافق عليه
+const EDIT_FIELD_LABELS={name:'الاسم',phone:'رقم الموبايل',whatsapp:'رقم الواتساب'};
+window.myaccRequestEdit=async function(){
+  if(!myaccCurrentId)return;
+  const field=document.getElementById('myaccEditField').value;
+  let val=document.getElementById('myaccEditValue').value.trim();
+  if(!EDIT_FIELD_LABELS[field])return;
+  if(field==='name'){
+    if(val.length<3){toast('اكتب الاسم كامل ⚠️','err');return;}
+  }else{
+    val=toEnDigits(val).replace(/[^0-9]/g,'');
+    if(val.length<10||val.length>13){toast('اكتب رقم صحيح ⚠️','err');return;}
+  }
+  const m=members.find(x=>x.id===myaccCurrentId);
+  if(!m)return;
+  if((m[field]||'')===val){toast('القيمة دي هي نفسها المسجلة ⚠️','err');return;}
+  try{
+    const snap=await getDocs(query(PROFEDITS,where('memberId','==',myaccCurrentId)));
+    if(snap.docs.some(d=>d.data().field===field&&d.data().status==='pending')){
+      toast('عندك طلب تعديل لنفس الحقل بانتظار الإدارة ⚠️','err');return;
+    }
+    await addDoc(PROFEDITS,{memberId:myaccCurrentId,memberName:m.name||'',field,oldValue:m[field]||'',newValue:val,status:'pending',createdAt:serverTimestamp()});
+    document.getElementById('myaccEditValue').value='';
+    toast('تم إرسال طلبك للإدارة ✅','ok');
+    renderMyaccEdits();
+  }catch(e){
+    console.error(e);
+    toast('حصل خطأ، حاول مرة تانية ❌','err');
+  }
+};
+async function renderMyaccEdits(){
+  const el=document.getElementById('myaccEditsList');
+  if(!el||!myaccCurrentId)return;
+  try{
+    const snap=await getDocs(query(PROFEDITS,where('memberId','==',myaccCurrentId)));
+    const list=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,5);
+    const st={pending:'⏳ بانتظار الإدارة',approved:'✅ تمت الموافقة',rejected:'❌ مرفوض'};
+    el.innerHTML=list.length?list.map(r=>`<div class="acc-row"><b>${EDIT_FIELD_LABELS[r.field]||r.field}: ${esc(r.newValue)}</b><span>${st[r.status]||''}</span></div>`).join(''):'';
+  }catch(e){el.innerHTML='';}
+}
 window.myaccLogout=function(){
   myaccCurrentId=null;
-  myaccNewImgUrl=null;
-  document.getElementById('myaccPhoneIn').value='';
-  document.getElementById('myaccNidIn').value='';
+  window._myaccPendingId=null;
+  ['myaccNidIn','myaccPassIn','myaccPhoneIn','myaccNewPw','myaccNewPw2','myaccEditValue'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('myaccPhoneRow').style.display='none';
   document.getElementById('myaccLoginCard').style.display='block';
+  document.getElementById('myaccSetPwCard').style.display='none';
   document.getElementById('myaccProfileCard').style.display='none';
 };
 
