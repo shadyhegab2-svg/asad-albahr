@@ -990,7 +990,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <p>للقادة والعرفاء فقط</p>
             <input type="text" class="pass-in" id="adminUser" placeholder="اسم المستخدم" onkeydown="if(event.key==='Enter')doLogin()"/>
             <input type="password" class="pass-in" id="passIn" placeholder="كلمة المرور" style="margin-top:8px" onkeydown="if(event.key==='Enter')doLogin()"/>
+            <button type="button" id="passToggle" onclick="toggleAdminPass()" style="background:none;border:none;color:var(--blue);font-family:Cairo,sans-serif;font-size:0.74rem;cursor:pointer;margin-top:6px">👁 إظهار الباسورد</button>
             <button class="login-btn" onclick="doLogin()">دخول ⚓</button>
+            <button type="button" onclick="forgotAdminPassword()" style="background:none;border:none;color:var(--muted);font-family:Cairo,sans-serif;font-size:0.74rem;cursor:pointer;margin-top:10px;text-decoration:underline">نسيت الباسورد؟ (الأدمن الكبير)</button>
+            <div id="loginBuild" style="font-size:0.64rem;color:var(--muted);margin-top:10px;opacity:.8">إصدار نظام الدخول: Firebase-2 ✅</div>
           </div>
         </div>
 
@@ -3789,6 +3792,22 @@ document.getElementById('newAdminRole')?.addEventListener('change',function(){
 });
 renderPermsGrid('newAdminPermsGrid',defaultPermsForRole('admin'));
 
+window.toggleAdminPass=function(){
+  const i=document.getElementById('passIn'),b=document.getElementById('passToggle');
+  const show=i.type==='password';
+  i.type=show?'text':'password';
+  b.textContent=show?'🙈 إخفاء الباسورد':'👁 إظهار الباسورد';
+};
+window.forgotAdminPassword=async function(){
+  if(!confirm('هنبعت رابط تغيير باسورد الأدمن الكبير على الإيميل المسجل في Firebase. تكمل؟'))return;
+  try{
+    await sendPasswordResetEmail(auth,SUPER_EMAIL);
+    toast('لو الحساب موجود، الرابط اتبعت على إيميلك (شوف السبام كمان) ✅','ok');
+  }catch(e){
+    console.error(e);
+    toast(authErrMsg(e),'err');
+  }
+};
 window.doLogin=async function(){
   const user=document.getElementById('adminUser').value.trim();
   const pass=document.getElementById('passIn').value;
@@ -3803,7 +3822,7 @@ window.doLogin=async function(){
     if(normUser(user)===normUser(SUPER_USERNAME)){
       let cred;
       try{cred=await signInTolerant(SUPER_EMAIL,pass);}
-      catch(e){console.error('Super login error:',e);failUi(authErrMsg(e));return;}
+      catch(e){console.error('Super login error:',e);failUi(authErrMsg(e)+(CRED_ERR_CODES.includes(e&&e.code)?' — لو مش متأكد من الباسورد اضغط "نسيت الباسورد"':''));return;}
       if((cred.user.email||'').toLowerCase()!==SUPER_EMAIL){await signOut(auth);failUi('غير مصرح ❌');return;}
       currentAdmin={id:'super',name:SUPER_USERNAME,role:'super',patrol:null,canManageFinance:true};
       loginSuccess();return;
