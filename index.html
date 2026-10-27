@@ -3819,10 +3819,11 @@ window.doLogin=async function(){
   };
   try{
     // الأدمن الكبير: دخول عن طريق Firebase Authentication (مفيش باسورد في الكود)
-    if(normUser(user)===normUser(SUPER_USERNAME)){
+    const typedLower=normUser(user).toLowerCase();
+    if(normUser(user)===normUser(SUPER_USERNAME)||typedLower===SUPER_EMAIL){
       let cred;
       try{cred=await signInTolerant(SUPER_EMAIL,pass);}
-      catch(e){console.error('Super login error:',e);failUi(authErrMsg(e)+(CRED_ERR_CODES.includes(e&&e.code)?' — لو مش متأكد من الباسورد اضغط "نسيت الباسورد"':''));return;}
+      catch(e){console.error('Super login error:',e);failUi(authErrMsg(e)+(CRED_ERR_CODES.includes(e&&e.code)?' — الإيميل المستخدم: '+SUPER_EMAIL+' . لو مش متأكد من الباسورد اضغط "نسيت الباسورد"':''));return;}
       if((cred.user.email||'').toLowerCase()!==SUPER_EMAIL){await signOut(auth);failUi('غير مصرح ❌');return;}
       currentAdmin={id:'super',name:SUPER_USERNAME,role:'super',patrol:null,canManageFinance:true};
       loginSuccess();return;
@@ -3830,7 +3831,7 @@ window.doLogin=async function(){
     const snap=await getDocs(ADMINS_COL);
     const list=snap.docs.map(d=>({id:d.id,...d.data()}));
     const cand=list.find(a=>normUser(a.username)===normUser(user));
-    if(!cand){failUi('اسم المستخدم أو كلمة المرور خطأ ❌');return;}
+    if(!cand){failUi(user.includes('@')?'الإيميل ده مش مسجل كأدمن كبير ⚠️ اكتب "شادي" أو الإيميل الصحيح':'اسم المستخدم أو كلمة المرور خطأ ❌');return;}
     if(cand.authEmail){
       try{await signInTolerant(cand.authEmail,pass);}
       catch(e){console.error('Admin login error:',e);failUi(authErrMsg(e));return;}
