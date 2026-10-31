@@ -992,7 +992,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
             <input type="password" class="pass-in" id="passIn" placeholder="كلمة المرور" style="margin-top:8px" onkeydown="if(event.key==='Enter')doLogin()"/>
             <button type="button" id="passToggle" onclick="toggleAdminPass()" style="background:none;border:none;color:var(--blue);font-family:Cairo,sans-serif;font-size:0.74rem;cursor:pointer;margin-top:6px">👁 إظهار الباسورد</button>
             <button class="login-btn" onclick="doLogin()">دخول ⚓</button>
-            <button type="button" onclick="forgotAdminPassword()" style="background:none;border:none;color:var(--muted);font-family:Cairo,sans-serif;font-size:0.74rem;cursor:pointer;margin-top:10px;text-decoration:underline">نسيت الباسورد؟ (الأدمن الكبير)</button>
+            <button type="button" onclick="forgotAdminPassword()" style="background:none;border:none;color:var(--muted);font-family:Cairo,sans-serif;font-size:0.74rem;cursor:pointer;margin-top:10px;text-decoration:underline">نسيت الباسورد؟</button>
+            <div style="font-size:0.68rem;color:var(--muted);margin-top:6px;line-height:1.7">نسيت اسمك أو باسوردك؟ اكتب اسمك واضغط "نسيت الباسورد" لو معاك إيميل مسجل. لو مفيش، كلم الأدمن الكبير وهيبعتلك بيانات دخول جديدة على واتساب</div>
             <div id="loginBuild" style="font-size:0.64rem;color:var(--muted);margin-top:10px;opacity:.8">إصدار نظام الدخول: Firebase-2 ✅</div>
           </div>
         </div>
@@ -1001,7 +1002,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
           <div class="card">
             <div class="adm-hdr">
               <div class="adm-title" id="adm-title">🛡️ لوحة التحكم</div>
-              <button class="out-btn" onclick="doLogout()">خروج ↩</button>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button class="out-btn" id="myPwBtn" style="display:none" onclick="changeMyAdminPassword()">🔐 باسوردي</button>
+                <button class="out-btn" onclick="doLogout()">خروج ↩</button>
+              </div>
             </div>
             <div class="atabs">
               <button class="atab on" onclick="goAdm('ann')">📢 إعلان</button>
@@ -1303,6 +1307,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
                 <div class="pgrid">
                   <div class="pf full"><label>اسم المستخدم الجديد</label><input id="newAdminUser" type="text" placeholder="مثال: قائد أحمد"/></div>
                   <div class="pf full"><label>كلمة المرور</label><input id="newAdminPass" type="text" placeholder="كلمة مرور قوية"/></div>
+                  <div class="pf full"><label>إيميل حقيقي (اختياري - بيخليه يستعيد باسورده بنفسه لو نسيه)</label><input id="newAdminEmail" type="email" placeholder="name@gmail.com"/></div>
+                  <div class="pf full"><label>رقم واتساب (اختياري - لإرسال بيانات الدخول له)</label><input id="newAdminPhone" type="tel" placeholder="01xxxxxxxxx"/></div>
                   <div class="pf full"><label>الدور الأساسي</label>
                     <select id="newAdminRole" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:Cairo,sans-serif;background:var(--bg)">
                       <option value="admin">🛡️ قائد</option>
@@ -1426,7 +1432,7 @@ window.addEventListener('error', function(e){
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, setDoc, getDoc, where, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
 const FB_CONFIG={
@@ -1448,15 +1454,22 @@ function getSecondaryAuth(){
   if(!_secAuth){_secAuth=getAuth(initializeApp(FB_CONFIG,'secondary'));}
   return _secAuth;
 }
-async function createAdminAuthAccount(password){
-  const rand=Math.random().toString(36).slice(2,10);
-  const email=`a${Date.now().toString(36)}${rand}@asad-admin.app`;
+// إنشاء حساب Firebase بإيميل وباسورد من غير ما نغيّر الحساب المسجل دخول حاليًا (بنستخدم التطبيق الثانوي)
+async function createAuthAccountWithEmail(email,password){
   const sa=getSecondaryAuth();
   const cred=await createUserWithEmailAndPassword(sa,email,password);
   const uid=cred.user.uid;
   await signOut(sa);
+  return uid;
+}
+async function createAdminAuthAccount(password,realEmail){
+  const rand=Math.random().toString(36).slice(2,10);
+  const email=realEmail||`a${Date.now().toString(36)}${rand}@asad-admin.app`;
+  const uid=await createAuthAccountWithEmail(email,password);
   return {email,uid};
 }
+// إيميل داخلي ثابت لحساب العضو: بيتحسب من رقم العضو ونسخة الحساب (كل كود جديد = نسخة جديدة)
+function memberAuthEmail(id,ver){return `m${ver}_${String(id).toLowerCase()}@asad-member.app`;}
 const CRED_ERR_CODES=['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-email','auth/missing-password'];
 function authErrMsg(e){
   const code=(e&&e.code)||'';
@@ -3799,16 +3812,27 @@ window.toggleAdminPass=function(){
   b.textContent=show?'🙈 إخفاء الباسورد':'👁 إظهار الباسورد';
 };
 window.forgotAdminPassword=async function(){
-  if(!confirm('هنبعت رابط تغيير باسورد الأدمن الكبير على الإيميل المسجل في Firebase. تكمل؟'))return;
+  const typed=normUser(document.getElementById('adminUser').value);
+  if(!typed){toast('اكتب اسم المستخدم الأول (أو "شادي" للأدمن الكبير) ⚠️','err');return;}
   try{
-    await sendPasswordResetEmail(auth,SUPER_EMAIL);
-    toast('لو الحساب موجود، الرابط اتبعت على إيميلك (شوف السبام كمان) ✅','ok');
+    if(typed===normUser(SUPER_USERNAME)||typed.toLowerCase()===SUPER_EMAIL){
+      if(!confirm('هنبعت رابط تغيير باسورد الأدمن الكبير على الإيميل المسجل في Firebase. تكمل؟'))return;
+      await sendPasswordResetEmail(auth,SUPER_EMAIL);
+      toast('لو الحساب موجود، الرابط اتبعت على إيميلك (شوف السبام كمان) ✅','ok');
+      return;
+    }
+    const snap=await getDocs(ADMINS_COL);
+    const cand=snap.docs.map(d=>({id:d.id,...d.data()})).find(a=>normUser(a.username)===typed);
+    const real=!!(cand&&cand.authEmail&&!cand.authEmail.endsWith('@asad-admin.app'));
+    if(real)await sendPasswordResetEmail(auth,cand.authEmail);
+    toast(real?'لو الاسم صح، اتبعت رابط تغيير الباسورد على إيميلك المسجل (شوف السبام كمان) ✅':'الحساب ده مفيهوش إيميل مسجل. كلم الأدمن الكبير وهيبعتلك بيانات دخول جديدة على واتساب 📲','ok');
   }catch(e){
     console.error(e);
     toast(authErrMsg(e),'err');
   }
 };
 window.doLogin=async function(){
+  if(myaccCurrentId||window._myaccPendingId)myaccLogout();
   const user=document.getElementById('adminUser').value.trim();
   const pass=document.getElementById('passIn').value;
   if(!user||!pass){toast('أدخل اسم المستخدم وكلمة المرور ⚠️','err');return;}
@@ -3846,9 +3870,11 @@ window.doLogin=async function(){
       patrol:cand.patrol||null,
       canManageFinance:!!cand.canManageFinance,
       permissions:cand.permissions||null,
-      legacy:!cand.authEmail
+      legacy:!cand.authEmail,
+      mustChangePw:!!cand.mustChangePw
     };
     loginSuccess();
+    if(currentAdmin.mustChangePw&&!currentAdmin.legacy)showChangePwModal(true);
   }catch(e){
     console.error('Login error:',e);
     toast('تعذر الاتصال بقاعدة البيانات — أعد المحاولة بعد ثوانٍ ⚠️','err');
@@ -3862,6 +3888,8 @@ function loginSuccess(){
   document.getElementById('lockCard').style.display='none';
   document.getElementById('adminPanel').classList.add('on');
   document.getElementById('adm-title').textContent=`🛡️ ${currentAdmin.name}`;
+  const myPwBtn=document.getElementById('myPwBtn');
+  if(myPwBtn)myPwBtn.style.display=(currentAdmin.role!=='super'&&!currentAdmin.legacy)?'inline-block':'none';
 
   if(currentAdmin.role==='super'){
     document.getElementById('superAdminCard').style.display='block';
@@ -3930,10 +3958,11 @@ async function renderAdminsList(){
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div style="flex:1">
           <div style="font-weight:700;font-size:0.82rem">${esc(a.username)}</div>
-          <div style="font-size:0.7rem;color:var(--muted)">${a.role==='admin'?'🛡️ قائد':'📋 عريف'}${a.patrol?' · '+a.patrol:''}${a.canManageFinance?' · 💰 أمين صندوق':''}</div>
+          <div style="font-size:0.7rem;color:var(--muted)">${a.role==='admin'?'🛡️ قائد':'📋 عريف'}${a.patrol?' · '+a.patrol:''}${a.canManageFinance?' · 💰 أمين صندوق':''}${a.phone?' · 📞':''}${(a.authEmail&&!a.authEmail.endsWith('@asad-admin.app'))?' · ✉️ إيميل حقيقي':''}</div>
           ${a.authEmail?'':'<div style="font-size:0.68rem;color:#c0392b;margin-top:2px">⚠️ حساب قديم: الباسورد متخزن مكشوف، رقّيه</div>'}
         </div>
         ${a.authEmail?'':`<button onclick="upgradeAdmin('${a.id}')" style="background:rgba(244,165,35,.18);border:1px solid rgba(244,165,35,.4);border-radius:8px;padding:4px 10px;color:#9a6a00;font-family:Cairo,sans-serif;font-size:0.7rem;cursor:pointer">🔒 ترقية</button>`}
+        ${a.authEmail?`<button onclick="resetAdminAccess('${a.id}')" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:4px 10px;color:#2563eb;font-family:Cairo,sans-serif;font-size:0.7rem;cursor:pointer">🔄 إعادة تعيين</button>`:''}
         <button onclick="toggleAdminPermsPanel('${a.id}')" style="background:rgba(26,41,66,.08);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--navy);font-family:Cairo,sans-serif;font-size:0.7rem;cursor:pointer">🔑 الصلاحيات</button>
         <button onclick="deleteAdmin('${a.id}')" style="background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:4px 10px;color:#c0392b;font-family:Cairo,sans-serif;font-size:0.72rem;cursor:pointer">🗑️ حذف</button>
       </div>
@@ -3947,31 +3976,130 @@ async function renderAdminsList(){
 window.addAdmin=async function(){
   const username=document.getElementById('newAdminUser').value.trim();
   const password=document.getElementById('newAdminPass').value;
+  const realEmail=(document.getElementById('newAdminEmail').value||'').trim().toLowerCase();
+  const phone=toEnDigits(document.getElementById('newAdminPhone').value).replace(/[^0-9]/g,'');
   const role=document.getElementById('newAdminRole').value;
   const patrol=document.getElementById('newAdminPatrol').value.trim();
   const permissions=readPermsGrid('newAdminPermsGrid');
   const canManageFinance=!!(permissions.dues||permissions.treasury);
   if(!username||!password){toast('أدخل الاسم وكلمة المرور ⚠️','err');return;}
   if(password.length<6){toast('كلمة المرور لازم 6 حروف أو أرقام على الأقل ⚠️','err');return;}
-  if(username===SUPER_USERNAME){toast('الاسم ده محجوز ⚠️','err');return;}
+  if(realEmail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(realEmail)){toast('الإيميل مش مظبوط ⚠️','err');return;}
+  if(realEmail===SUPER_EMAIL){toast('الإيميل ده بتاع الأدمن الكبير ⚠️','err');return;}
+  if(normUser(username)===normUser(SUPER_USERNAME)){toast('الاسم ده محجوز ⚠️','err');return;}
   if(role==='patrol'&&!patrol){toast('أدخل اسم الطليعة ⚠️','err');return;}
   const existing=await getDocs(ADMINS_COL);
-  if(existing.docs.some(d=>(d.data().username||'').trim()===username)){toast('فيه مستخدم بنفس الاسم ⚠️','err');return;}
+  if(existing.docs.some(d=>normUser(d.data().username)===normUser(username))){toast('فيه مستخدم بنفس الاسم ⚠️','err');return;}
   try{
-    const {email,uid}=await createAdminAuthAccount(password);
-    await addDoc(ADMINS_COL,{username,authEmail:email,authUid:uid,role,patrol:patrol||null,permissions,canManageFinance,createdAt:serverTimestamp()});
+    const {email,uid}=await createAdminAuthAccount(password,realEmail||null);
+    await addDoc(ADMINS_COL,{username,authEmail:email,authUid:uid,phone,role,patrol:patrol||null,permissions,canManageFinance,createdAt:serverTimestamp()});
     toast(`تم إضافة ${username} ✅`,'ok');
-    document.getElementById('newAdminUser').value='';
-    document.getElementById('newAdminPass').value='';
-    document.getElementById('newAdminPatrol').value='';
+    ['newAdminUser','newAdminPass','newAdminEmail','newAdminPhone','newAdminPatrol'].forEach(id=>document.getElementById(id).value='');
     renderPermsGrid('newAdminPermsGrid',defaultPermsForRole(role));
     renderAdminsList();
     logActivity(`أضاف مستخدم: ${username}`);
   }catch(e){
     console.error(e);
-    toast('حصل خطأ في إنشاء الحساب ❌','err');
+    toast(e&&e.code==='auth/email-already-in-use'?'الإيميل ده مستخدم قبل كده ⚠️ (لو كان لمستخدم اتمسح، لازم إيميل تاني)':'حصل خطأ في إنشاء الحساب ❌','err');
   }
 };
+// ===== استرجاع الدخول: الأدمن الكبير يعمل باسورد مؤقت ويبعته واتساب، والقائد يغيّره أول ما يدخل =====
+function genTempPassword(){
+  const abc='abcdefghjkmnpqrstuvwxyz23456789';
+  const a=new Uint32Array(8);crypto.getRandomValues(a);
+  return Array.from(a,x=>abc[x%abc.length]).join('');
+}
+window.resetAdminAccess=async function(id){
+  if(!currentAdmin||currentAdmin.role!=='super'){toast('الإجراء ده للأدمن الكبير بس ⚠️','err');return;}
+  const a=(window._adminsCache||[]).find(x=>x.id===id);
+  if(!a||!a.authEmail){toast('رقّي الحساب الأول (زرار الترقية) ⚠️','err');return;}
+  const real=!a.authEmail.endsWith('@asad-admin.app');
+  if(real){
+    if(!confirm(`${a.username} حسابه مربوط بإيميل حقيقي (${a.authEmail}).\nهنبعتله رابط تغيير الباسورد على الإيميل ده. تكمل؟`))return;
+    try{await sendPasswordResetEmail(auth,a.authEmail);toast('اتبعت رابط الاستعادة على إيميله ✅','ok');}
+    catch(e){console.error(e);toast(authErrMsg(e),'err');}
+    return;
+  }
+  if(!confirm(`هنعمل باسورد مؤقت جديد لـ ${a.username}، والباسورد القديم هيتلغي. تكمل؟`))return;
+  const p=prompt(`رقم واتساب ${a.username} (عشان نبعتله البيانات). سيبه فاضي لو هتنسخها وتبعتها بنفسك:`,a.phone||'');
+  if(p===null)return;
+  const phone=toEnDigits(p).replace(/[^0-9]/g,'');
+  try{
+    const temp=genTempPassword();
+    const {email,uid}=await createAdminAuthAccount(temp,null);
+    await updateDoc(doc(db,'admins',id),{authEmail:email,authUid:uid,mustChangePw:true,phone,updatedAt:serverTimestamp()});
+    logActivity(`أعاد تعيين دخول: ${a.username}`);
+    renderAdminsList();
+    showAdminCredsModal(a.username,temp,phone);
+  }catch(e){
+    console.error(e);
+    toast('حصل خطأ في إعادة التعيين ❌','err');
+  }
+};
+function showAdminCredsModal(username,temp,phone){
+  const num=String(phone||'').replace(/[^0-9]/g,'').replace(/^0/,'20');
+  const msg=`السلام عليكم ${username} 🌟\nبيانات دخولك للوحة الإدارة في تطبيق مجموعة أسد البحار 🦁⚓\n\n🔹 اسم المستخدم: ${username}\n🔑 الباسورد المؤقت: ${temp}\n\nأول ما تدخل هيطلب منك تختار باسورد جديد خاص بيك.\nلا تشارك البيانات دي مع أي شخص.\n\n—\n${BC_ADMIN_NOTICE}`;
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9990;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML=`<div style="background:#fff;color:#1a2a3a;border-radius:18px;padding:20px;max-width:340px;width:100%;text-align:center;direction:rtl;font-family:Cairo,sans-serif">
+    <div style="font-weight:800;margin-bottom:6px">🔑 بيانات دخول جديدة</div>
+    <div style="font-size:0.78rem;color:#6b7d99;margin-bottom:4px">اسم المستخدم</div>
+    <div style="font-weight:800;margin-bottom:8px">${esc(username)}</div>
+    <div style="font-size:0.78rem;color:#6b7d99">الباسورد المؤقت</div>
+    <div style="font-size:1.7rem;font-weight:900;letter-spacing:3px;margin:6px 0 12px;color:#1a3a6b;direction:ltr">${esc(temp)}</div>
+    <div style="font-size:0.7rem;color:#c0392b;margin-bottom:10px">الباسورد ده مش هيظهر تاني. ابعته دلوقتي</div>
+    <button data-act="wa" style="width:100%;padding:11px;border:none;border-radius:12px;background:#25d366;color:#fff;font-family:Cairo,sans-serif;font-weight:800;margin-bottom:8px;cursor:pointer">📲 إرسال على واتساب</button>
+    <button data-act="copy" style="width:100%;padding:11px;border:1px solid #d0dae8;border-radius:12px;background:#f0f4f8;font-family:Cairo,sans-serif;font-weight:700;margin-bottom:8px;cursor:pointer">📋 نسخ الرسالة كاملة</button>
+    <button data-act="close" style="width:100%;padding:10px;border:none;background:none;color:#7a8a9a;font-family:Cairo,sans-serif;cursor:pointer">إغلاق</button>
+  </div>`;
+  ov.addEventListener('click',e=>{
+    const act=e.target&&e.target.dataset?e.target.dataset.act:null;
+    if(act==='wa'){
+      if(!num){toast('مفيش رقم واتساب مسجل، انسخ الرسالة وابعتها بنفسك ⚠️','err');return;}
+      window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
+    }else if(act==='copy'){
+      if(navigator.clipboard)navigator.clipboard.writeText(msg).then(()=>toast('تم نسخ الرسالة ✅','ok')).catch(()=>toast('انسخها يدويًا من الشاشة','err'));
+      else toast('انسخها يدويًا من الشاشة','err');
+    }else if(act==='close'||e.target===ov){ov.remove();}
+  });
+  document.body.appendChild(ov);
+}
+function showChangePwModal(forced){
+  if(document.getElementById('cpwOverlay'))return;
+  const ov=document.createElement('div');
+  ov.id='cpwOverlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9990;display:flex;align-items:center;justify-content:center;padding:20px';
+  const inp='width:100%;padding:11px;border:1.5px solid #d0dae8;border-radius:10px;margin-bottom:8px;font-family:Cairo,sans-serif;direction:ltr;text-align:center';
+  ov.innerHTML=`<div style="background:#fff;color:#1a2a3a;border-radius:18px;padding:20px;max-width:340px;width:100%;direction:rtl;font-family:Cairo,sans-serif">
+    <div style="font-weight:800;text-align:center;margin-bottom:6px">🔐 ${forced?'اختار باسورد جديد خاص بيك':'تغيير الباسورد'}</div>
+    <div style="font-size:0.74rem;color:#6b7d99;text-align:center;margin-bottom:12px">${forced?'الباسورد المؤقت اللي دخلت بيه هيتلغي. ':''}6 حروف أو أرقام على الأقل</div>
+    <input id="cpw1" type="password" placeholder="الباسورد الجديد" autocomplete="new-password" style="${inp}"/>
+    <input id="cpw2" type="password" placeholder="أعد كتابته" autocomplete="new-password" style="${inp}"/>
+    <button data-act="save" style="width:100%;padding:11px;border:none;border-radius:12px;background:#1a3a6b;color:#fff;font-family:Cairo,sans-serif;font-weight:800;margin-top:4px;cursor:pointer">💾 حفظ</button>
+    ${forced?'':'<button data-act="close" style="width:100%;padding:10px;border:none;background:none;color:#7a8a9a;font-family:Cairo,sans-serif;cursor:pointer">إلغاء</button>'}
+  </div>`;
+  ov.addEventListener('click',async e=>{
+    const act=e.target&&e.target.dataset?e.target.dataset.act:null;
+    if(act==='close'){ov.remove();return;}
+    if(act!=='save')return;
+    const p1=ov.querySelector('#cpw1').value,p2=ov.querySelector('#cpw2').value;
+    if(p1.length<6){toast('الباسورد لازم 6 حروف أو أرقام على الأقل ⚠️','err');return;}
+    if(p1!==p2){toast('الباسوردين مش زي بعض ⚠️','err');return;}
+    try{
+      if(!auth.currentUser)throw {code:'no-user'};
+      await updatePassword(auth.currentUser,p1);
+      if(currentAdmin&&currentAdmin.id&&currentAdmin.id!=='super')await updateDoc(doc(db,'admins',currentAdmin.id),{mustChangePw:false});
+      if(currentAdmin)currentAdmin.mustChangePw=false;
+      ov.remove();
+      toast('تم تغيير الباسورد ✅','ok');
+    }catch(err){
+      console.error(err);
+      toast(err&&err.code==='auth/requires-recent-login'?'سجّل خروج وادخل تاني وبعدين غيّر الباسورد ⚠️':(err&&err.code==='no-user'?'الحساب ده لازم يترقّى الأول ⚠️':authErrMsg(err)),'err');
+    }
+  });
+  document.body.appendChild(ov);
+}
+window.changeMyAdminPassword=function(){showChangePwModal(false);};
 // ترقية حساب قديم (باسورد متخزن كنص) لحساب آمن في Firebase Authentication
 window.upgradeAdmin=async function(id){
   const a=(window._adminsCache||[]).find(x=>x.id===id);
@@ -4187,21 +4315,21 @@ window.genMemberCode=async function(id){
   if(m.acctState==='active'&&!confirm('العضو عنده باسورد شغال. توليد كود جديد هيلغي الباسورد القديم. تكمل؟'))return;
   try{
     const code=genAccessCode();
-    const salt=newSalt();
-    const codeHash=await hashSecret(code,salt);
-    await setDoc(doc(db,'memberAccounts',id),{codeHash,codeSalt:salt,codeExp:Date.now()+7*24*60*60*1000,pwHash:null,pwSalt:null,updatedAt:serverTimestamp()});
-    await updateDoc(doc(db,'members',id),{acctState:'code'});
+    const ver=(m.acctVer||0)+1;
+    const uid=await createAuthAccountWithEmail(memberAuthEmail(id,ver),code);
+    await updateDoc(doc(db,'members',id),{acctState:'code',acctVer:ver,authUid:uid,codeExp:Date.now()+7*24*60*60*1000});
+    try{await deleteDoc(doc(db,'memberAccounts',id));}catch(e){}
     showCodeModal(m,code,nid.slice(-4));
   }catch(e){
     console.error(e);
-    toast('حصل خطأ في توليد الكود ❌','err');
+    toast(e&&e.code==='auth/email-already-in-use'?'حصل تعارض، جرّب تاني ⚠️':'حصل خطأ في توليد الكود ❌','err');
   }
 };
 function showCodeModal(m,code,last4){
   const num=String(m.whatsapp||m.phone||'').replace(/[^0-9]/g,'').replace(/^0/,'20');
   const msg=`السلام عليكم ${m.name} 🌟\nتم تفعيل دخولك لحسابك في تطبيق مجموعة أسد البحار 🦁⚓\n\n🔹 اسم الدخول: ${last4} (آخر 4 أرقام من رقمك القومي)\n🔑 كود الدخول لأول مرة: ${code}\n\nالكود صالح 7 أيام ويُستخدم مرة واحدة، وبعد الدخول بيه هتختار باسورد خاص بيك.\nلا تشارك الكود مع أي شخص.\n\n—\n${BC_ADMIN_NOTICE}`;
   const ov=document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9990;display:flex;align-items:center;justify-content:center;padding:20px';
   ov.innerHTML=`<div style="background:#fff;color:#1a2a3a;border-radius:18px;padding:20px;max-width:340px;width:100%;text-align:center;direction:rtl;font-family:Cairo,sans-serif">
     <div style="font-weight:800;margin-bottom:6px">🔑 كود دخول ${esc(m.name)}</div>
     <div style="font-size:0.74rem;color:#6b7d99;margin-bottom:6px">اسم الدخول: ${esc(last4)} · الكود صالح 7 أيام</div>
@@ -4296,7 +4424,31 @@ function registerMyaccFail(){
 }
 function clearMyaccFail(){try{localStorage.removeItem(MYACC_LOCK_KEY);}catch(e){}}
 
+// أعضاء المرحلة الأولى (باسورد متخزن في memberAccounts): أول ما يدخلوا بنعملهم حساب Firebase بنفس الباسورد ونمسح النسخة القديمة
+async function tryLegacyMemberLogin(m,secret){
+  const snap=await getDoc(doc(db,'memberAccounts',m.id));
+  if(!snap.exists())return null;
+  const acc=snap.data();
+  let mode=null;
+  if(acc.pwHash&&acc.pwSalt&&await hashSecret(secret,acc.pwSalt)===acc.pwHash)mode='pw';
+  else if(acc.codeHash&&acc.codeSalt&&acc.codeExp>Date.now()&&await hashSecret(secret,acc.codeSalt)===acc.codeHash)mode='code';
+  if(!mode)return null;
+  const ver=1;
+  const email=memberAuthEmail(m.id,ver);
+  let uid;
+  try{uid=await createAuthAccountWithEmail(email,secret);}
+  catch(e){
+    if(!(e&&e.code==='auth/email-already-in-use'))throw e;
+    uid=(await signInWithEmailAndPassword(auth,email,secret)).user.uid;
+  }
+  const patch={acctVer:ver,authUid:uid,acctState:mode==='code'?'code':'active',codeExp:mode==='code'?(acc.codeExp||Date.now()+7*24*60*60*1000):0};
+  await updateDoc(doc(db,'members',m.id),patch);
+  try{await deleteDoc(doc(db,'memberAccounts',m.id));}catch(e){}
+  if(!auth.currentUser||auth.currentUser.uid!==uid)await signInWithEmailAndPassword(auth,email,secret);
+  return {m:{...m,...patch},mode:mode==='code'?'code':'pw'};
+}
 window.myaccLogin=async function(){
+  if(loggedIn){toast('إنت داخل كإدارة على الجهاز ده. اعمل خروج من الإدارة الأول ⚠️','err');return;}
   const last4=toEnDigits(document.getElementById('myaccNidIn').value).trim();
   const secret=toEnDigits(document.getElementById('myaccPassIn').value).trim();
   const phoneRow=document.getElementById('myaccPhoneRow');
@@ -4310,34 +4462,48 @@ window.myaccLogin=async function(){
   const btn=document.getElementById('myaccLoginBtn');
   if(btn){btn.disabled=true;btn.textContent='⏳';}
   try{
-    const cands=allMembers.filter(m=>{const n=toEnDigits(m.nationalId).trim();return n.length>=4&&n.slice(-4)===last4;});
-    let accs=[];
-    for(const m of cands){
-      const snap=await getDoc(doc(db,'memberAccounts',m.id));
-      if(snap.exists())accs.push({m,acc:snap.data()});
-    }
+    let cands=allMembers.filter(m=>{
+      const n=toEnDigits(m.nationalId).trim();
+      return n.length>=4&&n.slice(-4)===last4&&(m.acctState==='code'||m.acctState==='active');
+    });
     // لو أكتر من عضو آخر 4 أرقامهم زي بعض، بنطلب رقم الموبايل عشان نفرّق
-    if(accs.length>1){
+    if(cands.length>1){
       if(phoneRow.style.display==='none'||!phoneIn){
         phoneRow.style.display='block';
         toast('في أكتر من عضو بنفس آخر 4 أرقام، اكتب رقم موبايلك كمان ⚠️','err');
         return;
       }
-      accs=accs.filter(({m})=>normPhoneDigits(m.phone)===phoneIn||normPhoneDigits(m.whatsapp)===phoneIn);
+      cands=cands.filter(m=>normPhoneDigits(m.phone)===phoneIn||normPhoneDigits(m.whatsapp)===phoneIn);
     }
     let hit=null;
-    for(const {m,acc} of accs){
-      if(acc.pwHash&&acc.pwSalt&&await hashSecret(secret,acc.pwSalt)===acc.pwHash){hit={m,mode:'pw'};break;}
-      if(acc.codeHash&&acc.codeSalt&&acc.codeExp>Date.now()&&await hashSecret(secret,acc.codeSalt)===acc.codeHash){hit={m,mode:'code'};break;}
+    for(const m of cands){
+      if(m.authUid){
+        try{
+          await signInWithEmailAndPassword(auth,memberAuthEmail(m.id,m.acctVer||1),secret);
+          hit={m,mode:m.acctState==='code'?'code':'pw'};
+          break;
+        }catch(e){
+          if(!CRED_ERR_CODES.includes(e&&e.code))throw e;
+        }
+      }else{
+        const legacy=await tryLegacyMemberLogin(m,secret);
+        if(legacy){hit=legacy;break;}
+      }
     }
     if(!hit){
       registerMyaccFail();
       toast('البيانات غلط أو الكود انتهى. لو أول مرة اطلب كود جديد من الإدارة ❌','err');
       return;
     }
+    if(hit.mode==='code'&&hit.m.codeExp&&hit.m.codeExp<Date.now()){
+      await signOut(auth);
+      toast('الكود انتهى. اطلب كود جديد من الإدارة ❌','err');
+      return;
+    }
     clearMyaccFail();
     if(hit.mode==='code'){
       window._myaccPendingId=hit.m.id;
+      window._myaccPendingSecret=secret;
       document.getElementById('myaccLoginCard').style.display='none';
       document.getElementById('myaccSetPwCard').style.display='block';
       toast('الكود صح ✅ اختار باسورد خاص بيك','ok');
@@ -4346,32 +4512,31 @@ window.myaccLogin=async function(){
     myaccShowProfile(hit.m);
   }catch(e){
     console.error(e);
-    toast('حصل خطأ، جرّب تاني ❌','err');
+    toast((e&&typeof e.code==='string'&&e.code.startsWith('auth/'))?authErrMsg(e):'حصل خطأ، جرّب تاني ❌','err');
   }finally{
     if(btn){btn.disabled=false;btn.textContent='دخول';}
   }
 };
 window.myaccSetPassword=async function(){
   const id=window._myaccPendingId;
-  if(!id){toast('ارجع سجل دخول بالكود الأول ⚠️','err');return;}
+  if(!id||!auth.currentUser){toast('ارجع سجل دخول بالكود الأول ⚠️','err');return;}
   const p1=document.getElementById('myaccNewPw').value;
   const p2=document.getElementById('myaccNewPw2').value;
   if(p1.length<6){toast('الباسورد لازم 6 حروف أو أرقام على الأقل ⚠️','err');return;}
   if(p1!==p2){toast('الباسوردين مش زي بعض ⚠️','err');return;}
+  if(p1===window._myaccPendingSecret){toast('اختار باسورد مختلف عن الكود ⚠️','err');return;}
   try{
-    const salt=newSalt();
-    const pwHash=await hashSecret(p1,salt);
-    await setDoc(doc(db,'memberAccounts',id),{pwHash,pwSalt:salt,codeHash:null,codeSalt:null,codeExp:0,updatedAt:serverTimestamp()},{merge:true});
-    await updateDoc(doc(db,'members',id),{acctState:'active'});
-    window._myaccPendingId=null;
+    await updatePassword(auth.currentUser,p1);
+    await updateDoc(doc(db,'members',id),{acctState:'active',codeExp:0});
+    window._myaccPendingId=null;window._myaccPendingSecret=null;
     document.getElementById('myaccNewPw').value='';document.getElementById('myaccNewPw2').value='';
     document.getElementById('myaccSetPwCard').style.display='none';
     const m=allMembers.find(x=>x.id===id);
-    if(m)myaccShowProfile(m);
+    if(m)myaccShowProfile({...m,acctState:'active'});
     toast('تم حفظ الباسورد ✅','ok');
   }catch(e){
     console.error(e);
-    toast('حصل خطأ في حفظ الباسورد ❌','err');
+    toast(e&&e.code==='auth/requires-recent-login'?'سجّل دخول تاني بالكود وبعدين اختار الباسورد ⚠️':'حصل خطأ في حفظ الباسورد ❌','err');
   }
 };
 function acctRow(label,val){return `<div class="acc-row"><b>${label}</b><span>${val===''||val==null?'—':val}</span></div>`;}
@@ -4502,8 +4667,10 @@ async function renderMyaccEdits(){
   }catch(e){el.innerHTML='';}
 }
 window.myaccLogout=function(){
+  signOut(auth).catch(()=>{});
   myaccCurrentId=null;
   window._myaccPendingId=null;
+  window._myaccPendingSecret=null;
   ['myaccNidIn','myaccPassIn','myaccPhoneIn','myaccNewPw','myaccNewPw2','myaccEditValue'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('myaccPhoneRow').style.display='none';
   document.getElementById('myaccLoginCard').style.display='block';
